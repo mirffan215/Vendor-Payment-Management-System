@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Modules\CustomerAdmin\Vpms.CustomerAdmin.Infrastructure\Vpms.CustomerAdmin.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\BuildingBlocks\Vpms.BuildingBlocks\Vpms.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\..\Modules\Identity\Vpms.Identity.Infrastructure\Vpms.Identity.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Audit\Vpms.Audit.Infrastructure\Vpms.Audit.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

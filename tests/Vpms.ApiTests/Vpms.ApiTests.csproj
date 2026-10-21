@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <PackageReference Include="Microsoft.AspNetCore.TestHost" />
+    <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Serilog" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Vpms.TestSupport\Vpms.TestSupport.csproj" />
+    <ProjectReference Include="..\..\src\Host\Vpms.Api\Vpms.Api.csproj" />
+    <ProjectReference Include="..\..\src\Modules\CustomerAdmin\Vpms.CustomerAdmin.Domain\Vpms.CustomerAdmin.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\CustomerAdmin\Vpms.CustomerAdmin.Infrastructure\Vpms.CustomerAdmin.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Identity\Vpms.Identity.Domain\Vpms.Identity.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Identity\Vpms.Identity.Infrastructure\Vpms.Identity.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\BuildingBlocks\Vpms.BuildingBlocks\Vpms.BuildingBlocks.csproj" />
+  </ItemGroup>
+
+</Project>

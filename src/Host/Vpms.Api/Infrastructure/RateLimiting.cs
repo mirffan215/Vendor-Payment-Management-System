@@ -1,0 +1,68 @@
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Options;
+using Vpms.Api.Auth;
+
+namespace Vpms.Api.Infrastructure;
+
+public sealed class RateLimitSettings
+{
+    public const string Section = "RateLimiting";
+
+    /// <summary>Requests per window for each user (or client address when anonymous).</summary>
+    public int PermitLimit { get; set; } = 600;
+
+    /// <summary>Stricter budget per client address for sign-in endpoints.</summary>
+    public int AuthPermitLimit { get; set; } = 30;
+
+    public int WindowSeconds { get; set; } = 60;
+}
+
+public static class RateLimiting
+{
+    public const string AuthPolicy = "auth";
+
+    public static IServiceCollection AddVpmsRateLimiting(this IServiceCollection services)
+    {
+        services.AddOptions<RateLimitSettings>().BindConfiguration(RateLimitSettings.Section);
+        services.AddRateLimiter();
+        // Configured through IOptions so host configuration (and tests) can change the limits.
+        services.AddOptions<RateLimiterOptions>().Configure<IOptions<RateLimitSettings>>((options, settings) =>
+        {
+            var s = settings.Value;
+            var window = TimeSpan.FromSeconds(s.WindowSeconds);
+            options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+            options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(http =>
+                RateLimitPartition.GetFixedWindowLimiter(
+                    http.User.FindFirst(VpmsClaims.UserId)?.Value ?? "ip:" + http.Connection.RemoteIpAddress,
+                    _ => new FixedWindowRateLimiterOptions { PermitLimit = s.PermitLimit, Window = window, QueueLimit = 0 }));
+
+            options.AddPolicy(AuthPolicy, http => RateLimitPartition.GetFixedWindowLimiter(
+                "auth:" + http.Connection.RemoteIpAddress,
+                _ => new FixedWindowRateLimiterOptions { PermitLimit = s.AuthPermitLimit, Window = window, QueueLimit = 0 }));
+
+            options.OnRejected = async (context, ct) =>
+            {
+                var http = context.HttpContext;
+                if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retry))
+                {
+                    http.Response.Headers.RetryAfter = ((int)Math.Ceiling(retry.TotalSeconds)).ToString(System.Globalization.CultureInfo.InvariantCulture);
+                }
+
+                var problems = http.RequestServices.GetRequiredService<IProblemDetailsService>();
+                await problems.TryWriteAsync(new ProblemDetailsContext
+                {
+                    HttpContext = http,
+                    ProblemDetails = new ProblemDetails
+                    {
+                        Status = StatusCodes.Status429TooManyRequests,
+                        Title = "Too many requests.",
+                    },
+                });
+            };
+        });
+        return services;
+    }
+}

@@ -1,0 +1,37 @@
+services:
+  sql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:?copy .env.example to .env}
+    ports: ["1433:1433"]
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      retries: 10
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    ports: ["10000:10000"]
+  migrator:
+    build: { context: ., dockerfile: Dockerfile.migrator }
+    depends_on: { sql: { condition: service_healthy } }
+    environment:
+      ConnectionStrings__Migrator: Server=sql;Database=Vpms;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True
+      VPMS_APP_LOGIN: vpms_app_login
+      VPMS_APP_LOGIN_PASSWORD: ${VPMS_APP_LOGIN_PASSWORD:?copy .env.example to .env}
+    restart: "no"
+  api:
+    build: { context: ., dockerfile: Dockerfile.api }
+    depends_on: { migrator: { condition: service_completed_successfully } }
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__Default: Server=sql;Database=Vpms;User Id=vpms_app_login;Password=${VPMS_APP_LOGIN_PASSWORD};TrustServerCertificate=True
+    ports: ["8080:8080"]
+  worker:
+    build: { context: ., dockerfile: Dockerfile.worker }
+    depends_on: { migrator: { condition: service_completed_successfully } }
+    environment:
+      ConnectionStrings__Default: Server=sql;Database=Vpms;User Id=vpms_app_login;Password=${VPMS_APP_LOGIN_PASSWORD};TrustServerCertificate=True
+  web:
+    build: { context: web }
+    ports: ["5173:80"]

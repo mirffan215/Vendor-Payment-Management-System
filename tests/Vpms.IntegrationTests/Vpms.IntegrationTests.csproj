@@ -1,0 +1,39 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Testcontainers.MsSql" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Host\Vpms.Migrator\Vpms.Migrator.csproj" />
+    <ProjectReference Include="..\..\src\BuildingBlocks\Vpms.BuildingBlocks\Vpms.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\..\src\Modules\CustomerAdmin\Vpms.CustomerAdmin.Domain\Vpms.CustomerAdmin.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\CustomerAdmin\Vpms.CustomerAdmin.Infrastructure\Vpms.CustomerAdmin.Infrastructure.csproj" />
+    <ProjectReference Include="..\Vpms.TestSupport\Vpms.TestSupport.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Identity\Vpms.Identity.Application\Vpms.Identity.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Identity\Vpms.Identity.Contracts\Vpms.Identity.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Identity\Vpms.Identity.Domain\Vpms.Identity.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Identity\Vpms.Identity.Infrastructure\Vpms.Identity.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Audit\Vpms.Audit.Domain\Vpms.Audit.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Audit\Vpms.Audit.Application\Vpms.Audit.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Audit\Vpms.Audit.Infrastructure\Vpms.Audit.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Host\Vpms.Worker\Vpms.Worker.csproj" />
+  </ItemGroup>
+
+</Project>
