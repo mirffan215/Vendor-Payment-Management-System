@@ -130,6 +130,12 @@ public sealed class VendorService(
             .Select(v => v.Id).ToListAsync(ct);
     }
 
+    public async Task<string?> GetTaxNumberAsync(Guid vendorId, CancellationToken ct = default)
+    {
+        var cipher = await db.Vendors.AsNoTracking().Where(v => v.Id == vendorId).Select(v => v.TaxIdCipher).FirstOrDefaultAsync(ct);
+        return cipher is null ? null : await protector.UnprotectAsync(TaxColumn, cipher, ct);
+    }
+
     public async Task<Guid?> FindByErpAccountAsync(string erpVendorAccount, Guid legalEntityId, CancellationToken ct = default) =>
         await db.EntityLinks.AsNoTracking().Where(l => l.LegalEntityId == legalEntityId && l.ErpVendorAccount == erpVendorAccount)
             .Select(l => (Guid?)l.VendorId).FirstOrDefaultAsync(ct);

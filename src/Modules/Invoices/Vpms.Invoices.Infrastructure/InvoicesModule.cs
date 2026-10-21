@@ -23,6 +23,7 @@ public static class InvoicesModule
         services.AddScoped<IIntakeScan>(sp => sp.GetRequiredService<InvoiceIntakeService>());
         services.AddScoped<IPortalInvoiceService, PortalInvoiceService>();
         services.AddScoped<IVerificationRuleSetService, VerificationRuleSetService>();
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<Vpms.Invoices.Domain.Tax.ITaxRuleProvider, Vpms.Invoices.Domain.Tax.StandardVatProvider>());
         services.AddScoped<InvoiceVerifier>();
         services.AddScoped<IInvoiceVerifier>(sp => sp.GetRequiredService<InvoiceVerifier>());
         services.AddScoped<IVerificationScan>(sp => sp.GetRequiredService<InvoiceVerifier>());

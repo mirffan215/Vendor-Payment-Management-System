@@ -95,6 +95,9 @@ public sealed class LegalEntityService(CustomerAdminDbContext db, IFieldProtecto
     public Task<bool> ExistsAsync(Guid legalEntityId, CancellationToken ct = default) =>
         db.LegalEntities.AnyAsync(e => e.Id == legalEntityId, ct);
 
+    public async Task<string?> GetCountryAsync(Guid legalEntityId, CancellationToken ct = default) =>
+        await db.LegalEntities.AsNoTracking().Where(e => e.Id == legalEntityId).Select(e => e.CountryCode).FirstOrDefaultAsync(ct);
+
     public async Task<IReadOnlyDictionary<Guid, string>> GetNamesAsync(IEnumerable<Guid> legalEntityIds, CancellationToken ct = default)
     {
         var ids = legalEntityIds.Distinct().ToList();

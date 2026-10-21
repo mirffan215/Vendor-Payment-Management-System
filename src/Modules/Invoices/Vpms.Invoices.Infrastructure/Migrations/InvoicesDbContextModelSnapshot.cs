@@ -186,6 +186,10 @@ namespace Vpms.Invoices.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<string>("SupplierTaxNumber")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
                     b.Property<decimal>("TaxTotal")
                         .HasPrecision(19, 4)
                         .HasColumnType("decimal(19,4)");

@@ -16,6 +16,12 @@ public interface IVendorLookup
     /// <summary>The vendor the entity knows under this ERP vendor account, or null.</summary>
     Task<Guid?> FindByErpAccountAsync(string erpVendorAccount, Guid legalEntityId, CancellationToken ct = default);
 
+    /// <summary>
+    /// The vendor's tax registration number as held on the vendor master, for validating what an invoice states. Decrypted for internal
+    /// checks only: it is not shown to anyone and not logged.
+    /// </summary>
+    Task<string?> GetTaxNumberAsync(Guid vendorId, CancellationToken ct = default);
+
     /// <summary>True when the vendor is Active and linked (and not blocked) for the legal entity.</summary>
     Task<bool> CanTransactAsync(Guid vendorId, Guid legalEntityId, CancellationToken ct = default);
 }

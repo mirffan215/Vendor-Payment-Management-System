@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using Vpms.BuildingBlocks.Audit;
 using Vpms.BuildingBlocks.Errors;
 using Vpms.BuildingBlocks.Tenancy;
+using Vpms.CustomerAdmin.Contracts;
+using Vpms.Invoices.Domain.Tax;
 using Vpms.Invoices.Application;
 using Vpms.Invoices.Domain;
 using Vpms.Invoices.Domain.Verification;
@@ -12,8 +14,8 @@ namespace Vpms.Invoices.Infrastructure;
 
 /// <summary>Gathers what the rules need, runs the pure engine and records the outcome, exceptions and new invoice status in one transaction.</summary>
 public sealed class InvoiceVerifier(
-    InvoicesDbContext db, IVerificationRuleSetService ruleSets, IVendorLookup vendors, IAuditPort audit, TenantContext tenant, TimeProvider clock,
-    VerificationEngine? engine = null) : IInvoiceVerifier, IVerificationScan
+    InvoicesDbContext db, IVerificationRuleSetService ruleSets, IVendorLookup vendors, ILegalEntityLookup entities, IEnumerable<ITaxRuleProvider> taxProviders, IAuditPort audit,
+    TenantContext tenant, TimeProvider clock, VerificationEngine? engine = null) : IInvoiceVerifier, IVerificationScan
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
     private static readonly string[] LiveStatuses =
@@ -104,11 +106,22 @@ public sealed class InvoiceVerifier(
     {
         var facts = new InvoiceFacts(invoice.Id, invoice.VendorId, invoice.LegalEntityId, invoice.InvoiceNumber, invoice.InvoiceDate, invoice.DueDate, invoice.CurrencyCode,
             invoice.Subtotal, invoice.TaxTotal, invoice.Total, invoice.PoReference, invoice.SupplierTaxInvoiceRef,
-            invoice.Lines.OrderBy(l => l.LineNo).Select(l => new LineFacts(l.LineNo, l.Description, l.Quantity, l.UnitPrice, l.LineAmount, l.TaxCode, l.TaxRate, l.TaxAmount, l.PoLineRef)).ToList());
+            invoice.Lines.OrderBy(l => l.LineNo).Select(l => new LineFacts(l.LineNo, l.Description, l.Quantity, l.UnitPrice, l.LineAmount, l.TaxCode, l.TaxRate, l.TaxAmount, l.PoLineRef)).ToList(),
+            invoice.SupplierTaxNumber);
 
         var canTransact = await vendors.CanTransactAsync(invoice.VendorId, invoice.LegalEntityId, ct);
+        var provider = await TaxProviderAsync(invoice.LegalEntityId, ct);
+        var vendorTaxNumber = config.Get(RuleCodes.TaxVat).Enabled && provider is not null ? await vendors.GetTaxNumberAsync(invoice.VendorId, ct) : null;
         return new VerificationInput(facts, new VendorFacts(canTransact), await CandidatesAsync(invoice, config, ct), await PurchaseOrderAsync(invoice, ct),
-            DateOnly.FromDateTime(now.UtcDateTime));
+            DateOnly.FromDateTime(now.UtcDateTime), provider, vendorTaxNumber);
+    }
+
+    /// <summary>The country plug-in for the entity (by its country), or the standard fallback.</summary>
+    private async Task<ITaxRuleProvider?> TaxProviderAsync(Guid legalEntityId, CancellationToken ct)
+    {
+        var country = await entities.GetCountryAsync(legalEntityId, ct);
+        var providers = taxProviders.ToList();
+        return providers.FirstOrDefault(p => string.Equals(p.CountryCode, country, StringComparison.OrdinalIgnoreCase)) ?? providers.FirstOrDefault(p => p.CountryCode == "*");
     }
 
     /// <summary>Other live invoices of the same vendor in the same legal entity: the same number, or close in date.</summary>

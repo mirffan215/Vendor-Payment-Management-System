@@ -165,10 +165,11 @@ public sealed class PortalInvoicesController(IPortalInvoiceService invoices) : C
     public async Task<PortalInvoiceDto> Submit(
         [FromForm] Guid legalEntityId, [FromForm] string invoiceNumber, [FromForm] DateOnly invoiceDate, [FromForm] DateOnly? dueDate,
         [FromForm] string currencyCode, [FromForm] decimal subtotal, [FromForm] decimal taxTotal, [FromForm] decimal total, [FromForm] string? poReference,
+        [FromForm] string? supplierTaxNumber, [FromForm] string? supplierTaxInvoiceRef,
         IFormFile file, CancellationToken ct)
     {
         await using var stream = file.OpenReadStream();
-        var data = new InvoiceData(invoiceNumber, invoiceDate, dueDate, currencyCode, subtotal, taxTotal, total, poReference, null, []);
+        var data = new InvoiceData(invoiceNumber, invoiceDate, dueDate, currencyCode, subtotal, taxTotal, total, poReference, supplierTaxInvoiceRef, [], supplierTaxNumber);
         return await invoices.SubmitAsync(new PortalSubmitInvoice(legalEntityId, data), file.FileName, stream, ct);
     }
 }

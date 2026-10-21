@@ -158,6 +158,7 @@ public sealed partial class InvoiceService(
         invoice.Total = d.Total;
         invoice.PoReference = string.IsNullOrWhiteSpace(d.PoReference) ? null : d.PoReference.Trim();
         invoice.SupplierTaxInvoiceRef = string.IsNullOrWhiteSpace(d.SupplierTaxInvoiceRef) ? null : d.SupplierTaxInvoiceRef.Trim();
+        invoice.SupplierTaxNumber = string.IsNullOrWhiteSpace(d.SupplierTaxNumber) ? null : d.SupplierTaxNumber.Trim();
         var canonical = InvoiceNumber.Canonical(invoice.InvoiceNumber);
         invoice.NumberKeyIndex = canonical.Length == 0 ? null : await protector.BlindIndexAsync(NumberKeyColumn, $"{invoice.VendorId:N}|{canonical}", ct);
         invoice.DuplicateKeyIndex = canonical.Length == 0 ? null : await protector.BlindIndexAsync(DuplicateKeyColumn,
@@ -187,7 +188,7 @@ public sealed partial class InvoiceService(
         return new InvoiceDto(i.Id, i.LegalEntityId, i.VendorId, names.GetValueOrDefault(i.VendorId, ""), i.InvoiceNumber, i.InvoiceDate, i.DueDate, i.CurrencyCode,
             i.Subtotal, i.TaxTotal, i.Total, i.PoReference, i.SupplierTaxInvoiceRef, i.Source, i.Status, i.StatusReason, i.Version, i.CreatedAt, i.ReceivedAt,
             i.Lines.OrderBy(l => l.LineNo).Select(l => new InvoiceLineDto(l.Id, l.LineNo, l.Description, l.Quantity, l.UnitPrice, l.LineAmount, l.TaxCode, l.TaxRate,
-                l.TaxAmount, l.PoLineRef, l.DimensionsJson)).ToList(), files);
+                l.TaxAmount, l.PoLineRef, l.DimensionsJson)).ToList(), files, i.SupplierTaxNumber);
     }
 
     private async Task<Dictionary<Guid, string>> VendorNames(IEnumerable<Guid> ids, CancellationToken ct)
@@ -216,6 +217,7 @@ public sealed partial class InvoiceService(
         if (d.DueDate is { } due && due.Year is < 2000 or > 2100) throw new ValidationFailedException("invalid_date", "The due date is not valid.");
         if (d.Subtotal < 0 || d.TaxTotal < 0 || d.Total < 0) throw new ValidationFailedException("invalid_amount", "Amounts cannot be negative.");
         if (d.PoReference is { Length: > 100 }) throw new ValidationFailedException("invalid_po_reference", "The PO reference is too long.");
+        if (d.SupplierTaxNumber is { Length: > 30 }) throw new ValidationFailedException("invalid_tax_number", "The supplier tax number is too long.");
         if (d.SupplierTaxInvoiceRef is { Length: > 200 }) throw new ValidationFailedException("invalid_reference", "The supplier tax-invoice reference is too long.");
         if (d.Lines.Count > MaxLines) throw new ValidationFailedException("too_many_lines", $"An invoice can have at most {MaxLines} lines.");
 

@@ -5,7 +5,8 @@ public sealed record LineFacts(
 
 public sealed record InvoiceFacts(
     Guid Id, Guid VendorId, Guid LegalEntityId, string InvoiceNumber, DateOnly InvoiceDate, DateOnly? DueDate, string CurrencyCode,
-    decimal Subtotal, decimal TaxTotal, decimal Total, string? PoReference, string? SupplierTaxInvoiceRef, IReadOnlyList<LineFacts> Lines)
+    decimal Subtotal, decimal TaxTotal, decimal Total, string? PoReference, string? SupplierTaxInvoiceRef, IReadOnlyList<LineFacts> Lines,
+    string? SupplierTaxNumber = null)
 {
     public string CanonicalNumber => InvoiceNumber.Length == 0 ? "" : Domain.InvoiceNumber.Canonical(InvoiceNumber);
 }
@@ -27,7 +28,8 @@ public sealed record PoFacts(string PoNumber, Guid VendorId, string CurrencyCode
 
 /// <summary>Everything a rule may look at. Rules never reach into a database or the clock: all of it is passed in.</summary>
 public sealed record VerificationInput(
-    InvoiceFacts Invoice, VendorFacts Vendor, IReadOnlyList<CandidateFacts> Candidates, PoFacts? PurchaseOrder, DateOnly Today);
+    InvoiceFacts Invoice, VendorFacts Vendor, IReadOnlyList<CandidateFacts> Candidates, PoFacts? PurchaseOrder, DateOnly Today,
+    Tax.ITaxRuleProvider? TaxProvider = null, string? VendorTaxNumber = null);
 
 /// <param name="Key">A stable machine-readable reason, translated by the user interface.</param>
 public sealed record Finding(string Key, IReadOnlyDictionary<string, string> Evidence)

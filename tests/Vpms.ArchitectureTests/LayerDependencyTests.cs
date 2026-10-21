@@ -85,6 +85,22 @@ public class LayerDependencyTests
     }
 
     [Fact]
+    public void Country_tax_plugins_are_isolated_from_the_modules_that_host_them()
+    {
+        // Invoices knows only the plug-in interface (in its domain); no Invoices assembly may reference a concrete country module.
+        foreach (var layer in new[] { "Domain", "Application", "Infrastructure", "Contracts" })
+        {
+            var references = Asm("Invoices", layer).GetReferencedAssemblies().Select(a => a.Name);
+            Assert.DoesNotContain("Vpms.Tax.Sa", references);
+        }
+
+        // A country module may use the shared kernel and the invoice domain, and nothing else from the system.
+        var allowed = new[] { "Vpms.Invoices.Domain", "Vpms.BuildingBlocks" };
+        var taxReferences = typeof(Vpms.Tax.Sa.SaudiVatProvider).Assembly.GetReferencedAssemblies().Select(a => a.Name!).Where(n => n.StartsWith("Vpms.", StringComparison.Ordinal));
+        Assert.Empty(taxReferences.Except(allowed));
+    }
+
+    [Fact]
     public void IgnoreQueryFilters_detector_finds_real_usages()
     {
         // Guards the guard: the IL scan above must actually be able to see the call it bans.

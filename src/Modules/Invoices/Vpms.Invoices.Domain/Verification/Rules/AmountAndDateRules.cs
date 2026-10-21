@@ -69,9 +69,17 @@ public sealed class TaxVatRule : IVerificationRule
     {
         var i = input.Invoice;
         var tolerance = Tolerance.Of(i.CurrencyCode, setting.Parameters["toleranceMinorUnits"]);
-        return i.Lines.Where(l => Math.Abs(Money.Round(l.LineAmount * l.TaxRate, i.CurrencyCode) - l.TaxAmount) > tolerance)
+        var findings = i.Lines.Where(l => Math.Abs(Money.Round(l.LineAmount * l.TaxRate, i.CurrencyCode) - l.TaxAmount) > tolerance)
             .Select(l => Finding.Of("line_tax_mismatch", ("lineNo", l.LineNo.ToString(CultureInfo.InvariantCulture)),
                 ("expected", Tolerance.F(Money.Round(l.LineAmount * l.TaxRate, i.CurrencyCode))), ("actual", Tolerance.F(l.TaxAmount)))).ToList();
+
+        // The country's own checks, for the switches the entity has on. Isolated: with no provider only the arithmetic above runs.
+        if (input.TaxProvider is { } provider)
+        {
+            findings.AddRange(provider.Evaluate(new Tax.TaxInput(i, input.VendorTaxNumber, setting.Parameters)));
+        }
+
+        return findings;
     }
 }
 

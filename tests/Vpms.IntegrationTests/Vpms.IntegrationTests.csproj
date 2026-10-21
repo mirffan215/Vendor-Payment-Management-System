@@ -59,6 +59,7 @@
     <ProjectReference Include="..\..\src\Modules\Invoices\Vpms.Invoices.Application\Vpms.Invoices.Application.csproj" />
     <ProjectReference Include="..\..\src\Modules\Invoices\Vpms.Invoices.Infrastructure\Vpms.Invoices.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\Modules\Invoices\Vpms.Invoices.Contracts\Vpms.Invoices.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Tax\Vpms.Tax.Sa\Vpms.Tax.Sa.csproj" />
   </ItemGroup>
 
   <ItemGroup>

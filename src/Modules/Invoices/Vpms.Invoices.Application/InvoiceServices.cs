@@ -10,7 +10,7 @@ public sealed record InvoiceLineDto(
 
 public sealed record InvoiceData(
     string InvoiceNumber, DateOnly InvoiceDate, DateOnly? DueDate, string CurrencyCode, decimal Subtotal, decimal TaxTotal, decimal Total,
-    string? PoReference, string? SupplierTaxInvoiceRef, IReadOnlyList<InvoiceLineInput> Lines);
+    string? PoReference, string? SupplierTaxInvoiceRef, IReadOnlyList<InvoiceLineInput> Lines, string? SupplierTaxNumber = null);
 
 public sealed record CreateInvoice(Guid LegalEntityId, Guid VendorId, InvoiceData Data);
 
@@ -19,7 +19,7 @@ public sealed record InvoiceAttachmentDto(Guid Id, Guid AttachmentId, string Rol
 public sealed record InvoiceDto(
     Guid Id, Guid LegalEntityId, Guid VendorId, string VendorName, string InvoiceNumber, DateOnly InvoiceDate, DateOnly? DueDate, string CurrencyCode,
     decimal Subtotal, decimal TaxTotal, decimal Total, string? PoReference, string? SupplierTaxInvoiceRef, string Source, string Status, string? StatusReason,
-    int Version, DateTimeOffset CreatedAt, DateTimeOffset? ReceivedAt, IReadOnlyList<InvoiceLineDto> Lines, IReadOnlyList<InvoiceAttachmentDto> Attachments);
+    int Version, DateTimeOffset CreatedAt, DateTimeOffset? ReceivedAt, IReadOnlyList<InvoiceLineDto> Lines, IReadOnlyList<InvoiceAttachmentDto> Attachments, string? SupplierTaxNumber = null);
 
 public sealed record InvoiceListItem(
     Guid Id, Guid LegalEntityId, Guid VendorId, string VendorName, string InvoiceNumber, DateOnly InvoiceDate, string CurrencyCode, decimal Total,

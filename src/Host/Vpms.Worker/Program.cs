@@ -29,6 +29,8 @@ builder.Services.AddCustomerAdminModule(ConnectionString);
 builder.Services.AddIdentityModule(ConnectionString);
 builder.Services.AddVendorsModule(ConnectionString);
 builder.Services.AddInvoicesModule(ConnectionString);
+// Country tax rule plug-ins for received invoices. Removing a line switches that country back to the standard checks.
+builder.Services.AddSingleton<Vpms.Invoices.Domain.Tax.ITaxRuleProvider, Vpms.Tax.Sa.SaudiVatProvider>();
 builder.Services.Configure<GraphOptions>(builder.Configuration.GetSection(GraphOptions.Section));
 builder.Services.AddAuditModule(ConnectionString);
 builder.Services.AddSingleton<IAuditAnchorSink>(sp => new FileAuditAnchorSink(

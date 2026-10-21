@@ -72,7 +72,16 @@ public static class RuleCatalog
         new(RuleCodes.AmountLineMath, true, RuleSeverity.Flag, true, true,
             [new("toleranceMinorUnits", 1m, 0m, 100m, Loosening.WhenIncreased)]),
         new(RuleCodes.TaxVat, true, RuleSeverity.Flag, true, true,
-            [new("toleranceMinorUnits", 1m, 0m, 100m, Loosening.WhenIncreased)]),
+        [
+            new("toleranceMinorUnits", 1m, 0m, 100m, Loosening.WhenIncreased),
+            // Country-specific checks (switches, 1 = on). Which of them apply depends on the entity's country provider.
+            new(Tax.TaxSettings.CheckSupplierTaxNumberFormat, 1m, 0m, 1m, Loosening.WhenDecreased),
+            new(Tax.TaxSettings.RequireSupplierTaxNumber, 0m, 0m, 1m, Loosening.WhenDecreased),
+            new(Tax.TaxSettings.MatchVendorTaxNumber, 1m, 0m, 1m, Loosening.WhenDecreased),
+            new(Tax.TaxSettings.CheckSupplierTaxInvoiceRefFormat, 1m, 0m, 1m, Loosening.WhenDecreased),
+            new(Tax.TaxSettings.RequireSupplierTaxInvoiceRef, 0m, 0m, 1m, Loosening.WhenDecreased),
+            new(Tax.TaxSettings.CheckAllowedRates, 1m, 0m, 1m, Loosening.WhenDecreased),
+        ]),
         new(RuleCodes.DateSanity, true, RuleSeverity.Flag, true, true,
         [
             new("maxAgeDays", 365m, 30m, 3650m, Loosening.WhenIncreased),

@@ -38,6 +38,7 @@ public class InvoicesDbContext(DbContextOptions<InvoicesDbContext> options, ITen
             b.Property(x => x.Total).HasPrecision(19, 4);
             b.Property(x => x.PoReference).HasMaxLength(100);
             b.Property(x => x.SupplierTaxInvoiceRef).HasMaxLength(200);
+            b.Property(x => x.SupplierTaxNumber).HasMaxLength(30);
             b.Property(x => x.Source).HasMaxLength(20).IsRequired();
             b.Property(x => x.Status).HasMaxLength(20).IsRequired();
             b.Property(x => x.StatusReason).HasMaxLength(500);

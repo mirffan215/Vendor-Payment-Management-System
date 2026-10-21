@@ -57,6 +57,9 @@ public class Invoice : ILegalEntityScoped, IVendorOwned
     /// <summary>The supplier's own tax-invoice reference (for example a ZATCA UUID). Informational only.</summary>
     public string? SupplierTaxInvoiceRef { get; set; }
 
+    /// <summary>The supplier's tax registration number as printed on the invoice (for example the Saudi VAT number).</summary>
+    public string? SupplierTaxNumber { get; set; }
+
     public string Source { get; set; } = InvoiceSource.Manual;
     public string Status { get; set; } = InvoiceStatus.Draft;
 
