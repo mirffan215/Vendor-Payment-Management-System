@@ -45,7 +45,8 @@ body {
 
 .top nav {
   display: flex;
-  gap: 1rem;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
   margin-inline-end: auto;
 }
 
@@ -177,3 +178,6 @@ button.active { background: var(--accent); color: var(--accent-text); }
 .qr { inline-size: 12rem; max-inline-size: 100%; background: #fff; padding: 0.5rem; border-radius: 0.35rem; }
 .secret, .codes code { font-size: 1.05rem; letter-spacing: 0.05em; word-break: break-all; }
 .codes { grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); }
+
+textarea { inline-size: 100%; box-sizing: border-box; font: inherit; padding: 0.5rem; border: 1px solid var(--border); border-radius: 0.35rem; background: var(--surface); color: var(--text); }
+fieldset { min-inline-size: 0; }

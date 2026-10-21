@@ -107,3 +107,24 @@ export const proposeBank = (body: Record<string, string>) => post<PortalBankChan
 export const cancelBankChange = (id: string) => post<PortalBankChange>(`${P}/bank-detail-changes/${id}/cancel`)
 export const getRequests = () => api<PortalRequest[]>(`${P}/requests`)
 export const replyToRequest = (id: string, body: string) => post<PortalRequest>(`${P}/requests/${id}/reply`, { body })
+
+export interface PortalInvoice {
+  id: string
+  invoiceNumber: string
+  invoiceDate: string
+  dueDate?: string | null
+  currencyCode: string
+  total: number
+  poReference?: string | null
+  status: string
+  entityName?: string | null
+  legalEntityId: string
+  createdAt: string
+}
+export const getPortalInvoices = () => api<PortalInvoice[]>(`${P}/invoices`)
+export const submitPortalInvoice = (fields: Record<string, string>, file: File) => {
+  const form = new FormData()
+  for (const [k, v] of Object.entries(fields)) if (v !== '') form.append(k, v)
+  form.append('file', file)
+  return api<PortalInvoice>(`${P}/invoices`, { method: 'POST', body: form })
+}

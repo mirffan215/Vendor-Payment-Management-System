@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
-  cancelBankChange, getBankChanges, getBankDetails, getDocuments, getEntities, getProfile, getRequests, proposeBank,
+  getPortalInvoices, submitPortalInvoice, cancelBankChange, getBankChanges, getBankDetails, getDocuments, getEntities, getProfile, getRequests, proposeBank,
   replyToRequest, updateProfile, uploadDocument, type PortalSessionInfo,
 } from '../../api/portal'
 import { useAction } from '../../components/Busy'
@@ -9,7 +9,7 @@ import { ProblemAlert } from '../../components/ProblemText'
 import { useLoad } from '../../hooks/useLoad'
 import { formatDate, type CalendarPreference } from '../../i18n/format'
 
-const TABS = ['profile', 'documents', 'bank', 'messages'] as const
+const TABS = ['profile', 'documents', 'invoices', 'bank', 'messages'] as const
 type Tab = (typeof TABS)[number]
 const DOC_TYPES = ['CommercialRegistration', 'TaxCertificate', 'BankLetter', 'Other']
 
@@ -29,6 +29,7 @@ export function PortalHome({ session, calendar }: { session: PortalSessionInfo; 
       <div role="tabpanel">
         {tab === 'profile' && <Profile />}
         {tab === 'documents' && <Documents calendar={calendar} />}
+        {tab === 'invoices' && <Invoices calendar={calendar} />}
         {tab === 'bank' && <Bank calendar={calendar} />}
         {tab === 'messages' && <Messages />}
       </div>
@@ -239,6 +240,74 @@ function Messages() {
         ))}
       </ul>
       <ProblemAlert error={act.error} />
+    </div>
+  )
+}
+
+function Invoices({ calendar }: { calendar: CalendarPreference }) {
+  const { t, i18n } = useTranslation()
+  const list = useLoad(getPortalInvoices, 'invoices')
+  const entities = useLoad(getEntities, 'entities')
+  const act = useAction()
+  const [today] = useState(() => new Date().toISOString().slice(0, 10))
+  const [f, setF] = useState({ legalEntityId: '', invoiceNumber: '', invoiceDate: today, dueDate: '', currencyCode: 'SAR', subtotal: '', taxTotal: '', total: '', poReference: '', supplierTaxNumber: '' })
+  const [file, setFile] = useState<File>()
+  const set = (k: keyof typeof f) => (e: { target: { value: string } }) => setF({ ...f, [k]: e.target.value })
+  const entityId = f.legalEntityId || entities.data?.[0]?.legalEntityId || ''
+
+  async function submit(e: FormEvent) {
+    e.preventDefault()
+    if (!file) return
+    if (await act.run(() => submitPortalInvoice({ ...f, legalEntityId: entityId }, file))) {
+      setF({ ...f, invoiceNumber: '', subtotal: '', taxTotal: '', total: '', poReference: '' })
+      setFile(undefined)
+      list.reload()
+    }
+  }
+
+  return (
+    <div className="stack">
+      <ProblemAlert error={list.error} />
+      {list.data?.length === 0 && <p>{t('portal.noInvoices')}</p>}
+      <ul className="plain">
+        {(list.data ?? []).map((i) => (
+          <li key={i.id} className="row">
+            <span dir="ltr">{i.invoiceNumber}</span>
+            <span>{i.entityName}</span>
+            <span>{formatDate(i.invoiceDate, i18n.language, calendar)}</span>
+            <span dir="ltr">{i.currencyCode} {i.total}</span>
+            <span>{t(`portalInvoiceStatus.${i.status}`, { defaultValue: i.status })}</span>
+          </li>
+        ))}
+      </ul>
+      <form onSubmit={submit} className="stack">
+        <h2>{t('portal.submitInvoice')}</h2>
+        <p className="muted">{t('portal.submitInvoiceHelp')}</p>
+        <label>
+          {t('portal.customerEntity')}
+          <select value={entityId} onChange={set('legalEntityId')} required>
+            {(entities.data ?? []).map((x) => (<option key={x.legalEntityId} value={x.legalEntityId}>{x.legalEntityName ?? x.legalEntityId}</option>))}
+          </select>
+        </label>
+        <div className="row">
+          <label>{t('invoices.number')}<input value={f.invoiceNumber} onChange={set('invoiceNumber')} required maxLength={100} dir="ltr" /></label>
+          <label>{t('invoices.date')}<input type="date" value={f.invoiceDate} onChange={set('invoiceDate')} required dir="ltr" /></label>
+          <label>{t('invoices.dueDate')}<input type="date" value={f.dueDate} onChange={set('dueDate')} dir="ltr" /></label>
+          <label>{t('invoices.currency')}<input value={f.currencyCode} onChange={(e) => setF({ ...f, currencyCode: e.target.value.toUpperCase() })} required maxLength={3} dir="ltr" /></label>
+        </div>
+        <div className="row">
+          <label>{t('invoices.subtotal')}<input type="number" step="any" min="0" value={f.subtotal} onChange={set('subtotal')} required dir="ltr" /></label>
+          <label>{t('invoices.taxTotal')}<input type="number" step="any" min="0" value={f.taxTotal} onChange={set('taxTotal')} required dir="ltr" /></label>
+          <label>{t('invoices.total')}<input type="number" step="any" min="0" value={f.total} onChange={set('total')} required dir="ltr" /></label>
+        </div>
+        <div className="row">
+          <label>{t('invoices.poReference')}<input value={f.poReference} onChange={set('poReference')} maxLength={100} dir="ltr" /></label>
+          <label>{t('invoices.supplierTaxNumber')}<input value={f.supplierTaxNumber} onChange={set('supplierTaxNumber')} maxLength={30} dir="ltr" /></label>
+          <label>{t('portal.file')}<input type="file" accept=".pdf,.png,.jpg,.jpeg" onChange={(e) => setFile(e.target.files?.[0])} /></label>
+        </div>
+        <ProblemAlert error={act.error} />
+        <button type="submit" disabled={act.busy || !file}>{t('portal.submitInvoiceButton')}</button>
+      </form>
     </div>
   )
 }

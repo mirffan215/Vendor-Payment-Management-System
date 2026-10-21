@@ -9,7 +9,11 @@
     "skipToContent": "Skip to content",
     "vendors": "Vendors",
     "bankChanges": "Bank changes",
-    "admin": "Administration"
+    "admin": "Administration",
+    "invoices": "Invoices",
+    "exceptions": "Exceptions",
+    "intake": "Invoice intake",
+    "verification": "Verification rules"
   },
   "language": {
     "label": "Language",
@@ -99,7 +103,39 @@
       "invalid_credentials": "Sign-in failed. Check your details and try again.",
       "invalid_code": "The code is not correct. Try the next code shown.",
       "weak_password_": "This password is too weak. Use at least 12 characters that are hard to guess.",
-      "unknown_legal_entity": "That legal entity does not exist."
+      "unknown_legal_entity": "That legal entity does not exist.",
+      "invalid_invoice_number": "Enter an invoice number with letters or digits (up to 100 characters).",
+      "invalid_date": "The date is not valid.",
+      "invalid_amount": "Amounts cannot be negative, and tax rates must be between 0 and 1.",
+      "invalid_line": "Every line needs a description (up to 500 characters).",
+      "too_many_lines": "There are too many lines on this invoice.",
+      "incomplete_invoice": "Enter the invoice number and a total above zero before submitting.",
+      "vendor_cannot_transact": "This vendor is not active or is not linked to this legal entity.",
+      "override_required": "Accepting a blocking check needs the override permission.",
+      "not_waivable": "A vendor that may not be transacted with cannot be accepted.",
+      "stale_exception": "The invoice changed after this exception was raised. Verify it again.",
+      "unknown_user": "That user does not exist.",
+      "mailbox_in_use": "Another legal entity already uses this mailbox.",
+      "invalid_attachment_role": "Choose Original or Supporting.",
+      "attachment_exists": "This file is already attached.",
+      "attachment_mismatch": "The file was not uploaded for this invoice.",
+      "unsupported_type": "This file type is not accepted. Use PDF, PNG or JPEG.",
+      "unknown_rule": "That verification rule does not exist.",
+      "unknown_parameter": "That setting does not exist for this rule.",
+      "invalid_severity": "This rule cannot be set to that severity.",
+      "rule_not_disableable": "This rule cannot be switched off.",
+      "parameter_out_of_range": "A value is outside its allowed range.",
+      "concurrent_change": "The rules were changed at the same time. Reload and try again.",
+      "approval_required": "This change needs a second person's approval.",
+      "invalid_import": "Import between 1 and 500 purchase orders at a time.",
+      "invalid_po_number": "A purchase-order number is required.",
+      "invalid_version": "The version must be 1 or higher.",
+      "invalid_status": "The status must be Open, Closed or Cancelled.",
+      "invalid_lines": "Purchase orders need between 1 and 1000 lines.",
+      "duplicate_line": "Line numbers must be unique within an order.",
+      "po_older_version": "A newer version of this purchase order is already stored.",
+      "po_version_conflict": "This version exists with different content. Send a higher version.",
+      "unknown_vendor": "The vendor of this purchase order is not known."
     }
   },
   "format": {
@@ -306,7 +342,8 @@
       "profile": "Profile",
       "documents": "Documents",
       "bank": "Bank details",
-      "messages": "Messages"
+      "messages": "Messages",
+      "invoices": "Invoices"
     },
     "legalNameLocked": "To change your legal name or tax number, contact the customer.",
     "legalNameAr": "Legal name (Arabic)",
@@ -330,6 +367,260 @@
     "sendBankRequest": "Send request",
     "noMessages": "No messages.",
     "reply": "Reply",
-    "sendReply": "Send reply"
+    "sendReply": "Send reply",
+    "noInvoices": "You have not sent any invoices yet.",
+    "submitInvoice": "Send an invoice",
+    "submitInvoiceHelp": "Enter the invoice details exactly as on your invoice and attach the file. The customer checks it before payment.",
+    "customerEntity": "Customer entity",
+    "submitInvoiceButton": "Send invoice"
+  },
+  "invoices": {
+    "title": "Invoices",
+    "search": "Search number or PO",
+    "allEntities": "All entities",
+    "allSources": "All sources",
+    "source": "Source",
+    "empty": "No invoices match.",
+    "noNumber": "(no number yet)",
+    "newInvoice": "New invoice",
+    "fromDocument": "From a document",
+    "fromDocumentHelp": "Upload the supplier's invoice file. A draft is created for you to complete; nothing is read from the file automatically.",
+    "createDraft": "Create draft",
+    "entity": "Legal entity",
+    "vendor": "Vendor",
+    "number": "Invoice number",
+    "date": "Invoice date",
+    "dueDate": "Due date",
+    "currency": "Currency",
+    "subtotal": "Subtotal",
+    "taxTotal": "Tax total",
+    "total": "Total",
+    "poReference": "PO number",
+    "supplierTaxNumber": "Supplier tax number",
+    "supplierTaxInvoiceRef": "Supplier e-invoice reference",
+    "lines": "Lines",
+    "lineDescription": "Description",
+    "quantity": "Quantity",
+    "unitPrice": "Unit price",
+    "lineAmount": "Amount",
+    "taxCode": "Tax code",
+    "taxRate": "Rate (0–1)",
+    "taxAmount": "Tax",
+    "poLine": "PO line",
+    "removeLine": "Remove",
+    "addLine": "Add a line",
+    "save": "Save",
+    "back": "← All invoices",
+    "version": "Version",
+    "submit": "Submit",
+    "reverify": "Verify again",
+    "edit": "Edit",
+    "cancel": "Cancel invoice",
+    "reject": "Reject invoice",
+    "noLines": "No lines.",
+    "files": "Files",
+    "attachmentRole": "File role",
+    "suggestions": "Suggestions from the document",
+    "suggestionsHelp": "These are only suggestions with a confidence. Check them against the document and type the values in yourself.",
+    "noSuggestions": "Nothing was read from the file.",
+    "dismissSuggestion": "Dismiss suggestions",
+    "versionShort": "v{{version}}"
+  },
+  "invoiceStatus": {
+    "Draft": "Draft",
+    "Received": "Received",
+    "InVerification": "Being verified",
+    "Exception": "Needs attention",
+    "Verified": "Verified",
+    "ReadyForApproval": "Ready for approval",
+    "Rejected": "Rejected",
+    "Cancelled": "Cancelled"
+  },
+  "invoiceSource": {
+    "Manual": "Entered by staff",
+    "Portal": "Vendor portal",
+    "Email": "Email",
+    "Document": "Uploaded document"
+  },
+  "attachmentRole": {
+    "Original": "Original",
+    "Supporting": "Supporting"
+  },
+  "outcome": {
+    "Passed": "Passed",
+    "Failed": "Failed",
+    "Skipped": "Not run"
+  },
+  "severity": {
+    "Block": "Blocks",
+    "Flag": "Flag"
+  },
+  "suggestionField": {
+    "invoiceNumber": "Invoice number",
+    "total": "Total",
+    "invoiceDate": "Invoice date",
+    "subtotal": "Subtotal",
+    "taxTotal": "Tax total",
+    "poReference": "PO number",
+    "supplierTaxNumber": "Supplier tax number"
+  },
+  "verification": {
+    "title": "Verification",
+    "notYet": "This invoice has not been verified yet."
+  },
+  "exceptions": {
+    "title": "Exceptions",
+    "intro": "Checks that failed and wait for a person. A flag can be accepted with a reason. A blocking check needs the override permission, and not the person who made the invoice.",
+    "empty": "Nothing needs attention.",
+    "blockNote": "Blocking",
+    "waiveReason": "Reason for accepting",
+    "waive": "Accept with reason"
+  },
+  "verificationAdmin": {
+    "title": "Verification rules",
+    "intro": "Which checks run on invoices of each legal entity, and how strict they are.",
+    "version": "Settings version in force: {{version}} (0 means the built-in defaults).",
+    "pendingExists": "A change is waiting for approval for this legal entity.",
+    "savedPending": "The change loosens a check, so a second person must approve it before it applies.",
+    "savedActive": "The change applies now.",
+    "enabled": "On",
+    "severity": "If it fails",
+    "looseningNote": "Making a check weaker (turning it off, lowering it from Block to Flag, or widening a tolerance) needs approval from a different person.",
+    "note": "Why are you changing the rules?",
+    "propose": "Save change",
+    "inboxTitle": "Changes waiting for your approval",
+    "inboxIntro": "You cannot approve a change you made yourself.",
+    "inboxEmpty": "No changes are waiting.",
+    "loosens": "This change makes these checks weaker:",
+    "switchedOff": "switched off"
+  },
+  "rules": {
+    "duplicate.exact": {
+      "title": "Exact duplicate",
+      "help": "Same vendor, number, amount and date as another invoice."
+    },
+    "duplicate.same_number": {
+      "title": "Same invoice number",
+      "help": "Same vendor and number as another invoice, with a different amount or date."
+    },
+    "duplicate.fuzzy": {
+      "title": "Similar invoice",
+      "help": "A very similar number with nearly the same amount and date."
+    },
+    "po.required": {
+      "title": "PO required",
+      "help": "The invoice must name a purchase order."
+    },
+    "po.match": {
+      "title": "Purchase order match",
+      "help": "Price, quantity and total value against the purchase order."
+    },
+    "amount.totals": {
+      "title": "Totals",
+      "help": "Lines add up to the subtotal, and subtotal plus tax to the total."
+    },
+    "amount.line_math": {
+      "title": "Line amounts",
+      "help": "Quantity times unit price equals each line amount."
+    },
+    "tax.vat": {
+      "title": "VAT",
+      "help": "VAT arithmetic and the checks of the entity's country."
+    },
+    "date.sanity": {
+      "title": "Dates",
+      "help": "Not future-dated, not too old, due date not before the invoice date."
+    },
+    "vendor.state": {
+      "title": "Vendor status",
+      "help": "The vendor must be active and linked to this entity. Always blocks."
+    }
+  },
+  "ruleParams": {
+    "amountTolerancePercent": "Amount tolerance (%)",
+    "dateWindowDays": "Date window (days)",
+    "numberSimilarity": "Number similarity (0.5–1)",
+    "priceTolerancePercent": "Price tolerance (%)",
+    "priceToleranceAbsolute": "Price tolerance (amount)",
+    "quantityTolerancePercent": "Quantity tolerance (%)",
+    "overBillingPercent": "Over-billing allowance (%)",
+    "toleranceMinorUnits": "Tolerance (smallest currency units)",
+    "maxAgeDays": "Oldest invoice (days)",
+    "maxFutureDays": "Future dating allowed (days)",
+    "checkSupplierTaxNumberFormat": "Check supplier tax number format (1 = on)",
+    "requireSupplierTaxNumber": "Require supplier tax number (1 = on)",
+    "matchVendorTaxNumber": "Match vendor master tax number (1 = on)",
+    "checkSupplierTaxInvoiceRefFormat": "Check e-invoice reference format (1 = on)",
+    "requireSupplierTaxInvoiceRef": "Require e-invoice reference (1 = on)",
+    "checkAllowedRates": "Check tax categories and rates (1 = on)"
+  },
+  "intake": {
+    "title": "Invoice intake",
+    "tabs": {
+      "mail": "Unmatched email",
+      "mailbox": "Mailbox",
+      "orders": "Purchase orders"
+    },
+    "unmatchedIntro": "Email from senders we could not match to exactly one vendor. Nothing is guessed: choose the vendor, or dismiss the message.",
+    "noUnmatched": "No unmatched email.",
+    "attachments": "{{count}} files",
+    "chooseVendor": "Choose a vendor",
+    "assign": "Assign and create draft",
+    "dismiss": "Dismiss",
+    "mailboxIntro": "The mailbox each legal entity receives supplier invoices in. It is read through Microsoft Graph; sender addresses are matched to the contact email of active vendors.",
+    "mailboxAddress": "Mailbox address",
+    "lastError": "The last attempt to read this mailbox failed.",
+    "ordersIntro": "Purchase orders used for matching. Import them here until the ERP integration supplies them. Importing the same version again changes nothing.",
+    "importJson": "Purchase orders (JSON)",
+    "invalidJson": "This is not valid JSON.",
+    "import": "Import",
+    "importResult": "{{created}} created, {{updated}} updated, {{unchanged}} unchanged.",
+    "poLines": "{{count}} lines"
+  },
+  "poStatus": {
+    "Open": "Open",
+    "Closed": "Closed",
+    "Cancelled": "Cancelled"
+  },
+  "findings": {
+    "duplicate_exact": "Same as invoice {{invoiceNumber}} ({{status}}).",
+    "duplicate_same_number": "The number {{invoiceNumber}} was used before, for {{total}} on {{invoiceDate}}.",
+    "duplicate_similar": "Looks like invoice {{invoiceNumber}} ({{total}}, {{invoiceDate}}): similarity {{similarity}}.",
+    "po_reference_missing": "The invoice does not name a purchase order.",
+    "po_not_found": "Purchase order {{poNumber}} was not found for this legal entity.",
+    "po_other_vendor": "Purchase order {{poNumber}} belongs to another vendor.",
+    "po_currency_mismatch": "Currency {{invoiceCurrency}} differs from the order's {{poCurrency}}.",
+    "po_not_open": "Purchase order {{poNumber}} is {{status}}.",
+    "line_without_po_line": "Line {{lineNo}} does not name a purchase-order line.",
+    "po_line_not_found": "Line {{lineNo}}: purchase-order line {{poLine}} does not exist.",
+    "po_price_mismatch": "Line {{lineNo}}: price {{invoicePrice}} differs from the order price {{poPrice}}.",
+    "po_quantity_exceeded": "Line {{lineNo}}: {{invoicedIncludingThis}} invoiced against {{ordered}} ordered.",
+    "po_value_exceeded": "{{invoicedIncludingThis}} invoiced against {{ordered}} ordered on {{poNumber}}.",
+    "total_mismatch": "Subtotal {{subtotal}} plus tax {{tax}} is not the total {{total}}.",
+    "lines_subtotal_mismatch": "The lines add up to {{lines}}, not the subtotal {{subtotal}}.",
+    "lines_tax_mismatch": "The line tax adds up to {{lines}}, not the tax total {{tax}}.",
+    "total_not_positive": "The total must be more than zero.",
+    "line_amount_mismatch": "Line {{lineNo}}: quantity times price is {{expected}}, not {{actual}}.",
+    "line_tax_mismatch": "Line {{lineNo}}: tax should be {{expected}}, not {{actual}}.",
+    "invoice_date_in_future": "The invoice date {{invoiceDate}} is {{daysAhead}} days ahead.",
+    "invoice_too_old": "The invoice date {{invoiceDate}} is {{ageDays}} days ago.",
+    "due_before_invoice": "The due date {{dueDate}} is before the invoice date {{invoiceDate}}.",
+    "vendor_cannot_transact": "The vendor is not active or is not linked to this legal entity.",
+    "tax_number_required": "The invoice does not state the supplier's tax number.",
+    "tax_number_invalid_format": "The supplier tax number {{value}} is not in a valid format.",
+    "tax_number_vendor_mismatch": "The supplier tax number on the invoice does not match the vendor record.",
+    "tax_ref_required": "The invoice does not carry the supplier's e-invoice reference.",
+    "tax_ref_invalid_format": "The supplier's e-invoice reference is not a valid UUID.",
+    "tax_code_missing": "Line {{lineNo}} has no tax category.",
+    "tax_code_unknown": "Line {{lineNo}}: unknown tax category {{taxCode}}.",
+    "tax_rate_not_allowed": "Line {{lineNo}}: rate {{rate}} is not allowed for category {{taxCode}} (expected {{expected}}).",
+    "tax_amount_on_non_taxable": "Line {{lineNo}}: category {{taxCode}} cannot carry tax."
+  },
+  "portalInvoiceStatus": {
+    "Received": "Received",
+    "InReview": "In review",
+    "NeedsAttention": "Needs attention: the customer will contact you",
+    "Rejected": "Rejected",
+    "Cancelled": "Cancelled"
   }
 }

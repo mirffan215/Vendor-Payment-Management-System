@@ -10,6 +10,11 @@ import { HomePage } from './pages/HomePage'
 import { LoginPage } from './pages/LoginPage'
 import { PortalShell } from './pages/portal/PortalShell'
 import { AdminPage } from './pages/staff/AdminPage'
+import { ExceptionsPage } from './pages/staff/ExceptionsPage'
+import { IntakePage } from './pages/staff/IntakePage'
+import { InvoiceDetailPage } from './pages/staff/InvoiceDetailPage'
+import { InvoicesPage } from './pages/staff/InvoicesPage'
+import { VerificationAdminPage } from './pages/staff/VerificationAdminPage'
 import { BankChangesPage } from './pages/staff/BankChangesPage'
 import { VendorDetailPage } from './pages/staff/VendorDetailPage'
 import { VendorsPage } from './pages/staff/VendorsPage'
@@ -36,6 +41,10 @@ function StaffShell({ calendar, onCalendarChange }: CalendarProps) {
           <nav aria-label={t('nav.home')}>
             <Link to="/">{t('nav.home')}</Link>
             <Link to="/vendors">{t('nav.vendors')}</Link>
+            <Link to="/invoices">{t('nav.invoices')}</Link>
+            <Link to="/exceptions">{t('nav.exceptions')}</Link>
+            <Link to="/intake">{t('nav.intake')}</Link>
+            <Link to="/verification">{t('nav.verification')}</Link>
             <Link to="/bank-changes">{t('nav.bankChanges')}</Link>
             <Link to="/admin">{t('nav.admin')}</Link>
             <Link to="/audit">{t('nav.audit')}</Link>
@@ -56,6 +65,11 @@ function StaffShell({ calendar, onCalendarChange }: CalendarProps) {
               <Route path="/" element={<HomePage />} />
               <Route path="/vendors" element={<VendorsPage calendar={calendar} />} />
               <Route path="/vendors/:id" element={<VendorDetailPage calendar={calendar} />} />
+              <Route path="/invoices" element={<InvoicesPage calendar={calendar} />} />
+              <Route path="/invoices/:id" element={<InvoiceDetailPage calendar={calendar} />} />
+              <Route path="/exceptions" element={<ExceptionsPage calendar={calendar} />} />
+              <Route path="/intake" element={<IntakePage calendar={calendar} />} />
+              <Route path="/verification" element={<VerificationAdminPage />} />
               <Route path="/bank-changes" element={<BankChangesPage calendar={calendar} />} />
               <Route path="/admin" element={<AdminPage calendar={calendar} />} />
               <Route path="/audit" element={<AuditPage calendar={calendar} />} />
