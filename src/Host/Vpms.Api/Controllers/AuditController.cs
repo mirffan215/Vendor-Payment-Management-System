@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using Vpms.Api.Auth;
 using Vpms.Audit.Application;
@@ -6,7 +7,8 @@ using Vpms.Identity.Contracts;
 namespace Vpms.Api.Controllers;
 
 [ApiController]
-[Route("api/v1/audit")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/audit")]
 public sealed class AuditController(IAuditQueryService query, IPermissionEvaluator permissions) : ControllerBase
 {
     /// <summary>Audit trail of the caller's tenant, limited to the legal entities the caller may read.</summary>

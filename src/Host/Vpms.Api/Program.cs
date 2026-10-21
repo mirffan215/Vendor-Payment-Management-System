@@ -1,17 +1,22 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
-using Microsoft.AspNetCore.Authorization;
+using Serilog;
 using Vpms.Api.Auth;
-using Vpms.BuildingBlocks.Persistence;
+using Vpms.Api.Infrastructure;
 using Vpms.Audit.Application;
 using Vpms.Audit.Infrastructure;
+using Vpms.BuildingBlocks.Persistence;
 using Vpms.CustomerAdmin.Infrastructure;
 using Vpms.Identity.Application;
 using Vpms.Identity.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.AddVpmsLogging();
 
 static string ConnectionString(IServiceProvider sp) =>
     sp.GetRequiredService<IConfiguration>().GetConnectionString("Default")
@@ -25,6 +30,7 @@ builder.Services.AddAuditModule(ConnectionString);
 builder.Services.AddSingleton<IAuditAnchorSink>(sp => new FileAuditAnchorSink(
     sp.GetRequiredService<IConfiguration>()["Audit:AnchorDirectory"] ?? Path.Combine(Path.GetTempPath(), "vpms-audit-anchors")));
 builder.Services.AddMemoryCache();
+
 // Per-tenant OIDC schemes are added at runtime; the shared post-configuration (data protection, nonce/state formats) is registered once.
 builder.Services.TryAddEnumerable(
     ServiceDescriptor.Singleton<IPostConfigureOptions<OpenIdConnectOptions>, OpenIdConnectPostConfigureOptions>());
@@ -43,12 +49,14 @@ builder.Services.AddAuthentication(VpmsAuth.CookieScheme)
         o.Cookie.SameSite = SameSiteMode.Lax;
         o.Cookie.Path = "/";
         o.SlidingExpiration = true;
-        o.ExpireTimeSpan = TimeSpan.FromMinutes(30);
         o.Events.OnValidatePrincipal = CookieSessionValidator.ValidateAsync;
         // APIs answer 401/403 rather than redirecting to a login page.
         o.Events.OnRedirectToLogin = ctx => { ctx.Response.StatusCode = StatusCodes.Status401Unauthorized; return Task.CompletedTask; };
         o.Events.OnRedirectToAccessDenied = ctx => { ctx.Response.StatusCode = StatusCodes.Status403Forbidden; return Task.CompletedTask; };
     });
+
+builder.Services.AddOptions<CookieAuthenticationOptions>(VpmsAuth.CookieScheme)
+    .Configure<IOptions<AuthOptions>>((cookie, auth) => cookie.ExpireTimeSpan = auth.Value.IdleTimeout);
 
 builder.Services.AddAuthorizationBuilder()
     .AddPolicy(VpmsAuth.InternalPolicy, p => p
@@ -72,25 +80,49 @@ builder.Services.AddAntiforgery(o =>
     o.Cookie.SameSite = SameSiteMode.Lax;
 });
 
+builder.Services.AddProblemDetails(o => o.CustomizeProblemDetails = ProblemDetailsCustomization.Customize);
+builder.Services.AddExceptionHandler<ProblemDetailsExceptionHandler>();
+builder.Services.AddVpmsRateLimiting();
+builder.Services.AddVpmsTelemetry(builder.Configuration);
+builder.Services.AddVpmsHealthChecks();
+
 builder.Services.AddControllers();
+builder.Services.AddApiVersioning(o =>
+{
+    o.DefaultApiVersion = new ApiVersion(1, 0);
+    o.ReportApiVersions = true;
+    o.ApiVersionReader = new UrlSegmentApiVersionReader();
+}).AddMvc();
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
+app.UseExceptionHandler();
+app.UseStatusCodePages();
+app.UseMiddleware<SecurityHeadersMiddleware>();
+if (!app.Environment.IsDevelopment())
 {
-    app.MapOpenApi().AllowAnonymous();
+    app.UseHsts();
 }
 
+app.UseSerilogRequestLogging();
 app.UseHttpsRedirection();
+app.UseRateLimiter();
 app.UseMiddleware<AuditContextMiddleware>();
 app.UseMiddleware<OidcCallbackSchemeMiddleware>();
 app.UseAuthentication();
 app.UseMiddleware<TenantContextMiddleware>();
 app.UseMiddleware<AuditActorMiddleware>();
+app.UseMiddleware<LogEnrichmentMiddleware>();
 app.UseAuthorization();
 app.UseMiddleware<CsrfProtectionMiddleware>();
 
+if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Testing")
+{
+    app.MapOpenApi().AllowAnonymous();
+}
+
+app.MapVpmsHealth();
 app.MapAuthEndpoints();
 app.MapControllers();
 

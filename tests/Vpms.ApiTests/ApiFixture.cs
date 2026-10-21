@@ -14,6 +14,8 @@ using Vpms.CustomerAdmin.Infrastructure;
 using Vpms.Identity.Application;
 using Vpms.Identity.Domain;
 using Vpms.Identity.Infrastructure;
+using Serilog.Core;
+using Serilog.Events;
 using Vpms.TestSupport;
 
 namespace Vpms.ApiTests;
@@ -27,6 +29,7 @@ public sealed class ApiFixture : WebApplicationFactory<Program>, IAsyncLifetime
     public ApiFixture(SqlServerFixture sql) => _sql = sql;
 
     public FakeTimeProvider Clock { get; } = new(DateTimeOffset.UtcNow);
+    public CollectingLogSink LogSink { get; } = new();
     public FakeOidcProvider IdpA { get; private set; } = null!;
     public FakeOidcProvider IdpB { get; private set; } = null!;
     public Guid TenantA { get; } = Guid.NewGuid();
@@ -54,6 +57,7 @@ public sealed class ApiFixture : WebApplicationFactory<Program>, IAsyncLifetime
         }));
         builder.ConfigureTestServices(services =>
         {
+            services.AddSingleton<ILogEventSink>(LogSink);
             services.RemoveAll<TimeProvider>();
             services.AddSingleton<TimeProvider>(Clock);
             services.RemoveAll<OidcBackchannelOptions>();
@@ -136,4 +140,13 @@ public sealed class ApiFixture : WebApplicationFactory<Program>, IAsyncLifetime
     }
 
     Task IAsyncLifetime.DisposeAsync() => DisposeAsync();
+}
+
+public sealed class CollectingLogSink : ILogEventSink
+{
+    private readonly System.Collections.Concurrent.ConcurrentQueue<LogEvent> _events = new();
+
+    public IReadOnlyCollection<LogEvent> Events => _events.ToArray();
+
+    public void Emit(LogEvent logEvent) => _events.Enqueue(logEvent);
 }

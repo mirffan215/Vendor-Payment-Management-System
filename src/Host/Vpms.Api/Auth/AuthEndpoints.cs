@@ -11,7 +11,7 @@ public static class AuthEndpoints
 {
     public static void MapAuthEndpoints(this WebApplication app)
     {
-        var auth = app.MapGroup("/auth").AllowAnonymous();
+        var auth = app.MapGroup("/auth").AllowAnonymous().RequireRateLimiting(Infrastructure.RateLimiting.AuthPolicy);
 
         // Public: lists the sign-in options of a tenant (id and display name only).
         auth.MapGet("/providers", async (string tenant, ITenantLookup tenants, IIdentityStore store, CancellationToken ct) =>
@@ -45,21 +45,6 @@ public static class AuthEndpoints
             await http.SignOutAsync(VpmsAuth.CookieScheme);
             return Results.NoContent();
         }).RequireAuthorization();
-
-        var api = app.MapGroup("/api/v1");
-        api.MapGet("/session", (ClaimsPrincipal user, HttpContext http, IAntiforgery antiforgery) =>
-        {
-            var tokens = antiforgery.GetAndStoreTokens(http);
-            return Results.Ok(new
-            {
-                userId = user.FindFirstValue(VpmsClaims.UserId),
-                tenantId = user.FindFirstValue(VpmsClaims.TenantId),
-                email = user.FindFirstValue("email"),
-                displayName = user.FindFirstValue("name"),
-                locale = user.FindFirstValue("locale"),
-                csrfToken = tokens.RequestToken,
-            });
-        }).RequireAuthorization(VpmsAuth.InternalPolicy);
     }
 
     /// <summary>Only local, path-absolute URLs are accepted to prevent open redirects.</summary>
