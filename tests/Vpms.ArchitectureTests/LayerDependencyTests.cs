@@ -75,6 +75,16 @@ public class LayerDependencyTests
     }
 
     [Fact]
+    public void Cross_vendor_checks_are_only_used_by_the_bank_details_fraud_control()
+    {
+        var asms = Modules.SelectMany(m => new[] { "Application", "Infrastructure", "Domain" }.Select(l => Asm(m, l)))
+            .Append(typeof(Program).Assembly);
+        var offenders = asms.SelectMany(a => a.GetTypes()).Where(t => ReferencesMethod(t, "BeginCrossVendorCheck"))
+            .Select(t => (t.DeclaringType ?? t).FullName).Distinct().ToList(); // async methods compile to nested types
+        Assert.Equal(["Vpms.Vendors.Infrastructure.BankDetailsService"], offenders);
+    }
+
+    [Fact]
     public void IgnoreQueryFilters_detector_finds_real_usages()
     {
         // Guards the guard: the IL scan above must actually be able to see the call it bans.

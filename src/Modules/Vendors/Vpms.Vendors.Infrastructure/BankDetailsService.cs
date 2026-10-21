@@ -13,7 +13,7 @@ using Vpms.Vendors.Domain;
 namespace Vpms.Vendors.Infrastructure;
 
 public sealed class BankDetailsService(
-    VendorsDbContext db, IFieldProtector protector, IAuditPort audit, ICurrentUser current, TenantContext tenant, TimeProvider clock)
+    VendorsDbContext db, IFieldProtector protector, IAuditPort audit, ICurrentUser current, TenantContext tenant, VendorContext vendorScope, TimeProvider clock)
     : IBankDetailsService, IBankDetailsLookup, IBankChangeExpiryScan
 {
     public const string IbanColumn = "vendor.BankDetails.Iban";
@@ -68,9 +68,23 @@ public sealed class BankDetailsService(
             throw new ConflictException("no_change", "These are the bank details already in effect.");
         }
 
-        var shared = await db.BankDetails.AsNoTracking().AnyAsync(b => b.VendorId != vendorId
-            && (b.Status == BankDetailsStatus.Verified || b.Status == BankDetailsStatus.Pending)
-            && ((ibanIndex != null && b.IbanIndex == ibanIndex) || (accountIndex != null && b.AccountNumberIndex == accountIndex && b.CountryCode == r.CountryCode)), ct);
+        // The shared-account control must see every vendor of the tenant, even when a vendor session is proposing.
+        bool shared;
+        using (vendorScope.BeginCrossVendorCheck())
+        {
+            shared = await db.BankDetails.AsNoTracking().AnyAsync(b => b.VendorId != vendorId
+                && (b.Status == BankDetailsStatus.Verified || b.Status == BankDetailsStatus.Pending)
+                && ((ibanIndex != null && b.IbanIndex == ibanIndex) || (accountIndex != null && b.AccountNumberIndex == accountIndex && b.CountryCode == r.CountryCode)), ct);
+        }
+
+        if (shared && source == ChangeSource.VendorPortal)
+        {
+            // Never tell a vendor that another vendor uses an account; stop the request and let staff see the attempt.
+            await audit.WriteNowAsync(new AuditEntry("bank-details.portal-shared-account-blocked", "Vendor", vendorId.ToString(), ActorId: madeBy,
+                ChangeSummaryJson: JsonSerializer.Serialize(new { vendorId, currency, account = AuditRedactor.MaskTail(iban ?? account) })), ct);
+            throw new ConflictException("bank_details_not_accepted", "These bank details cannot be accepted online. Please contact the customer's accounts payable team.");
+        }
+
         if (shared && !r.ConfirmSharedAccount)
         {
             throw new ConflictException("bank_account_shared", "Another vendor already uses this account. This can indicate fraud; confirm only if it is expected.");

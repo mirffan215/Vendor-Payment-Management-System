@@ -22,7 +22,7 @@ public static class DocumentStatus
     public const string Rejected = "Rejected";
 }
 
-public class VendorDocument : ITenantOwned
+public class VendorDocument : IVendorOwned
 {
     public Guid Id { get; set; }
     public Guid TenantId { get; set; }
@@ -40,7 +40,7 @@ public class VendorDocument : ITenantOwned
 }
 
 /// <summary>The accounting rules one legal entity applies to a vendor. The same vendor can have different rules per entity.</summary>
-public class VendorEntityLink : ILegalEntityScoped
+public class VendorEntityLink : ILegalEntityScoped, IVendorOwned
 {
     public Guid Id { get; set; }
     public Guid TenantId { get; set; }
@@ -65,7 +65,7 @@ public static class RequestStatus
 }
 
 /// <summary>A question or request from the customer to a vendor (e.g. "send an updated tax certificate").</summary>
-public class VendorRequest : ITenantOwned
+public class VendorRequest : IVendorOwned
 {
     public Guid Id { get; set; }
     public Guid TenantId { get; set; }
@@ -83,7 +83,7 @@ public static class MessageDirection
     public const string FromVendor = "FromVendor";
 }
 
-public class VendorMessage : ITenantOwned
+public class VendorMessage : IVendorOwned
 {
     public Guid Id { get; set; }
     public Guid TenantId { get; set; }

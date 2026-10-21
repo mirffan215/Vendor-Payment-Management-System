@@ -14,7 +14,10 @@ public sealed class VendorDocumentService(
 {
     public const string OwnerType = "Vendor";
 
-    public async Task<VendorDocumentDto> AddAsync(Guid vendorId, string type, Guid attachmentId, DateOnly? expiresOn, CancellationToken ct = default)
+    public Task<VendorDocumentDto> AddAsync(Guid vendorId, string type, Guid attachmentId, DateOnly? expiresOn, CancellationToken ct = default) =>
+        AddCoreAsync(vendorId, type, attachmentId, expiresOn, UploaderKind.Staff, ct);
+
+    internal async Task<VendorDocumentDto> AddCoreAsync(Guid vendorId, string type, Guid attachmentId, DateOnly? expiresOn, string uploaderKind, CancellationToken ct)
     {
         if (!VendorDocumentType.All.Contains(type))
         {
@@ -40,7 +43,7 @@ public sealed class VendorDocumentService(
         var doc = new VendorDocument
         {
             Id = Guid.NewGuid(), VendorId = vendorId, Type = type, AttachmentId = attachmentId, ExpiresOn = expiresOn,
-            UploadedBy = current.UserId, UploaderKind = UploaderKind.Staff, CreatedAt = clock.GetUtcNow(),
+            UploadedBy = current.UserId, UploaderKind = uploaderKind, CreatedAt = clock.GetUtcNow(),
         };
         db.Documents.Add(doc);
         audit.Record(new AuditEntry("vendor.document.added", "VendorDocument", doc.Id.ToString(),

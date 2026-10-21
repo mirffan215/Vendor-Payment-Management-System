@@ -63,6 +63,26 @@ public sealed class VendorContext
 {
     public Guid? VendorId { get; private set; }
 
+    private bool _crossVendorCheck;
+
+    /// <summary>The vendor rows are filtered to: null while a <see cref="BeginCrossVendorCheck"/> scope is open.</summary>
+    public Guid? FilterVendorId => _crossVendorCheck ? null : VendorId;
+
+    /// <summary>
+    /// Lets a fraud control look across the vendors of the tenant (e.g. "is this bank account used by another vendor?").
+    /// Only for read-only existence checks whose result is never shown to the vendor. Callers are allow-listed by architecture tests.
+    /// </summary>
+    public IDisposable BeginCrossVendorCheck()
+    {
+        _crossVendorCheck = true;
+        return new CrossVendorScope(this);
+    }
+
+    private sealed class CrossVendorScope(VendorContext owner) : IDisposable
+    {
+        public void Dispose() => owner._crossVendorCheck = false;
+    }
+
     public Guid RequireVendorId() => VendorId ?? throw new InvalidOperationException("No vendor in this scope.");
 
     public void SetVendor(Guid vendorId)

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Vpms.Api.Auth;
 using Vpms.Identity.Contracts;
+using Vpms.Vendors.Application;
 using Vpms.Vendors.Contracts;
 using Vpms.VendorPortal.Application;
 
@@ -88,6 +89,63 @@ public sealed class PortalSessionController(IAntiforgery antiforgery, IVendorLoo
             csrfToken = tokens.RequestToken,
         });
     }
+}
+
+public sealed record ReplyRequest(string Body);
+
+/// <summary>
+/// What a signed-in vendor user can do. There is no vendor id in any route or body: the vendor comes from the session, and
+/// the data layer filters every vendor-owned table to it, so another vendor's ids simply do not exist here (404).
+/// </summary>
+[ApiController, ApiVersion("1.0"), Route("api/v{version:apiVersion}/portal"), Authorize(AuthenticationSchemes = VpmsAuth.VendorCookieScheme, Policy = VendorClaims.PortalPolicy)]
+public sealed class PortalVendorController(IVendorPortalService portal) : ControllerBase
+{
+    private const long MaxUpload = 25 * 1024 * 1024;
+
+    [HttpGet("profile")]
+    public async Task<PortalProfile> Profile(CancellationToken ct) => await portal.GetProfileAsync(ct);
+
+    [HttpPut("profile")]
+    public async Task<PortalProfile> UpdateProfile(UpdatePortalProfile body, CancellationToken ct) => await portal.UpdateProfileAsync(body, ct);
+
+    [HttpGet("entities")]
+    public async Task<IReadOnlyList<PortalEntityLink>> Entities(CancellationToken ct) => await portal.ListEntityLinksAsync(ct);
+
+    [HttpGet("documents")]
+    public async Task<IReadOnlyList<VendorDocumentDto>> Documents(CancellationToken ct) => await portal.ListDocumentsAsync(ct);
+
+    [HttpPost("documents"), RequestSizeLimit(MaxUpload)]
+    public async Task<VendorDocumentDto> Upload([FromForm] string type, [FromForm] DateOnly? expiresOn, IFormFile file, CancellationToken ct)
+    {
+        await using var stream = file.OpenReadStream();
+        return await portal.UploadDocumentAsync(type, expiresOn, file.FileName, stream, ct);
+    }
+
+    [HttpGet("documents/{documentId:guid}/file")]
+    public async Task<IActionResult> Download(Guid documentId, CancellationToken ct)
+    {
+        var file = await portal.OpenDocumentAsync(documentId, ct);
+        Response.Headers["X-Content-Type-Options"] = "nosniff";
+        return File(file.Content, file.ContentType, file.FileName);
+    }
+
+    [HttpGet("bank-details")]
+    public async Task<IReadOnlyList<BankDetailsDto>> BankDetails(CancellationToken ct) => await portal.ListBankDetailsAsync(ct);
+
+    [HttpGet("bank-detail-changes")]
+    public async Task<IReadOnlyList<PortalBankChange>> BankChanges(CancellationToken ct) => await portal.ListBankChangesAsync(ct);
+
+    [HttpPost("bank-detail-changes")]
+    public async Task<PortalBankChange> ProposeBank(ProposeBankDetails body, CancellationToken ct) => await portal.ProposeBankDetailsAsync(body, ct);
+
+    [HttpPost("bank-detail-changes/{changeId:guid}/cancel")]
+    public async Task<PortalBankChange> CancelBank(Guid changeId, CancellationToken ct) => await portal.CancelBankChangeAsync(changeId, ct);
+
+    [HttpGet("requests")]
+    public async Task<IReadOnlyList<RequestDto>> Requests(CancellationToken ct) => await portal.ListRequestsAsync(ct);
+
+    [HttpPost("requests/{requestId:guid}/reply")]
+    public async Task<RequestDto> Reply(Guid requestId, ReplyRequest body, CancellationToken ct) => await portal.ReplyToRequestAsync(requestId, body.Body, ct);
 }
 
 /// <summary>Customer staff manage who at a vendor can use the portal.</summary>

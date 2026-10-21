@@ -34,7 +34,7 @@ public static class ChangeSource
 /// One set of bank details of a vendor. Values are never edited: a change creates a new Pending row. A row only becomes
 /// Verified through an approved <see cref="BankDetailChange"/> (enforced by the database as well).
 /// </summary>
-public class BankDetails : ITenantOwned
+public class BankDetails : IVendorOwned
 {
     public Guid Id { get; set; }
     public Guid TenantId { get; set; }
@@ -65,7 +65,7 @@ public class BankDetails : ITenantOwned
 /// changes to an existing account, and for changes raised by the vendor, the decision must reference an out-of-band
 /// callback verification with a known vendor contact.
 /// </summary>
-public class BankDetailChange : ITenantOwned
+public class BankDetailChange : IVendorOwned
 {
     public Guid Id { get; set; }
     public Guid TenantId { get; set; }

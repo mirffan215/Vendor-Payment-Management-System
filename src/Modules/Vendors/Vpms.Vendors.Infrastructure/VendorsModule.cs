@@ -13,7 +13,9 @@ public static class VendorsModule
         services.AddScoped<VendorService>();
         services.AddScoped<IVendorService>(sp => sp.GetRequiredService<VendorService>());
         services.AddScoped<IVendorLookup>(sp => sp.GetRequiredService<VendorService>());
-        services.AddScoped<IVendorDocumentService, VendorDocumentService>();
+        services.AddScoped<VendorDocumentService>();
+        services.AddScoped<IVendorDocumentService>(sp => sp.GetRequiredService<VendorDocumentService>());
+        services.AddScoped<IVendorPortalService, VendorPortalService>();
         services.AddScoped<IVendorEntityLinkService, VendorEntityLinkService>();
         services.AddScoped<IVendorRequestService, VendorRequestService>();
         services.AddScoped<BankDetailsService>();

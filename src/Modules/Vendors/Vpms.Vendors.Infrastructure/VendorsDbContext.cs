@@ -5,8 +5,8 @@ using Vpms.Vendors.Domain;
 
 namespace Vpms.Vendors.Infrastructure;
 
-public class VendorsDbContext(DbContextOptions<VendorsDbContext> options, ITenantContext tenant)
-    : TenantDbContext(options, tenant)
+public class VendorsDbContext(DbContextOptions<VendorsDbContext> options, ITenantContext tenant, VendorContext? vendor = null)
+    : TenantDbContext(options, tenant, vendor)
 {
     public const string Schema = "vendor";
 
@@ -132,5 +132,8 @@ public class VendorsDbContext(DbContextOptions<VendorsDbContext> options, ITenan
         });
 
         base.OnModelCreating(modelBuilder);
+
+        // The vendor master row is keyed by the vendor id; a vendor session sees only its own row.
+        ApplyVendorFilterOnKey<Vendor>(modelBuilder);
     }
 }
