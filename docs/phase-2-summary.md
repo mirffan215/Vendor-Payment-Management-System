@@ -44,13 +44,13 @@ API 73, web 33 (Vitest) + 7 (Playwright). `dotnet build -c Release` has 0 warnin
 - **Invitation delivery** is a pluggable interface that logs the link; real email comes with Phase 7.
 - **Docker images** are still unverified in this sandbox (TLS proxy), and the web image has no reverse-proxy
   configuration for `/api`, `/auth`, `/portal/auth` (Phase 8).
-- **MinIO tests** run only in CI (the image cannot be pulled here); Azurite and the in-process S3 fake run locally.
+- **MinIO tests** are skipped when the image cannot be pulled. MinIO no longer publishes on Docker Hub, and the quay.io image was refused on the CI runner, so they were skipped locally and in CI. Set `VPMS_MINIO_IMAGE` to another S3-compatible image to run them. The S3 adapter is still covered by the in-process S3 fake, and Azure by Azurite.
 - **Identity-provider scheme eviction** after a provider change is per instance; multi-instance eviction is Phase 8.
 - **Audit anchoring** is still a file stand-in (Phase 8).
 - No vendor-level RLS predicate and no per-user permission-aware navigation yet.
 - Self-service password reset and MFA reset are staff-mediated by design in v1.
 - Test-only: a frozen fake clock makes message order ambiguous within the same instant; one test advances the clock.
-- CI on GitHub could not be checked from this session at the time of writing (GitHub tools were unavailable).
+- CI on GitHub was red on every Phase 2 push before this fix (MinIO image unavailable, then one ordering flake in a test). It is green on the final commit (run 20, all four jobs).
 
 ## Open items for you
 
