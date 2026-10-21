@@ -33,6 +33,7 @@
     <ProjectReference Include="..\..\src\Modules\Audit\Vpms.Audit.Domain\Vpms.Audit.Domain.csproj" />
     <ProjectReference Include="..\..\src\Modules\Audit\Vpms.Audit.Application\Vpms.Audit.Application.csproj" />
     <ProjectReference Include="..\..\src\Modules\Audit\Vpms.Audit.Infrastructure\Vpms.Audit.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Host\Vpms.Worker\Vpms.Worker.csproj" />
   </ItemGroup>
 
 </Project>

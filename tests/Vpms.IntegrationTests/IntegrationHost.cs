@@ -43,5 +43,7 @@ public sealed class IntegrationHost : IAsyncDisposable
         return scope;
     }
 
+    public IServiceScopeFactory ScopeFactory => _root.GetRequiredService<IServiceScopeFactory>();
+
     public ValueTask DisposeAsync() => _root.DisposeAsync();
 }

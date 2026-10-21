@@ -36,6 +36,8 @@ jobs:
       - run: npm test --if-present
       - run: npm run build
       - run: npm audit --audit-level=high
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
 
   infra:
     runs-on: ubuntu-latest

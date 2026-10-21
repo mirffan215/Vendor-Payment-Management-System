@@ -1,0 +1,47 @@
+{
+  "app": { "name": "Vendor Payment Management" },
+  "nav": { "home": "Home", "audit": "Audit trail", "signOut": "Sign out", "skipToContent": "Skip to content" },
+  "language": { "label": "Language", "en": "English", "ar": "العربية" },
+  "calendar": { "label": "Calendar", "gregorian": "Gregorian", "hijri": "Hijri" },
+  "login": {
+    "title": "Sign in",
+    "intro": "Enter your organisation's identifier to see how you can sign in.",
+    "tenantLabel": "Organisation identifier",
+    "tenantPlaceholder": "e.g. acme",
+    "find": "Find sign-in options",
+    "continueWith": "Continue with {{provider}}",
+    "noProviders": "No sign-in options were found for this organisation.",
+    "deniedTitle": "Sign-in was not permitted",
+    "deniedBody": "Your account is not allowed to use this application. Contact your administrator."
+  },
+  "home": {
+    "title": "Welcome, {{name}}",
+    "tenant": "Organisation",
+    "email": "Email",
+    "session": "Your session is active."
+  },
+  "audit": {
+    "title": "Audit trail",
+    "intro": "Every sensitive action is recorded here and cannot be changed.",
+    "columns": {
+      "sequence": "No.",
+      "time": "Time",
+      "action": "Action",
+      "entity": "Entity",
+      "actor": "Actor"
+    },
+    "actor": { "User": "User", "System": "System", "Anonymous": "Anonymous", "Delegate": "Delegate" },
+    "empty": "There are no audit events to show.",
+    "loadMore": "Load more",
+    "loading": "Loading…",
+    "forbidden": "You do not have permission to view the audit trail.",
+    "error": "The audit trail could not be loaded."
+  },
+  "errors": {
+    "unauthenticated": "Please sign in to continue.",
+    "forbidden": "You do not have permission to do this.",
+    "generic": "Something went wrong. Please try again.",
+    "reference": "Reference: {{id}}"
+  },
+  "format": { "currencyExample": "Amount" }
+}
