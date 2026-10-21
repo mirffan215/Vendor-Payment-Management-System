@@ -21,7 +21,8 @@ jobs:
           dotnet list Vpms.sln package --vulnerable --include-transitive 2>&1 | tee vuln.txt
           ! grep -q "has the following vulnerable packages" vuln.txt
       - run: dotnet test Vpms.sln --no-build -c Release --logger "trx;LogFileName=results.trx"
-        # Integration tests use Testcontainers (SQL Server); Docker is available on ubuntu-latest.
+        # Integration tests use Testcontainers: SQL Server, Azurite and MinIO. Docker is available on ubuntu-latest.
+        # With CI set, an unavailable MinIO fails the run instead of skipping the tests.
 
   web:
     runs-on: ubuntu-latest

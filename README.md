@@ -3,17 +3,18 @@
 Multi-tenant SaaS that approves vendor invoices and **prepares** payment instructions. It never transfers money and
 does not issue invoices. Design documents live in [`docs/`](docs/); delivery follows [`docs/roadmap.md`](docs/roadmap.md).
 
-Current status: **Phase 1 (foundation) complete** — see [`docs/phase-1-summary.md`](docs/phase-1-summary.md).
+Current status: **Phase 2 (customer administration and vendors) complete** — see [`docs/phase-2-summary.md`](docs/phase-2-summary.md)
+(Phase 1: [`docs/phase-1-summary.md`](docs/phase-1-summary.md)).
 
 ## Repository layout
 
 | Path | Contents |
 |---|---|
 | `src/BuildingBlocks` | Shared kernel: tenancy, persistence base, audit port, SoD primitives, tenant-scoped storage/cache/jobs |
-| `src/Modules/{Identity,CustomerAdmin,Audit}` | Modules, each with `Domain`, `Application`, `Infrastructure`, `Contracts` |
+| `src/Modules/{Identity,CustomerAdmin,Audit,Documents,Vendors,VendorPortal}` | Modules, each with `Domain`, `Application`, `Infrastructure`, `Contracts` |
 | `src/Host/Vpms.Api` | ASP.NET Core 10 Web API (BFF cookie sessions, per-tenant OIDC) |
-| `src/Host/Vpms.Worker` | Background host (audit chain verification and anchoring) |
-| `src/Host/Vpms.Migrator` | Applies EF Core migrations and provisions the restricted application login |
+| `src/Host/Vpms.Worker` | Background host (audit chain verification and anchoring, attachment scanning, bank-change expiry) |
+| `src/Host/Vpms.Migrator` | Applies EF Core migrations, provisions the restricted application login, and provisions tenants (`provision-tenant`) |
 | `web/` | React + TypeScript (Vite), English/Arabic, RTL |
 | `tests/` | Unit, architecture, integration (Testcontainers SQL Server), API tests |
 | `infra/` | Bicep skeleton |
@@ -51,6 +52,34 @@ cd web && npm run dev                     # proxies /api and /auth to the API (V
 
 The API must connect as the restricted application login, **not** as the owner: audit immutability and row-level
 security rely on the database permissions that login gets (see ADR-0007).
+
+## Provisioning a tenant
+
+Tenants are created by an operator, not through a web surface. The migrator creates the tenant, system roles, the
+first administrator (as a pending role assignment, activated at first sign-in) and the first identity provider:
+
+```bash
+dotnet run --project src/Host/Vpms.Migrator -- provision-tenant \
+  --name "Acme Holdings" --slug acme --admin-email admin@acme.com \
+  --idp-kind entra|google|oidc --idp-name "Acme SSO" --idp-authority https://login.example/tenant/v2.0 \
+  --idp-client-id <client-id> --idp-secret-ref <secret-name> --domains acme.com [--locale en]
+```
+
+The administrator then signs in, adds legal entities, roles and further providers, and invites vendor users from a
+vendor's page. Invitation links are logged in development; email delivery arrives in Phase 7.
+
+## Configuration
+
+| Setting | Meaning |
+|---|---|
+| `Storage:Provider` | `InMemory` (default, development only), `AzureBlob` or `S3` (`Storage:Azure:*`, `Storage:S3:*`); endpoints and credentials via configuration / Key Vault |
+| `Encryption:Provider` | `Local` (default, development only; `Encryption:LocalKek`) or `KeyVault` (`Encryption:KeyVaultKeyId`); production refuses `Local` |
+| `Documents:Scanner` | `ClamAv` (default; `Documents:ClamAv:Host`/`Port`) or `Eicar` (development/tests); files stay in quarantine until scanned |
+| `Portal:PublicBaseUrl` | Base URL used in vendor invitation links |
+| `Portal:PasswordHashIterations` | PBKDF2 iterations (default 600,000; lowered only in tests) |
+| `RateLimiting:PortalAuthPermitLimit` | Requests per window for vendor sign-in endpoints |
+
+In production the web server must route `/api`, `/auth` and `/portal/auth` to the API (the Vite dev server does).
 
 ## Conventions
 

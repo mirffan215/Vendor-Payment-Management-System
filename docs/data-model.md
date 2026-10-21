@@ -166,3 +166,19 @@ duplicate detection works without decrypting. See ADR-0004.
 - `ApprovalTask.DecidedBy <> WorkflowInstance.StartedBy`; `ReleaseAuthorization.AuthorizedBy` not among invoice approvers.
 - Published `WorkflowVersion` rows cannot be modified; instances keep their `VersionId`.
 - `AuditEvent` rows cannot be updated or deleted; chain verifies.
+
+## Phase 2 as built (differences from the logical model above)
+
+- Schemas: `customer`, `identity`, `audit`, `documents`, `vendor`, `portal`.
+- `BankDetails.Source` moved to the change record (`BankDetailChange.Source`: Staff, VendorPortal); `BankDetails` has
+  `MaskedAccount` and blind indexes (`IbanIndex`, `AccountNumberIndex`); proposed values live on the pending
+  `BankDetails` row (encrypted) rather than in a JSON blob. `BankDetailChange` adds `ReplacesBankDetailsId`,
+  `ProposedBankDetailsId`, `ExpiresAt` and `CallbackVerificationRef`. Database guards are listed in ADR-0008.
+- `VendorRequest` and `VendorMessage` implement the staff/vendor thread; `VendorDocument` links an `Attachment`
+  (statuses Uploaded, Verified, Rejected) and records who uploaded it.
+- `Attachment.ScanStatus` includes `Failed`; scanner signature and timestamps are stored.
+- Portal: `VendorUser` (password hash, encrypted TOTP secret, lockout counters, MFA-reset state), `VendorInvite`
+  (hashed token, purpose, expiry, single use), `VendorRecoveryCode` (hashed).
+- `PendingRoleAssignment` lets an administrator grant a role to someone who has not signed in yet.
+- Every vendor-owned table has `VendorId` and the vendor query filter; every tenant-owned table keeps `TenantId`, the
+  tenant filter and an RLS policy.

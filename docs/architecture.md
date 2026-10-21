@@ -195,7 +195,7 @@ future integration; v1 never moves money.**
 | Control | Enforced in |
 |---|---|
 | Maker-checker, self-approval blocked | Workflow engine guards; shared `MakerCheckerGuard` |
-| Two-person bank-detail change | Vendor module: `BankDetailChange` state machine requires checker != maker |
+| Two-person bank-detail change | Vendor module: `BankDetailChange` state machine requires checker != maker, plus CHECK constraint and triggers (ADR-0008) |
 | Invoice approval vs release separation | Treasury `ReleaseAuthorization` + SoD matrix |
 | Re-approval on material change | Invoice `MaterialityPolicy` -> `InvoiceChangedMaterially` -> new workflow instance |
 | Duplicate detection / ERP reconciliation | Verification engine; ERP reconciliation job |
@@ -216,3 +216,18 @@ future integration; v1 never moves money.**
   Docker images for Api and Worker.
 - Localization/tax: Saudi VAT and ZATCA-related logic lives in an isolated, configurable module. VPMS does not
   issue invoices; see `risks-and-open-questions.md` for the obligation analysis.
+
+## 13. Phase 2 additions
+
+- **New modules:** `Documents` (attachments, quarantine, scanning), `Vendors` (vendor lifecycle, documents, per-entity
+  links, requests, bank details), `VendorPortal` (vendor users, invites, MFA). Each has its own schema, DbContext and
+  migrations; cross-module access is through `Contracts` only (architecture tests).
+- **Vendor isolation:** `IVendorOwned` + `VendorContext` add a named query filter and a write guard on top of tenancy
+  (ADR-0009). Cross-vendor existence checks use the allow-listed `BeginCrossVendorCheck` scope.
+- **Two session types:** staff (`__Host-vpms`, `ctx=internal`) and vendors (`__Host-vpms-vendor`, `ctx=vendor`) never
+  satisfy each other's policies.
+- **Storage and encryption:** `IBlobBackend` (Azure/S3) behind `TenantScopedFileStore` (ADR-0010); `IFieldProtector`
+  encrypts tax numbers, registration numbers, IBANs, account numbers and TOTP secrets with per-tenant keys and
+  blind indexes (ADR-0004).
+- **Worker jobs:** attachment scanning and bank-change expiry join audit chain verification.
+- **Frontend:** staff screens (vendors, bank-change approvals, administration) and a separate `/portal` area.

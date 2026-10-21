@@ -21,7 +21,7 @@ foundation; logging, OpenTelemetry, health checks, problem details, OpenAPI; i18
 Depends on: Phase 0 approval.
 Acceptance: cross-tenant isolation tests pass; audit events cannot be updated or deleted; CI is green.
 
-## Phase 2: Customer administration and vendors (`phase-2-customer-and-vendors.md`)
+## Phase 2: Customer administration and vendors (`phase-2-customer-and-vendors.md`) — complete, see [phase-2-summary.md](phase-2-summary.md)
 Scope: tenant setup, legal entities, branding, roles, approval-matrix data model; vendor registration and
 onboarding; bank details with two-person verification; vendor-entity relationships; vendor self-service portal;
 storage abstraction (Azure Blob + S3), virus-scan hook, encrypted fields.

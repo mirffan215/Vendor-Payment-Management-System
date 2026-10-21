@@ -12,6 +12,9 @@ Phase 0 ADRs were approved by the owner and are **Accepted**.
 | [0005](0005-erp-adapter.md) | ERP adapter | Accepted |
 | [0006](0006-authentication-bff.md) | Authentication: BFF cookie sessions with per-tenant OIDC | Accepted |
 | [0007](0007-database-identities-and-migrations.md) | Database identities, row-level security scope and migrations | Accepted |
+| [0008](0008-bank-detail-change-control.md) | Bank-detail change control | Accepted |
+| [0009](0009-vendor-portal-authentication.md) | Vendor portal authentication and data isolation | Accepted |
+| [0010](0010-file-storage-and-scanning.md) | File storage and virus scanning | Accepted |
 
 ## Template
 

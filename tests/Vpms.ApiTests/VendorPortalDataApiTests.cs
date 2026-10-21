@@ -235,6 +235,7 @@ public sealed class VendorPortalDataApiTests : IClassFixture<ApiFixtureHolder>
 
         Assert.Equal(HttpStatusCode.NotFound, (await two.Post($"/api/v1/portal/requests/{requestId}/reply", new { body = "Not mine" })).StatusCode);
 
+        _api.Clock.Advance(TimeSpan.FromSeconds(5)); // the fixture clock is frozen; messages are ordered by time
         var reply = await one.Post($"/api/v1/portal/requests/{requestId}/reply", new { body = "Uploaded, thank you." });
         Assert.Equal(HttpStatusCode.OK, reply.StatusCode);
         var updated = await reply.Content.ReadFromJsonAsync<JsonElement>();
