@@ -15,4 +15,10 @@ public sealed class TenantLookup(CustomerAdminDbContext db, TenantContext tenant
             .Select(t => (Guid?)t.Id)
             .FirstOrDefaultAsync(ct);
     }
+
+    public async Task<string?> FindSlugAsync(Guid tenantId, CancellationToken ct = default)
+    {
+        using var _ = tenant.BeginPlatformScope();
+        return await db.Tenants.AsNoTracking().Where(t => t.Id == tenantId).Select(t => t.Slug).FirstOrDefaultAsync(ct);
+    }
 }

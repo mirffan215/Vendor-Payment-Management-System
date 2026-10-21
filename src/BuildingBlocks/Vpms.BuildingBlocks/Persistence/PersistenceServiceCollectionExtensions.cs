@@ -11,6 +11,7 @@ public static class PersistenceServiceCollectionExtensions
     {
         services.AddScoped<TenantContext>();
         services.AddScoped<ITenantContext>(sp => sp.GetRequiredService<TenantContext>());
+        services.AddScoped<VendorContext>();
         services.AddScoped<TenantSessionContextInterceptor>();
         services.AddScoped<Vpms.BuildingBlocks.Audit.AuditBuffer>();
         services.AddScoped<Vpms.BuildingBlocks.Audit.AuditContext>();

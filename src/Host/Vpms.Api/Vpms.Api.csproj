@@ -39,6 +39,10 @@
     <ProjectReference Include="..\..\Modules\Vendors\Vpms.Vendors.Application\Vpms.Vendors.Application.csproj" />
     <ProjectReference Include="..\..\Modules\Vendors\Vpms.Vendors.Contracts\Vpms.Vendors.Contracts.csproj" />
     <ProjectReference Include="..\..\Modules\Vendors\Vpms.Vendors.Domain\Vpms.Vendors.Domain.csproj" />
+    <ProjectReference Include="..\..\Modules\VendorPortal\Vpms.VendorPortal.Infrastructure\Vpms.VendorPortal.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\VendorPortal\Vpms.VendorPortal.Application\Vpms.VendorPortal.Application.csproj" />
+    <ProjectReference Include="..\..\Modules\VendorPortal\Vpms.VendorPortal.Domain\Vpms.VendorPortal.Domain.csproj" />
+    <ProjectReference Include="..\..\Modules\VendorPortal\Vpms.VendorPortal.Contracts\Vpms.VendorPortal.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

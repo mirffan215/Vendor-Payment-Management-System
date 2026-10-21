@@ -54,3 +54,21 @@ public sealed class TenantContext : ITenantContext
         public void Dispose() => owner.IsPlatform = false;
     }
 }
+
+/// <summary>
+/// Set only for requests made by a signed-in vendor (portal) user. Vendor-owned data is additionally filtered to this vendor,
+/// on top of the tenant filter, so a vendor can never see another vendor's rows even inside the same tenant.
+/// </summary>
+public sealed class VendorContext
+{
+    public Guid? VendorId { get; private set; }
+
+    public Guid RequireVendorId() => VendorId ?? throw new InvalidOperationException("No vendor in this scope.");
+
+    public void SetVendor(Guid vendorId)
+    {
+        if (vendorId == Guid.Empty) throw new ArgumentException("Vendor id must not be empty.", nameof(vendorId));
+        if (VendorId is { } existing && existing != vendorId) throw new TenantViolationException("The vendor of the current scope cannot be changed.");
+        VendorId = vendorId;
+    }
+}

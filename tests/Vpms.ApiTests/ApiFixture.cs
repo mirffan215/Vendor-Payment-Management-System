@@ -56,6 +56,10 @@ public sealed class ApiFixture : WebApplicationFactory<Program>, IAsyncLifetime
             ["Secrets:secret-a"] = "secret-a",
             ["Secrets:secret-b"] = "secret-b",
             ["Documents:Scanner"] = "Eicar",
+            ["Portal:PasswordHashIterations"] = "1000",
+            ["RateLimiting:PortalAuthPermitLimit"] = "10000", // tests share one client address; dedicated tests lower it
+            ["RateLimiting:AuthPermitLimit"] = "10000",
+            ["Portal:PublicBaseUrl"] = "https://portal.test",
             ["Encryption:LocalKek"] = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32)),
         }));
         builder.ConfigureTestServices(services =>

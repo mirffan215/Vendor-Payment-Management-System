@@ -4,4 +4,6 @@ namespace Vpms.CustomerAdmin.Contracts;
 public interface ITenantLookup
 {
     Task<Guid?> FindTenantIdBySlugAsync(string slug, CancellationToken ct = default);
+
+    Task<string?> FindSlugAsync(Guid tenantId, CancellationToken ct = default);
 }

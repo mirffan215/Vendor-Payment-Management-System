@@ -5,6 +5,7 @@ using Vpms.BuildingBlocks.Audit;
 using Vpms.BuildingBlocks.Errors;
 using Vpms.BuildingBlocks.Security;
 using Vpms.BuildingBlocks.Tenancy;
+using Vpms.VendorPortal.Application;
 
 namespace Vpms.Api.Infrastructure;
 
@@ -54,6 +55,7 @@ public sealed class ProblemDetailsExceptionHandler(ILogger<ProblemDetailsExcepti
         TenantViolationException => (StatusCodes.Status403Forbidden, "tenant_violation", "Access to this resource is not permitted.", null),
         TenantRequiredException => (StatusCodes.Status401Unauthorized, "tenant_required", "Authentication with a tenant is required.", null),
         DbUpdateConcurrencyException => (StatusCodes.Status409Conflict, "concurrency_conflict", "The resource was changed by someone else. Reload and retry.", null),
+        InvalidCredentialsException => (StatusCodes.Status401Unauthorized, "invalid_credentials", "Sign-in failed.", "Check your details and try again."),
         NotFoundException => (StatusCodes.Status404NotFound, "not_found", "The resource was not found.", null),
         ConflictException e => (StatusCodes.Status409Conflict, "conflict", "The request conflicts with the current state.", e.Message),
         ValidationFailedException e => (e.StatusCode, "validation_failed", "The request is not acceptable.", e.Message),

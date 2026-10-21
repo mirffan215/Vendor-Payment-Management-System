@@ -26,5 +26,7 @@
     <ProjectReference Include="..\..\Modules\Documents\Vpms.Documents.Contracts\Vpms.Documents.Contracts.csproj" />
     <ProjectReference Include="..\..\Modules\Vendors\Vpms.Vendors.Infrastructure\Vpms.Vendors.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Vendors\Vpms.Vendors.Application\Vpms.Vendors.Application.csproj" />
+    <ProjectReference Include="..\..\Modules\VendorPortal\Vpms.VendorPortal.Infrastructure\Vpms.VendorPortal.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\VendorPortal\Vpms.VendorPortal.Application\Vpms.VendorPortal.Application.csproj" />
   </ItemGroup>
 </Project>

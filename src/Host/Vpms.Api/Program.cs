@@ -17,6 +17,8 @@ using Vpms.Documents.Application;
 using Vpms.Documents.Infrastructure;
 using Vpms.Identity.Application;
 using Vpms.Identity.Infrastructure;
+using Vpms.VendorPortal.Application;
+using Vpms.VendorPortal.Infrastructure;
 using Vpms.Vendors.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -41,6 +43,8 @@ builder.Services.AddIdentityModule(ConnectionString);
 builder.Services.AddAuditModule(ConnectionString);
 builder.Services.AddDocumentsModule(ConnectionString);
 builder.Services.AddVendorsModule(ConnectionString);
+builder.Services.Configure<PortalOptions>(builder.Configuration.GetSection(PortalOptions.Section));
+builder.Services.AddVendorPortalModule(ConnectionString);
 builder.Services.AddSingleton<IAuditAnchorSink>(sp => new FileAuditAnchorSink(
     sp.GetRequiredService<IConfiguration>()["Audit:AnchorDirectory"] ?? Path.Combine(Path.GetTempPath(), "vpms-audit-anchors")));
 builder.Services.AddMemoryCache();
@@ -69,6 +73,22 @@ builder.Services.AddAuthentication(VpmsAuth.CookieScheme)
         o.Events.OnRedirectToAccessDenied = ctx => { ctx.Response.StatusCode = StatusCodes.Status403Forbidden; return Task.CompletedTask; };
     });
 
+builder.Services.AddAuthentication()
+    .AddCookie(VpmsAuth.VendorCookieScheme, o =>
+    {
+        // A separate cookie, scheme and context: a vendor session can never satisfy a staff policy, or the other way round.
+        o.Cookie.Name = "__Host-vpms-vendor";
+        o.Cookie.HttpOnly = true;
+        o.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        o.Cookie.SameSite = SameSiteMode.Strict;
+        o.Cookie.Path = "/";
+        o.SlidingExpiration = true;
+        o.ExpireTimeSpan = TimeSpan.FromMinutes(20);
+        o.Events.OnValidatePrincipal = VendorCookieValidator.ValidateAsync;
+        o.Events.OnRedirectToLogin = ctx => { ctx.Response.StatusCode = StatusCodes.Status401Unauthorized; return Task.CompletedTask; };
+        o.Events.OnRedirectToAccessDenied = ctx => { ctx.Response.StatusCode = StatusCodes.Status403Forbidden; return Task.CompletedTask; };
+    });
+
 builder.Services.AddOptions<CookieAuthenticationOptions>(VpmsAuth.CookieScheme)
     .Configure<IOptions<AuthOptions>>((cookie, auth) => cookie.ExpireTimeSpan = auth.Value.IdleTimeout);
 
@@ -82,6 +102,12 @@ builder.Services.AddAuthorizationBuilder()
         .RequireClaim(VpmsClaims.Context, VpmsClaims.InternalContext)
         .RequireClaim(VpmsClaims.TenantId)
         .Build())
+    .AddPolicy(VendorClaims.PortalPolicy, p => p
+        .AddAuthenticationSchemes(VpmsAuth.VendorCookieScheme)
+        .RequireAuthenticatedUser()
+        .RequireClaim(VpmsClaims.Context, VendorClaims.VendorContext)
+        .RequireClaim(VendorClaims.VendorId)
+        .RequireClaim(VpmsClaims.TenantId))
     .AddPermissionPolicies();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IAuthorizationHandler, PermissionHandler>();
@@ -137,6 +163,7 @@ app.UseRateLimiter();
 app.UseMiddleware<AuditContextMiddleware>();
 app.UseMiddleware<OidcCallbackSchemeMiddleware>();
 app.UseAuthentication();
+app.UseMiddleware<VendorSessionMiddleware>();
 app.UseMiddleware<TenantContextMiddleware>();
 app.UseMiddleware<AuditActorMiddleware>();
 app.UseMiddleware<LogEnrichmentMiddleware>();
