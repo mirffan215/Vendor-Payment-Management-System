@@ -5,6 +5,7 @@
     <ProjectReference Include="..\..\BuildingBlocks\Vpms.BuildingBlocks\Vpms.BuildingBlocks.csproj" />
     <ProjectReference Include="..\..\Modules\Identity\Vpms.Identity.Infrastructure\Vpms.Identity.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Audit\Vpms.Audit.Infrastructure\Vpms.Audit.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Documents\Vpms.Documents.Infrastructure\Vpms.Documents.Infrastructure.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

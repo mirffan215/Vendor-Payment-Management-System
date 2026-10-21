@@ -1,10 +1,13 @@
 using Microsoft.Extensions.DependencyInjection;
 using Vpms.Audit.Application;
 using Vpms.Audit.Infrastructure;
+using Vpms.BuildingBlocks.Cloud;
 using Vpms.BuildingBlocks.Persistence;
 using Vpms.BuildingBlocks.Security.Encryption;
 using Vpms.BuildingBlocks.Tenancy;
 using Vpms.CustomerAdmin.Infrastructure;
+using Vpms.Documents.Application;
+using Vpms.Documents.Infrastructure;
 using Vpms.Identity.Infrastructure;
 using Vpms.TestSupport;
 
@@ -18,7 +21,7 @@ public sealed class IntegrationHost : IAsyncDisposable
     public TestDatabase Database { get; }
     public string AnchorDirectory { get; } = Path.Combine(Path.GetTempPath(), "vpms-anchors-" + Guid.NewGuid().ToString("N"));
 
-    public IntegrationHost(TestDatabase database, TimeProvider? clock = null)
+    public IntegrationHost(TestDatabase database, TimeProvider? clock = null, Action<IServiceCollection>? configure = null)
     {
         Database = database;
         var services = new ServiceCollection();
@@ -31,6 +34,11 @@ public sealed class IntegrationHost : IAsyncDisposable
         services.AddIdentityModule(_ => database.AppConnectionString);
         services.AddAuditModule(_ => database.AppConnectionString);
         services.AddSingleton<IAuditAnchorSink>(new FileAuditAnchorSink(AnchorDirectory));
+        services.Configure<StorageOptions>(o => o.Provider = "InMemory");
+        services.AddBlobStorage();
+        services.Configure<DocumentsOptions>(o => o.Scanner = "Eicar");
+        services.AddDocumentsModule(_ => database.AppConnectionString);
+        configure?.Invoke(services);
         _root = services.BuildServiceProvider(validateScopes: true);
     }
 

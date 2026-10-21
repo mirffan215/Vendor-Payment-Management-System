@@ -84,7 +84,10 @@ public sealed class InMemoryBlobBackend : IBlobBackend
     {
         using var ms = new MemoryStream();
         await content.CopyToAsync(ms, ct);
-        _blobs[key] = ms.ToArray();
+        if (!_blobs.TryAdd(key, ms.ToArray()))
+        {
+            throw new InvalidOperationException("Storage key already exists; objects are write-once.");
+        }
     }
 
     public Task<Stream?> GetAsync(string key, CancellationToken ct = default) =>

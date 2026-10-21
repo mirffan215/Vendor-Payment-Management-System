@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Vpms.Audit.Infrastructure;
 using Vpms.BuildingBlocks.Tenancy;
 using Vpms.CustomerAdmin.Infrastructure;
+using Vpms.Documents.Infrastructure;
 using Vpms.Identity.Infrastructure;
 
 namespace Vpms.Migrator;
@@ -22,6 +23,11 @@ public static class DatabaseMigrator
         }
 
         await using (var ctx = new AuditDbContext(Options<AuditDbContext>(connectionString), tenant))
+        {
+            await ctx.Database.MigrateAsync(ct);
+        }
+
+        await using (var ctx = new DocumentsDbContext(Options<DocumentsDbContext>(connectionString), tenant))
         {
             await ctx.Database.MigrateAsync(ct);
         }

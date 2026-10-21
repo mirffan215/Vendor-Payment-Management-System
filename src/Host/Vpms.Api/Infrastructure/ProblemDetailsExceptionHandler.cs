@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Vpms.BuildingBlocks.Audit;
+using Vpms.BuildingBlocks.Errors;
 using Vpms.BuildingBlocks.Security;
 using Vpms.BuildingBlocks.Tenancy;
 
@@ -33,6 +34,16 @@ public sealed class ProblemDetailsExceptionHandler(ILogger<ProblemDetailsExcepti
             problem.Extensions["rule"] = sod.Rule;
         }
 
+        if (code is "validation_failed" or "conflict")
+        {
+            problem.Extensions["errorCode"] = exception switch
+            {
+                ValidationFailedException v => v.Code,
+                ConflictException c => c.Code,
+                _ => code,
+            };
+        }
+
         http.Response.StatusCode = status;
         return await problems.TryWriteAsync(new ProblemDetailsContext { HttpContext = http, ProblemDetails = problem, Exception = exception });
     }
@@ -43,6 +54,9 @@ public sealed class ProblemDetailsExceptionHandler(ILogger<ProblemDetailsExcepti
         TenantViolationException => (StatusCodes.Status403Forbidden, "tenant_violation", "Access to this resource is not permitted.", null),
         TenantRequiredException => (StatusCodes.Status401Unauthorized, "tenant_required", "Authentication with a tenant is required.", null),
         DbUpdateConcurrencyException => (StatusCodes.Status409Conflict, "concurrency_conflict", "The resource was changed by someone else. Reload and retry.", null),
+        NotFoundException => (StatusCodes.Status404NotFound, "not_found", "The resource was not found.", null),
+        ConflictException e => (StatusCodes.Status409Conflict, "conflict", "The request conflicts with the current state.", e.Message),
+        ValidationFailedException e => (e.StatusCode, "validation_failed", "The request is not acceptable.", e.Message),
         BadHttpRequestException e => (e.StatusCode, "bad_request", "The request is malformed.", null),
         _ => (StatusCodes.Status500InternalServerError, "internal_error", "An unexpected error occurred.", null),
     };

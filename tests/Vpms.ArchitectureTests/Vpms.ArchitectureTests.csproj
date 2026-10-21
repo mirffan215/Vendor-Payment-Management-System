@@ -35,6 +35,10 @@
     <ProjectReference Include="..\..\src\Modules\Audit\Vpms.Audit.Contracts\Vpms.Audit.Contracts.csproj" />
     <ProjectReference Include="..\..\src\BuildingBlocks\Vpms.BuildingBlocks\Vpms.BuildingBlocks.csproj" />
     <ProjectReference Include="..\..\src\Host\Vpms.Api\Vpms.Api.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Documents\Vpms.Documents.Domain\Vpms.Documents.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Documents\Vpms.Documents.Application\Vpms.Documents.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Documents\Vpms.Documents.Infrastructure\Vpms.Documents.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Documents\Vpms.Documents.Contracts\Vpms.Documents.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

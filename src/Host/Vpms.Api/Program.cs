@@ -9,9 +9,12 @@ using Vpms.Api.Auth;
 using Vpms.Api.Infrastructure;
 using Vpms.Audit.Application;
 using Vpms.Audit.Infrastructure;
+using Vpms.BuildingBlocks.Cloud;
 using Vpms.BuildingBlocks.Persistence;
 using Vpms.BuildingBlocks.Security.Encryption;
 using Vpms.CustomerAdmin.Infrastructure;
+using Vpms.Documents.Application;
+using Vpms.Documents.Infrastructure;
 using Vpms.Identity.Application;
 using Vpms.Identity.Infrastructure;
 
@@ -27,9 +30,14 @@ builder.Services.Configure<AuthOptions>(builder.Configuration.GetSection(AuthOpt
 builder.Services.AddTenancy();
 builder.Services.Configure<EncryptionOptions>(builder.Configuration.GetSection(EncryptionOptions.Section));
 builder.Services.AddFieldEncryption();
+builder.Services.AddKeyVaultKeyEncryption();
+builder.Services.Configure<StorageOptions>(builder.Configuration.GetSection(StorageOptions.Section));
+builder.Services.AddBlobStorage();
+builder.Services.Configure<DocumentsOptions>(builder.Configuration.GetSection(DocumentsOptions.Section));
 builder.Services.AddCustomerAdminModule(ConnectionString);
 builder.Services.AddIdentityModule(ConnectionString);
 builder.Services.AddAuditModule(ConnectionString);
+builder.Services.AddDocumentsModule(ConnectionString);
 builder.Services.AddSingleton<IAuditAnchorSink>(sp => new FileAuditAnchorSink(
     sp.GetRequiredService<IConfiguration>()["Audit:AnchorDirectory"] ?? Path.Combine(Path.GetTempPath(), "vpms-audit-anchors")));
 builder.Services.AddMemoryCache();
@@ -104,6 +112,12 @@ if (app.Environment.IsProduction()
     && string.Equals(app.Configuration["Encryption:Provider"] ?? "Local", "Local", StringComparison.OrdinalIgnoreCase))
 {
     throw new InvalidOperationException("Encryption:Provider must be KeyVault in Production; the Local key is for development only.");
+}
+
+if (app.Environment.IsProduction()
+    && string.Equals(app.Configuration["Storage:Provider"] ?? "InMemory", "InMemory", StringComparison.OrdinalIgnoreCase))
+{
+    throw new InvalidOperationException("Storage:Provider must be Azure or S3 in Production.");
 }
 
 app.UseExceptionHandler();
