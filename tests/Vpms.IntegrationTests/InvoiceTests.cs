@@ -54,7 +54,7 @@ public sealed class InvoiceTests : IAsyncLifetime
     private static InvoiceLineInput Line(decimal amount = 100m, string desc = "Consulting") => new(desc, 1, amount, amount, "S", 0.15m, Math.Round(amount * 0.15m, 2), null, null);
 
     private static InvoiceData Data(string number = "INV-001", decimal net = 100m) =>
-        new(number, new DateOnly(2026, 10, 1), new DateOnly(2026, 11, 1), "SAR", net, Math.Round(net * 0.15m, 2), net + Math.Round(net * 0.15m, 2), "PO-1", "ZATCA-UUID-1", [Line(net)]);
+        new(number, TestDates.Ago(10), TestDates.Ago(10).AddDays(30), "SAR", net, Math.Round(net * 0.15m, 2), net + Math.Round(net * 0.15m, 2), null, "ZATCA-UUID-1", [Line(net)]);
 
     private Task<T> As<T>(Guid tenant, Guid actor, Func<IServiceProvider, Task<T>> action) => ActiveVendorKit.AsAsync(_host.Services, tenant, actor, action);
 
@@ -148,7 +148,7 @@ public sealed class InvoiceTests : IAsyncLifetime
     {
         var created = await Create();
         var submitted = await As(_tenantA, _clerk, s => s.GetRequiredService<IInvoiceService>().SubmitAsync(created.Id));
-        Assert.Equal(InvoiceStatus.Received, submitted.Status);
+        Assert.Equal(InvoiceStatus.Verified, submitted.Status); // verification follows receipt at once; this invoice passes every check
         Assert.NotNull(submitted.ReceivedAt);
 
         var ex = await Assert.ThrowsAsync<ConflictException>(() => As(_tenantA, _clerk, s => s.GetRequiredService<IInvoiceService>().UpdateAsync(created.Id, Data("INV-009"))));

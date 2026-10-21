@@ -80,3 +80,13 @@ public static class ActiveVendorKit
         }
     }
 }
+
+/// <summary>Dates relative to now, so tests do not start failing the "invoice too old" check as time passes.</summary>
+public static class TestDates
+{
+    public static DateOnly Today => DateOnly.FromDateTime(DateTime.UtcNow);
+
+    public static DateOnly Ago(int days) => Today.AddDays(-days);
+
+    public static string Iso(DateOnly d) => d.ToString("yyyy-MM-dd");
+}

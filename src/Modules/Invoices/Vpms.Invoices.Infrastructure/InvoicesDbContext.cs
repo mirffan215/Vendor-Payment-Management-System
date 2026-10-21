@@ -18,6 +18,10 @@ public class InvoicesDbContext(DbContextOptions<InvoicesDbContext> options, ITen
     public DbSet<InvoiceMailbox> Mailboxes => Set<InvoiceMailbox>();
     public DbSet<IntakeMessage> IntakeMessages => Set<IntakeMessage>();
     public DbSet<VerificationRuleSet> RuleSets => Set<VerificationRuleSet>();
+    public DbSet<VerificationResult> VerificationResults => Set<VerificationResult>();
+    public DbSet<InvoiceException> Exceptions => Set<InvoiceException>();
+    public DbSet<PurchaseOrder> PurchaseOrders => Set<PurchaseOrder>();
+    public DbSet<PurchaseOrderLine> PurchaseOrderLines => Set<PurchaseOrderLine>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -122,6 +126,58 @@ public class InvoicesDbContext(DbContextOptions<InvoicesDbContext> options, ITen
             // At most one version in force and one waiting for approval per legal entity.
             b.HasIndex(x => x.LegalEntityId).IsUnique().HasFilter("[Status] = 'Active'").HasDatabaseName("UX_RuleSet_Active");
             b.HasIndex(x => x.LegalEntityId).IsUnique().HasFilter("[Status] = 'Pending'").HasDatabaseName("UX_RuleSet_Pending");
+        });
+
+        modelBuilder.Entity<VerificationResult>(b =>
+        {
+            b.ToTable("VerificationResult");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.RuleCode).HasMaxLength(50).IsRequired();
+            b.Property(x => x.Outcome).HasMaxLength(10).IsRequired();
+            b.Property(x => x.Severity).HasMaxLength(10).IsRequired();
+            b.Property(x => x.DetailJson).IsRequired();
+            b.HasIndex(x => new { x.TenantId, x.InvoiceId, x.RunId });
+        });
+
+        modelBuilder.Entity<InvoiceException>(b =>
+        {
+            b.ToTable("InvoiceException");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.RuleCode).HasMaxLength(50).IsRequired();
+            b.Property(x => x.Severity).HasMaxLength(10).IsRequired();
+            b.Property(x => x.Status).HasMaxLength(10).IsRequired();
+            b.Property(x => x.DetailJson).IsRequired();
+            b.Property(x => x.Resolution).HasMaxLength(500);
+            b.Property(x => x.RowVersion).IsRowVersion();
+            b.HasIndex(x => new { x.TenantId, x.LegalEntityId, x.Status });
+            // One open exception per invoice and rule.
+            b.HasIndex(x => new { x.InvoiceId, x.RuleCode }).IsUnique().HasFilter("[Status] = 'Open'").HasDatabaseName("UX_InvoiceException_Open");
+        });
+
+        modelBuilder.Entity<PurchaseOrder>(b =>
+        {
+            b.ToTable("PurchaseOrder");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.PoNumber).HasMaxLength(100).IsRequired();
+            b.Property(x => x.CurrencyCode).HasMaxLength(3).IsFixedLength().IsRequired();
+            b.Property(x => x.Status).HasMaxLength(20).IsRequired();
+            b.Property(x => x.PreviouslyInvoicedValue).HasPrecision(19, 4);
+            b.Property(x => x.ContentHash).HasMaxLength(64).IsFixedLength().IsRequired();
+            b.Property(x => x.RowVersion).IsRowVersion();
+            b.HasMany(x => x.Lines).WithOne().HasForeignKey(x => x.PurchaseOrderId).OnDelete(DeleteBehavior.Cascade);
+            b.HasIndex(x => new { x.TenantId, x.LegalEntityId, x.PoNumber }).IsUnique();
+        });
+
+        modelBuilder.Entity<PurchaseOrderLine>(b =>
+        {
+            b.ToTable("PurchaseOrderLine");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.LineNo).HasMaxLength(30).IsRequired();
+            b.Property(x => x.Description).HasMaxLength(500).IsRequired();
+            b.Property(x => x.OrderedQuantity).HasPrecision(19, 6);
+            b.Property(x => x.UnitPrice).HasPrecision(19, 6);
+            b.Property(x => x.PreviouslyInvoicedQuantity).HasPrecision(19, 6);
+            b.HasIndex(x => new { x.PurchaseOrderId, x.LineNo }).IsUnique();
         });
 
         base.OnModelCreating(modelBuilder);

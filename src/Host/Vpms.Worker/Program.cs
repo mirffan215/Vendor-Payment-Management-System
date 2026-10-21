@@ -38,5 +38,6 @@ builder.Services.AddHostedService<AttachmentScanJob>();
 builder.Services.AddHostedService<BankChangeExpiryJob>();
 builder.Services.AddHostedService<EmailIntakeJob>();
 builder.Services.AddHostedService<InvoiceExtractionJob>();
+builder.Services.AddHostedService<InvoiceVerificationJob>();
 
 await builder.Build().RunAsync();

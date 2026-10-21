@@ -130,6 +130,10 @@ public sealed class VendorService(
             .Select(v => v.Id).ToListAsync(ct);
     }
 
+    public async Task<Guid?> FindByErpAccountAsync(string erpVendorAccount, Guid legalEntityId, CancellationToken ct = default) =>
+        await db.EntityLinks.AsNoTracking().Where(l => l.LegalEntityId == legalEntityId && l.ErpVendorAccount == erpVendorAccount)
+            .Select(l => (Guid?)l.VendorId).FirstOrDefaultAsync(ct);
+
     public async Task<string?> GetLinkCurrencyAsync(Guid vendorId, Guid legalEntityId, CancellationToken ct = default) =>
         await db.EntityLinks.AsNoTracking().Where(l => l.VendorId == vendorId && l.LegalEntityId == legalEntityId)
             .Select(l => l.DefaultCurrency).FirstOrDefaultAsync(ct);

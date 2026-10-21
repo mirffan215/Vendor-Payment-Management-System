@@ -113,8 +113,8 @@ public sealed class InvoiceIntakeApiTests : IClassFixture<ApiFixtureHolder>
 
         var form = new MultipartFormDataContent
         {
-            { new StringContent(entity.ToString()), "legalEntityId" }, { new StringContent("PORTAL-100"), "invoiceNumber" }, { new StringContent("2026-10-01"), "invoiceDate" },
-            { new StringContent("2026-11-01"), "dueDate" }, { new StringContent("SAR"), "currencyCode" }, { new StringContent("100"), "subtotal" },
+            { new StringContent(entity.ToString()), "legalEntityId" }, { new StringContent("PORTAL-100"), "invoiceNumber" }, { new StringContent(TestDates.Iso(TestDates.Ago(5))), "invoiceDate" },
+            { new StringContent(TestDates.Iso(TestDates.Ago(5).AddDays(30))), "dueDate" }, { new StringContent("SAR"), "currencyCode" }, { new StringContent("100"), "subtotal" },
             { new StringContent("15"), "taxTotal" }, { new StringContent("115"), "total" }, { new StringContent("PO-77"), "poReference" },
             { new ByteArrayContent(Pdf), "file", "invoice.pdf" },
         };
@@ -122,8 +122,10 @@ public sealed class InvoiceIntakeApiTests : IClassFixture<ApiFixtureHolder>
         Assert.Equal(HttpStatusCode.OK, submitted.StatusCode);
         var invoice = await submitted.Content.ReadFromJsonAsync<JsonElement>();
         var id = invoice.GetProperty("id").GetGuid();
-        Assert.Equal("Received", invoice.GetProperty("status").GetString());
+        // PO-77 is not a known purchase order, so the invoice needs attention; the vendor is told that much and no more
+        Assert.Equal("NeedsAttention", invoice.GetProperty("status").GetString());
         Assert.False(invoice.TryGetProperty("statusReason", out _));
+        Assert.DoesNotContain("po_not_found", await submitted.Content.ReadAsStringAsync());
 
         Assert.Single((await a.Client.GetFromJsonAsync<JsonElement>("/api/v1/portal/invoices")).EnumerateArray());
         Assert.Empty((await b.Client.GetFromJsonAsync<JsonElement>("/api/v1/portal/invoices")).EnumerateArray());
@@ -140,7 +142,7 @@ public sealed class InvoiceIntakeApiTests : IClassFixture<ApiFixtureHolder>
         // missing essentials are refused with a stable code
         var bad = new MultipartFormDataContent
         {
-            { new StringContent(entity.ToString()), "legalEntityId" }, { new StringContent("PORTAL-101"), "invoiceNumber" }, { new StringContent("2026-10-01"), "invoiceDate" },
+            { new StringContent(entity.ToString()), "legalEntityId" }, { new StringContent("PORTAL-101"), "invoiceNumber" }, { new StringContent(TestDates.Iso(TestDates.Ago(5))), "invoiceDate" },
             { new StringContent("SAR"), "currencyCode" }, { new StringContent("0"), "subtotal" }, { new StringContent("0"), "taxTotal" }, { new StringContent("0"), "total" },
             { new ByteArrayContent(Pdf), "file", "invoice.pdf" },
         };

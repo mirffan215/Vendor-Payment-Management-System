@@ -75,6 +75,17 @@ public sealed class InvoicesController(
         return File(file.Content, file.ContentType, file.FileName);
     }
 
+    // --- verification ------------------------------------------------------------------------------------------
+
+    [HttpGet("{id:guid}/verification")]
+    public async Task<IActionResult> Verification(Guid id, [FromServices] IInvoiceExceptionService exceptions, CancellationToken ct) =>
+        await Can(Permissions.InvoiceView, id, ct) ? Ok(await exceptions.DetailAsync(id, ct)) : NotFound();
+
+    /// <summary>Runs verification again on the same data, for example after the rules changed or a purchase order was imported.</summary>
+    [HttpPost("{id:guid}/reverify")]
+    public async Task<IActionResult> Reverify(Guid id, [FromServices] IInvoiceExceptionService exceptions, CancellationToken ct) =>
+        await Can(Permissions.InvoiceEdit, id, ct) ? Ok(await exceptions.ReverifyAsync(id, ct)) : NotFound();
+
     // --- document channel and extraction suggestions -----------------------------------------------------------
 
     [HttpPost("from-document"), RequestSizeLimit(MaxUpload)]

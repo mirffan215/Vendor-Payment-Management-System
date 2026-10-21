@@ -89,9 +89,9 @@ public sealed class InvoiceIntakeTests : IAsyncLifetime
         Assert.Equal("incomplete_invoice", incomplete.Code);
 
         await As(_tenantA, _staff, s => s.GetRequiredService<IInvoiceService>().UpdateAsync(draft.Id,
-            new InvoiceData("DOC-1", new DateOnly(2026, 10, 1), null, "SAR", 100, 15, 115, null, null, [])));
+            new InvoiceData("DOC-1", TestDates.Ago(5), null, "SAR", 100, 15, 115, null, null, [])));
         var submitted = await As(_tenantA, _staff, s => s.GetRequiredService<IInvoiceService>().SubmitAsync(draft.Id));
-        Assert.Equal(InvoiceStatus.Received, submitted.Status);
+        Assert.Equal(InvoiceStatus.Verified, submitted.Status);
     }
 
     [Fact]
@@ -319,18 +319,18 @@ public sealed class InvoiceIntakeTests : IAsyncLifetime
     }
 
     private static PortalSubmitInvoice Submission(Guid entity, string number = "P-001", decimal total = 115m) =>
-        new(entity, new InvoiceData(number, new DateOnly(2026, 10, 1), new DateOnly(2026, 11, 1), "SAR", 100m, 15m, total, "PO-9", null, []));
+        new(entity, new InvoiceData(number, TestDates.Ago(5), TestDates.Ago(5).AddDays(30), "SAR", 100m, 15m, total, null, null, []));
 
     [Fact]
     public async Task A_vendor_submits_an_invoice_with_its_file_and_sees_only_its_own()
     {
         var submitted = await AsVendor(_vendor, s => s.GetRequiredService<IPortalInvoiceService>().SubmitAsync(Submission(_entity), "inv.pdf", new MemoryStream(Pdf)));
-        Assert.Equal(PortalInvoiceStatus.Received, submitted.Status);
+        Assert.Equal(PortalInvoiceStatus.InReview, submitted.Status);
         Assert.Equal("KSA", submitted.EntityName);
 
         var row = Assert.Single(await InvoicesOf(_tenantA));
         Assert.Equal(InvoiceSource.Portal, row.Source);
-        Assert.Equal(InvoiceStatus.Received, row.Status);
+        Assert.Equal(InvoiceStatus.Verified, row.Status);
         Assert.Equal("Vendor", row.CreatedByKind);
 
         await AsVendor(_vendor2, s => s.GetRequiredService<IPortalInvoiceService>().SubmitAsync(Submission(_entity, "P-002"), "inv.pdf", new MemoryStream(Pdf)));
@@ -351,7 +351,7 @@ public sealed class InvoiceIntakeTests : IAsyncLifetime
             AsVendor(_vendor, s => s.GetRequiredService<IPortalInvoiceService>().SubmitAsync(Submission(_entity, "P-3"), "fake.pdf", new MemoryStream(Encoding.ASCII.GetBytes("MZ no")))));
 
         // failed submissions leave nothing the vendor or staff would mistake for a live invoice
-        Assert.DoesNotContain(await InvoicesOf(_tenantA), i => i.Status is InvoiceStatus.Draft or InvoiceStatus.Received);
+        Assert.DoesNotContain(await InvoicesOf(_tenantA), i => i.Status is InvoiceStatus.Draft or InvoiceStatus.Received or InvoiceStatus.Verified);
     }
 
     [Theory]

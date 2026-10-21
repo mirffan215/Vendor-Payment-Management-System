@@ -45,7 +45,7 @@ public sealed class InvoicesApiTests : IClassFixture<ApiFixtureHolder>
         Assert.Equal(2, (await edited.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("version").GetInt32());
 
         var submitted = await clerk.Post($"/api/v1/invoices/{id}/submit", new { });
-        Assert.Equal("Received", (await submitted.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("status").GetString());
+        Assert.Equal("Verified", (await submitted.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("status").GetString());
 
         var again = await clerk.Post($"/api/v1/invoices/{id}/submit", new { });
         Assert.Equal(HttpStatusCode.Conflict, again.StatusCode);
@@ -152,8 +152,8 @@ public sealed class InvoicesApiTests : IClassFixture<ApiFixtureHolder>
 
     private static object Data(string number, string currency = "SAR", decimal total = 115m) => new
     {
-        invoiceNumber = number, invoiceDate = "2026-10-01", dueDate = "2026-11-01", currencyCode = currency, subtotal = 100m, taxTotal = 15m, total,
-        poReference = "PO-1", supplierTaxInvoiceRef = (string?)null,
+        invoiceNumber = number, invoiceDate = TestDates.Iso(TestDates.Ago(10)), dueDate = TestDates.Iso(TestDates.Ago(10).AddDays(30)), currencyCode = currency, subtotal = 100m, taxTotal = 15m, total,
+        poReference = (string?)null, supplierTaxInvoiceRef = (string?)null,
         lines = new[] { new { description = "Consulting", quantity = 1m, unitPrice = 100m, lineAmount = 100m, taxCode = "S", taxRate = 0.15m, taxAmount = 15m, poLineRef = (string?)null, dimensionsJson = (string?)null } },
     };
 

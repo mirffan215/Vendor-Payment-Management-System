@@ -15,7 +15,7 @@ namespace Vpms.Invoices.Infrastructure;
 
 public sealed partial class InvoiceService(
     InvoicesDbContext db, IFieldProtector protector, IVendorLookup vendors, ILegalEntityLookup entities, IAttachmentService attachments,
-    IAuditPort audit, ICurrentUser current, TimeProvider clock) : IInvoiceService
+    IAuditPort audit, ICurrentUser current, TimeProvider clock, IInvoiceVerifier verifier) : IInvoiceService
 {
     public const string DuplicateKeyColumn = "invoice.Invoice.DuplicateKey";
     public const string NumberKeyColumn = "invoice.Invoice.NumberKey";
@@ -96,12 +96,14 @@ public sealed partial class InvoiceService(
         audit.Record(new AuditEntry("invoice.updated", "Invoice", id.ToString(),
             ChangeSummaryJson: JsonSerializer.Serialize(new { invoice.Version, invoice.CurrencyCode, invoice.Total })));
         await db.SaveChangesAsync(ct);
+        if (invoice.Status == InvoiceStatus.Received) await VerifyNowAsync(id, ct); // an invoice corrected out of Exception is checked again at once
         return await GetAsync(id, ct);
     }
 
     /// <summary>A draft from intake may be incomplete; it cannot be submitted until a person has filled in the essentials.</summary>
-    public Task<InvoiceDto> SubmitAsync(Guid id, CancellationToken ct = default) =>
-        Transition(id, "invoice.submitted", (i, now) =>
+    public async Task<InvoiceDto> SubmitAsync(Guid id, CancellationToken ct = default)
+    {
+        await Transition(id, "invoice.submitted", (i, now) =>
         {
             if (InvoiceNumber.Normalize(i.InvoiceNumber).Length == 0 || i.Total <= 0)
             {
@@ -110,6 +112,15 @@ public sealed partial class InvoiceService(
 
             i.Submit(now);
         }, ct);
+        await VerifyNowAsync(id, ct); // verification follows receipt immediately; the worker re-checks anything that slipped through
+        return await GetAsync(id, ct);
+    }
+
+    private async Task VerifyNowAsync(Guid id, CancellationToken ct)
+    {
+        db.ChangeTracker.Clear();
+        await verifier.VerifyAsync(id, ct);
+    }
 
     public Task<InvoiceDto> CancelAsync(Guid id, string reason, CancellationToken ct = default) =>
         Transition(id, "invoice.cancelled", (i, _) => i.Cancel(reason), ct, reason);

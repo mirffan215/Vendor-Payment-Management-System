@@ -125,6 +125,22 @@ public class Invoice : ILegalEntityScoped, IVendorOwned
         StatusReason = reason;
     }
 
+    /// <summary>Every exception has been closed without a change to the invoice (all waived), so verification is complete.</summary>
+    public void ClearExceptions()
+    {
+        Require(Status == InvoiceStatus.Exception, "Only an invoice with exceptions can have them cleared.");
+        Status = InvoiceStatus.Verified;
+        StatusReason = null;
+    }
+
+    /// <summary>Verify again with the same invoice data, for example after the rules or a purchase order changed.</summary>
+    public void RequestReverification()
+    {
+        Require(Status is InvoiceStatus.Exception or InvoiceStatus.Verified, "Only a verified invoice, or one with exceptions, can be verified again.");
+        Status = InvoiceStatus.Received;
+        StatusReason = null;
+    }
+
     public void MarkReadyForApproval()
     {
         Require(Status == InvoiceStatus.Verified, "Only a verified invoice can be sent for approval.");

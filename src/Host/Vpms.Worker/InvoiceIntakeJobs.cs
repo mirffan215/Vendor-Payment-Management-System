@@ -92,3 +92,50 @@ public sealed class InvoiceExtractionJob(IServiceScopeFactory scopes, IConfigura
         return done;
     }
 }
+
+/// <summary>Safety net: verifies invoices that were received but not verified (for example if the request was interrupted).</summary>
+public sealed class InvoiceVerificationJob(IServiceScopeFactory scopes, IConfiguration configuration, ILogger<InvoiceVerificationJob> logger) : BackgroundService
+{
+    private static readonly TimeSpan Grace = TimeSpan.FromMinutes(2);
+
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(configuration.GetValue("Invoices:VerificationSweepSeconds", 120)));
+        do
+        {
+            try
+            {
+                await RunOnceAsync(stoppingToken);
+            }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                return;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Invoice verification sweep failed.");
+            }
+        }
+        while (await timer.WaitForNextTickAsync(stoppingToken));
+    }
+
+    public async Task<int> RunOnceAsync(CancellationToken ct)
+    {
+        IReadOnlyList<Guid> tenants;
+        await using (var list = scopes.CreateAsyncScope())
+        {
+            tenants = await list.ServiceProvider.GetRequiredService<IVerificationScan>().TenantsWithUnverifiedInvoicesAsync(Grace, ct);
+        }
+
+        var done = 0;
+        foreach (var tenantId in tenants)
+        {
+            await using var scope = scopes.CreateAsyncScope();
+            scope.ServiceProvider.GetRequiredService<TenantContext>().SetTenant(tenantId);
+            done += await scope.ServiceProvider.GetRequiredService<IVerificationScan>().VerifyStaleAsync(Grace, 50, ct);
+        }
+
+        if (done > 0) logger.LogInformation("Verified {Count} invoices that had been left waiting.", done);
+        return done;
+    }
+}
