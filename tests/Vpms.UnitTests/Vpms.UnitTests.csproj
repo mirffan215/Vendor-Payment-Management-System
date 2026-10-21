@@ -21,6 +21,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\BuildingBlocks\Vpms.BuildingBlocks\Vpms.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Identity\Vpms.Identity.Domain\Vpms.Identity.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Identity\Vpms.Identity.Application\Vpms.Identity.Application.csproj" />
   </ItemGroup>
 
 </Project>

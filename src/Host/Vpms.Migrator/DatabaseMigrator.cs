@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Vpms.BuildingBlocks.Tenancy;
 using Vpms.CustomerAdmin.Infrastructure;
+using Vpms.Identity.Infrastructure;
 
 namespace Vpms.Migrator;
 
@@ -13,6 +14,11 @@ public static class DatabaseMigrator
         using var _ = tenant.BeginPlatformScope();
 
         await using (var ctx = new CustomerAdminDbContext(Options<CustomerAdminDbContext>(connectionString), tenant))
+        {
+            await ctx.Database.MigrateAsync(ct);
+        }
+
+        await using (var ctx = new IdentityDbContext(Options<IdentityDbContext>(connectionString), tenant))
         {
             await ctx.Database.MigrateAsync(ct);
         }

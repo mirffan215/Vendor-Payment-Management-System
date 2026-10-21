@@ -4,6 +4,7 @@ using Vpms.BuildingBlocks.Persistence;
 using Vpms.BuildingBlocks.Tenancy;
 using Vpms.CustomerAdmin.Domain;
 using Vpms.CustomerAdmin.Infrastructure;
+using Vpms.TestSupport;
 
 namespace Vpms.IntegrationTests;
 

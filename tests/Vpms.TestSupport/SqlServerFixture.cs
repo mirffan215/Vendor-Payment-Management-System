@@ -1,8 +1,9 @@
 using Microsoft.Data.SqlClient;
+using Xunit;
 using Testcontainers.MsSql;
 using Vpms.Migrator;
 
-namespace Vpms.IntegrationTests;
+namespace Vpms.TestSupport;
 
 /// <summary>One SQL Server container per test run; each test class gets its own migrated database.</summary>
 public sealed class SqlServerFixture : IAsyncLifetime
@@ -55,9 +56,3 @@ public sealed class SqlServerFixture : IAsyncLifetime
 }
 
 public sealed record TestDatabase(string OwnerConnectionString, string AppConnectionString);
-
-[CollectionDefinition(Name)]
-public sealed class SqlServerCollection : ICollectionFixture<SqlServerFixture>
-{
-    public const string Name = "sqlserver";
-}

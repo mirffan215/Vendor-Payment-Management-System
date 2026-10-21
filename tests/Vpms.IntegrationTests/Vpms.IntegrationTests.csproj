@@ -25,6 +25,7 @@
     <ProjectReference Include="..\..\src\BuildingBlocks\Vpms.BuildingBlocks\Vpms.BuildingBlocks.csproj" />
     <ProjectReference Include="..\..\src\Modules\CustomerAdmin\Vpms.CustomerAdmin.Domain\Vpms.CustomerAdmin.Domain.csproj" />
     <ProjectReference Include="..\..\src\Modules\CustomerAdmin\Vpms.CustomerAdmin.Infrastructure\Vpms.CustomerAdmin.Infrastructure.csproj" />
+    <ProjectReference Include="..\Vpms.TestSupport\Vpms.TestSupport.csproj" />
   </ItemGroup>
 
 </Project>

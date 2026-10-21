@@ -3,6 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Modules\CustomerAdmin\Vpms.CustomerAdmin.Infrastructure\Vpms.CustomerAdmin.Infrastructure.csproj" />
     <ProjectReference Include="..\..\BuildingBlocks\Vpms.BuildingBlocks\Vpms.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\..\Modules\Identity\Vpms.Identity.Infrastructure\Vpms.Identity.Infrastructure.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
