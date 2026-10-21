@@ -17,6 +17,7 @@ using Vpms.Documents.Application;
 using Vpms.Documents.Infrastructure;
 using Vpms.Identity.Application;
 using Vpms.Identity.Infrastructure;
+using Vpms.Vendors.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,6 +40,7 @@ builder.Services.AddSingleton<IProviderChangeNotifier>(sp => sp.GetRequiredServi
 builder.Services.AddIdentityModule(ConnectionString);
 builder.Services.AddAuditModule(ConnectionString);
 builder.Services.AddDocumentsModule(ConnectionString);
+builder.Services.AddVendorsModule(ConnectionString);
 builder.Services.AddSingleton<IAuditAnchorSink>(sp => new FileAuditAnchorSink(
     sp.GetRequiredService<IConfiguration>()["Audit:AnchorDirectory"] ?? Path.Combine(Path.GetTempPath(), "vpms-audit-anchors")));
 builder.Services.AddMemoryCache();

@@ -8,6 +8,7 @@ using Vpms.BuildingBlocks.Tenancy;
 using Vpms.CustomerAdmin.Infrastructure;
 using Vpms.Documents.Application;
 using Vpms.Documents.Infrastructure;
+using Vpms.Vendors.Infrastructure;
 using Vpms.Identity.Infrastructure;
 using Vpms.TestSupport;
 
@@ -38,6 +39,7 @@ public sealed class IntegrationHost : IAsyncDisposable
         services.AddBlobStorage();
         services.Configure<DocumentsOptions>(o => o.Scanner = "Eicar");
         services.AddDocumentsModule(_ => database.AppConnectionString);
+        services.AddVendorsModule(_ => database.AppConnectionString);
         services.AddSingleton<Vpms.Identity.Application.ISecretResolver, NoSecrets>();
         configure?.Invoke(services);
         _root = services.BuildServiceProvider(validateScopes: true);

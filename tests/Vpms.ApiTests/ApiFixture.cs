@@ -11,6 +11,7 @@ using Vpms.BuildingBlocks.Persistence;
 using Vpms.BuildingBlocks.Tenancy;
 using Vpms.CustomerAdmin.Domain;
 using Vpms.CustomerAdmin.Infrastructure;
+using Vpms.Documents.Application;
 using Vpms.Identity.Application;
 using Vpms.Identity.Domain;
 using Vpms.Identity.Infrastructure;
@@ -54,6 +55,7 @@ public sealed class ApiFixture : WebApplicationFactory<Program>, IAsyncLifetime
             ["ConnectionStrings:Default"] = _db.AppConnectionString,
             ["Secrets:secret-a"] = "secret-a",
             ["Secrets:secret-b"] = "secret-b",
+            ["Documents:Scanner"] = "Eicar",
             ["Encryption:LocalKek"] = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32)),
         }));
         builder.ConfigureTestServices(services =>
@@ -126,6 +128,23 @@ public sealed class ApiFixture : WebApplicationFactory<Program>, IAsyncLifetime
 
         var user = await db.Users.FirstAsync(u => u.Email == email);
         await scope.ServiceProvider.GetRequiredService<IRoleAssignmentService>().AssignAsync(user.Id, user.Id, role.Id, legalEntityId);
+    }
+
+    /// <summary>Runs the virus scan the worker would run, for every attachment waiting in quarantine.</summary>
+    public async Task ScanAllAsync()
+    {
+        IReadOnlyList<PendingScan> pending;
+        await using (var list = Services.CreateAsyncScope())
+        {
+            pending = await list.ServiceProvider.GetRequiredService<IAttachmentScanService>().ListPendingAsync(200);
+        }
+
+        foreach (var item in pending)
+        {
+            await using var scope = Services.CreateAsyncScope();
+            scope.ServiceProvider.GetRequiredService<TenantContext>().SetTenant(item.TenantId);
+            await scope.ServiceProvider.GetRequiredService<IAttachmentScanService>().ScanAsync(item.AttachmentId);
+        }
     }
 
     private async Task SeedAsync() => await WithDbAsync<int>(async (identity, admin) =>

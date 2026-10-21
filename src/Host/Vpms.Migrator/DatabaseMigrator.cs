@@ -6,6 +6,7 @@ using Vpms.BuildingBlocks.Tenancy;
 using Vpms.CustomerAdmin.Infrastructure;
 using Vpms.Documents.Infrastructure;
 using Vpms.Identity.Infrastructure;
+using Vpms.Vendors.Infrastructure;
 
 namespace Vpms.Migrator;
 
@@ -28,6 +29,11 @@ public static class DatabaseMigrator
         }
 
         await using (var ctx = new DocumentsDbContext(Options<DocumentsDbContext>(connectionString), tenant))
+        {
+            await ctx.Database.MigrateAsync(ct);
+        }
+
+        await using (var ctx = new VendorsDbContext(Options<VendorsDbContext>(connectionString), tenant))
         {
             await ctx.Database.MigrateAsync(ct);
         }

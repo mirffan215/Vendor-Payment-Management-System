@@ -9,6 +9,7 @@
     <ProjectReference Include="..\..\Modules\Identity\Vpms.Identity.Domain\Vpms.Identity.Domain.csproj" />
     <ProjectReference Include="..\..\Modules\Audit\Vpms.Audit.Domain\Vpms.Audit.Domain.csproj" />
     <ProjectReference Include="..\..\Modules\CustomerAdmin\Vpms.CustomerAdmin.Domain\Vpms.CustomerAdmin.Domain.csproj" />
+    <ProjectReference Include="..\..\Modules\Vendors\Vpms.Vendors.Infrastructure\Vpms.Vendors.Infrastructure.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
