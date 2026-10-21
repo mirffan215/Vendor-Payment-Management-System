@@ -1,0 +1,52 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main, "claude/**"]
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with: { dotnet-version: "10.0.x" }
+      - run: dotnet restore Vpms.sln
+      - run: dotnet build Vpms.sln --no-restore -c Release
+      - name: Vulnerable packages
+        run: |
+          dotnet list Vpms.sln package --vulnerable --include-transitive 2>&1 | tee vuln.txt
+          ! grep -q "has the following vulnerable packages" vuln.txt
+      - run: dotnet test Vpms.sln --no-build -c Release --logger "trx;LogFileName=results.trx"
+        # Integration tests use Testcontainers (SQL Server); Docker is available on ubuntu-latest.
+
+  web:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: web } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: web/package-lock.json }
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test --if-present
+      - run: npm run build
+      - run: npm audit --audit-level=high
+
+  infra:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: az bicep build --file infra/main.bicep --stdout > /dev/null
+
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: gitleaks/gitleaks-action@v2
+        env: { GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}" }
