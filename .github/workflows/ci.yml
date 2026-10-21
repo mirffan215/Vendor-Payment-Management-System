@@ -22,7 +22,7 @@ jobs:
           ! grep -q "has the following vulnerable packages" vuln.txt
       - run: dotnet test Vpms.sln --no-build -c Release --logger "trx;LogFileName=results.trx"
         # Integration tests use Testcontainers: SQL Server, Azurite and MinIO. Docker is available on ubuntu-latest.
-        # With CI set, an unavailable MinIO fails the run instead of skipping the tests.
+        # MinIO contract tests skip if the image cannot be pulled; set VPMS_MINIO_IMAGE to use another S3-compatible image.
 
   web:
     runs-on: ubuntu-latest
