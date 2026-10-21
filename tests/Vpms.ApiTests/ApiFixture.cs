@@ -11,6 +11,7 @@ using Vpms.BuildingBlocks.Persistence;
 using Vpms.BuildingBlocks.Tenancy;
 using Vpms.CustomerAdmin.Domain;
 using Vpms.CustomerAdmin.Infrastructure;
+using Vpms.Identity.Application;
 using Vpms.Identity.Domain;
 using Vpms.Identity.Infrastructure;
 using Vpms.TestSupport;
@@ -89,6 +90,19 @@ public sealed class ApiFixture : WebApplicationFactory<Program>, IAsyncLifetime
             new DbContextOptionsBuilder<CustomerAdminDbContext>().UseSqlServer(_db.AppConnectionString)
                 .AddInterceptors(new TenantSessionContextInterceptor(tenant)).Options, tenant);
         return await action(identity, admin);
+    }
+
+    /// <summary>Gives an existing user a role (system roles are created on demand), as a tenant administrator would.</summary>
+    public async Task AssignRoleAsync(Guid tenantId, string email, string roleName, Guid? legalEntityId)
+    {
+        await using var scope = Services.CreateAsyncScope();
+        scope.ServiceProvider.GetRequiredService<TenantContext>().SetTenant(tenantId);
+        var roles = scope.ServiceProvider.GetRequiredService<IRoleAssignmentService>();
+        await roles.EnsureSystemRolesAsync();
+        var db = scope.ServiceProvider.GetRequiredService<IdentityDbContext>();
+        var user = await db.Users.FirstAsync(u => u.Email == email);
+        var role = await db.Roles.FirstAsync(r => r.Name == roleName);
+        await roles.AssignAsync(user.Id, user.Id, role.Id, legalEntityId);
     }
 
     private async Task SeedAsync() => await WithDbAsync<int>(async (identity, admin) =>

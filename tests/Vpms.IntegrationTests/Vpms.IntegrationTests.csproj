@@ -30,6 +30,9 @@
     <ProjectReference Include="..\..\src\Modules\Identity\Vpms.Identity.Contracts\Vpms.Identity.Contracts.csproj" />
     <ProjectReference Include="..\..\src\Modules\Identity\Vpms.Identity.Domain\Vpms.Identity.Domain.csproj" />
     <ProjectReference Include="..\..\src\Modules\Identity\Vpms.Identity.Infrastructure\Vpms.Identity.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Audit\Vpms.Audit.Domain\Vpms.Audit.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Audit\Vpms.Audit.Application\Vpms.Audit.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Audit\Vpms.Audit.Infrastructure\Vpms.Audit.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

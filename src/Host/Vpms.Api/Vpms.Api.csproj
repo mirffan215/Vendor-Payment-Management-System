@@ -22,6 +22,7 @@
     <ProjectReference Include="..\..\Modules\CustomerAdmin\Vpms.CustomerAdmin.Contracts\Vpms.CustomerAdmin.Contracts.csproj" />
     <ProjectReference Include="..\..\Modules\Identity\Vpms.Identity.Domain\Vpms.Identity.Domain.csproj" />
     <ProjectReference Include="..\..\Modules\Identity\Vpms.Identity.Contracts\Vpms.Identity.Contracts.csproj" />
+    <ProjectReference Include="..\..\Modules\Audit\Vpms.Audit.Domain\Vpms.Audit.Domain.csproj" />
   </ItemGroup>
 
 </Project>

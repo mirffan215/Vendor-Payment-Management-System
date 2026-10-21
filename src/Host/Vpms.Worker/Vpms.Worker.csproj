@@ -19,5 +19,6 @@
     <ProjectReference Include="..\..\Modules\Audit\Vpms.Audit.Infrastructure\Vpms.Audit.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Audit\Vpms.Audit.Application\Vpms.Audit.Application.csproj" />
     <ProjectReference Include="..\..\BuildingBlocks\Vpms.BuildingBlocks\Vpms.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\..\Modules\Audit\Vpms.Audit.Domain\Vpms.Audit.Domain.csproj" />
   </ItemGroup>
 </Project>

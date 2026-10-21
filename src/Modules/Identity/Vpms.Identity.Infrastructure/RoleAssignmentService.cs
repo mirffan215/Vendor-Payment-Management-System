@@ -1,11 +1,13 @@
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
+using Vpms.BuildingBlocks.Audit;
 using Vpms.BuildingBlocks.Security;
 using Vpms.Identity.Application;
 using Vpms.Identity.Domain;
 
 namespace Vpms.Identity.Infrastructure;
 
-public sealed class RoleAssignmentService(IdentityDbContext db, ConflictingPermissionsMatrix matrix, TimeProvider clock)
+public sealed class RoleAssignmentService(IdentityDbContext db, ConflictingPermissionsMatrix matrix, TimeProvider clock, IAuditPort audit)
     : IRoleAssignmentService
 {
     public async Task EnsureSystemRolesAsync(CancellationToken ct = default)
@@ -39,7 +41,7 @@ public sealed class RoleAssignmentService(IdentityDbContext db, ConflictingPermi
             select p.Permission).Distinct().ToListAsync(ct);
 
         var combined = held.Concat(role.Permissions.Select(p => p.Permission)).ToHashSet();
-        matrix.EnsureNoConflicts(combined);
+        await EnsureNoConflictsAudited(combined, actorUserId, userId, roleId, legalEntityId, ct);
 
         // A tenant-wide grant also overlaps every entity-scoped grant the user has.
         if (legalEntityId is null)
@@ -51,15 +53,34 @@ public sealed class RoleAssignmentService(IdentityDbContext db, ConflictingPermi
                 select new { a.LegalEntityId, p.Permission }).ToListAsync(ct);
             foreach (var group in scoped.GroupBy(x => x.LegalEntityId))
             {
-                matrix.EnsureNoConflicts(group.Select(x => x.Permission).Concat(combined).ToHashSet());
+                await EnsureNoConflictsAudited(group.Select(x => x.Permission).Concat(combined).ToHashSet(),
+                    actorUserId, userId, roleId, legalEntityId, ct);
             }
         }
 
-        db.RoleAssignments.Add(new RoleAssignment
+        var assignment = new RoleAssignment
         {
             Id = Guid.NewGuid(), UserId = userId, RoleId = roleId, LegalEntityId = legalEntityId,
             AssignedAt = clock.GetUtcNow(), AssignedBy = actorUserId,
-        });
+        };
+        db.RoleAssignments.Add(assignment);
+        audit.Record(new AuditEntry("role.assigned", "RoleAssignment", assignment.Id.ToString(), legalEntityId,
+            JsonSerializer.Serialize(new { userId, roleId, role = role.Name }), ActorId: actorUserId));
         await db.SaveChangesAsync(ct);
+    }
+
+    private async Task EnsureNoConflictsAudited(IReadOnlySet<string> permissions, Guid actorUserId, Guid userId, Guid roleId,
+        Guid? legalEntityId, CancellationToken ct)
+    {
+        try
+        {
+            matrix.EnsureNoConflicts(permissions);
+        }
+        catch (SegregationOfDutiesException ex)
+        {
+            await audit.WriteNowAsync(new AuditEntry("sod.assignment.blocked", "RoleAssignment", null, legalEntityId,
+                JsonSerializer.Serialize(new { userId, roleId, rule = ex.Rule }), ActorId: actorUserId), ct);
+            throw;
+        }
     }
 }

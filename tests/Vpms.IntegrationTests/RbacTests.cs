@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Vpms.BuildingBlocks.Persistence;
 using Vpms.BuildingBlocks.Security;
 using Vpms.BuildingBlocks.Tenancy;
@@ -14,7 +15,7 @@ namespace Vpms.IntegrationTests;
 public sealed class RbacTests : IAsyncLifetime
 {
     private readonly SqlServerFixture _sql;
-    private TestDatabase _db = null!;
+    private IntegrationHost _host = null!;
     private readonly Guid _tenantA = Guid.NewGuid();
     private readonly Guid _tenantB = Guid.NewGuid();
     private readonly Guid _entity1 = Guid.NewGuid();
@@ -26,12 +27,12 @@ public sealed class RbacTests : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        _db = await _sql.CreateDatabaseAsync();
+        _host = new IntegrationHost(await _sql.CreateDatabaseAsync());
         (_userA, _) = await SeedTenantAsync(_tenantA);
         (_userB, _) = await SeedTenantAsync(_tenantB);
     }
 
-    public Task DisposeAsync() => Task.CompletedTask;
+    public async Task DisposeAsync() => await _host.DisposeAsync();
 
     [Fact]
     public async Task Entity_scoped_role_grants_the_permission_only_for_that_entity()
@@ -147,12 +148,9 @@ public sealed class RbacTests : IAsyncLifetime
 
     private async Task Run(Guid tenantId, Func<IRoleAssignmentService, IPermissionEvaluator, IdentityDbContext, Task> action)
     {
-        var tenant = new TenantContext();
-        tenant.SetTenant(tenantId);
-        await using var db = new IdentityDbContext(
-            new DbContextOptionsBuilder<IdentityDbContext>().UseSqlServer(_db.AppConnectionString)
-                .AddInterceptors(new TenantSessionContextInterceptor(tenant)).Options, tenant);
-        var svc = new RoleAssignmentService(db, SodConfiguration.Default(), TimeProvider.System);
-        await action(svc, new PermissionEvaluator(db), db);
+        await using var scope = _host.Scope(tenantId);
+        var sp = scope.ServiceProvider;
+        await action(sp.GetRequiredService<IRoleAssignmentService>(), sp.GetRequiredService<IPermissionEvaluator>(),
+            sp.GetRequiredService<IdentityDbContext>());
     }
 }

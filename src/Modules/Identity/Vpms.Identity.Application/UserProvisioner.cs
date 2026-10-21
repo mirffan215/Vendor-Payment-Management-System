@@ -1,3 +1,5 @@
+using System.Text.Json;
+using Vpms.BuildingBlocks.Audit;
 using Vpms.BuildingBlocks.Tenancy;
 using Vpms.Identity.Domain;
 
@@ -25,19 +27,19 @@ public sealed record SignInResult(SignedInUser? User, SignInDenial? Denial)
 /// Maps a validated external identity to a VPMS user. The tenant comes from the provider configuration held by
 /// the server, never from claims inside the external token.
 /// </summary>
-public sealed class UserProvisioner(IIdentityStore store, TenantContext tenant, TimeProvider clock)
+public sealed class UserProvisioner(IIdentityStore store, TenantContext tenant, TimeProvider clock, IAuditPort audit)
 {
     public async Task<SignInResult> SignInAsync(IdentityProviderConfig provider, ExternalIdentity identity,
         CancellationToken ct = default)
     {
         if (!provider.Enabled)
         {
-            return Deny(SignInDenial.ProviderDisabled);
+            return await Deny(provider, SignInDenial.ProviderDisabled, ct);
         }
 
         if (string.IsNullOrWhiteSpace(identity.Subject))
         {
-            return Deny(SignInDenial.MissingSubject);
+            return await Deny(provider, SignInDenial.MissingSubject, ct);
         }
 
         tenant.SetTenant(provider.TenantId);
@@ -47,12 +49,12 @@ public sealed class UserProvisioner(IIdentityStore store, TenantContext tenant, 
         {
             if (!provider.AutoProvision)
             {
-                return Deny(SignInDenial.NotProvisioned);
+                return await Deny(provider, SignInDenial.NotProvisioned, ct);
             }
 
             if (!EmailAllowed(provider, identity.Email))
             {
-                return Deny(SignInDenial.EmailDomainNotAllowed);
+                return await Deny(provider, SignInDenial.EmailDomainNotAllowed, ct);
             }
 
             user = new User
@@ -66,21 +68,32 @@ public sealed class UserProvisioner(IIdentityStore store, TenantContext tenant, 
                 CreatedAt = clock.GetUtcNow(),
             };
             await store.AddUserAsync(user, ct);
+            audit.Record(new AuditEntry("user.provisioned", "User", user.Id.ToString(), ActorType: AuditActorType.System,
+                ChangeSummaryJson: JsonSerializer.Serialize(new { providerId = provider.Id })));
         }
 
         if (user.Status != UserStatus.Active)
         {
-            return Deny(SignInDenial.UserDisabled);
+            return await Deny(provider, SignInDenial.UserDisabled, ct, user.Id);
         }
 
         user.LastLoginAt = clock.GetUtcNow();
+        audit.Record(new AuditEntry("auth.login.succeeded", "User", user.Id.ToString(), ActorId: user.Id,
+            ActorType: AuditActorType.User, ChangeSummaryJson: JsonSerializer.Serialize(new { providerId = provider.Id })));
         await store.SaveChangesAsync(ct);
 
         return new SignInResult(
             new SignedInUser(user.Id, user.TenantId, user.ProviderId, user.Email, user.DisplayName, user.Locale), null);
     }
 
-    private static SignInResult Deny(SignInDenial reason) => new(null, reason);
+    private async Task<SignInResult> Deny(IdentityProviderConfig provider, SignInDenial reason, CancellationToken ct, Guid? userId = null)
+    {
+        // No personal data in the record: only the provider and the reason.
+        await audit.WriteNowAsync(new AuditEntry("auth.login.denied", "User", userId?.ToString(), TenantId: provider.TenantId,
+            ActorType: AuditActorType.Anonymous,
+            ChangeSummaryJson: JsonSerializer.Serialize(new { providerId = provider.Id, reason = reason.ToString() })), ct);
+        return new SignInResult(null, reason);
+    }
 
     public static bool EmailAllowed(IdentityProviderConfig provider, string? email)
     {

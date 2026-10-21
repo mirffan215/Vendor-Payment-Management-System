@@ -12,6 +12,9 @@ public static class PersistenceServiceCollectionExtensions
         services.AddScoped<TenantContext>();
         services.AddScoped<ITenantContext>(sp => sp.GetRequiredService<TenantContext>());
         services.AddScoped<TenantSessionContextInterceptor>();
+        services.AddScoped<Vpms.BuildingBlocks.Audit.AuditBuffer>();
+        services.AddScoped<Vpms.BuildingBlocks.Audit.AuditContext>();
+        services.AddScoped<Vpms.BuildingBlocks.Audit.AuditSaveChangesInterceptor>();
         return services;
     }
 
@@ -25,7 +28,9 @@ public static class PersistenceServiceCollectionExtensions
     {
         services.AddDbContext<T>((sp, options) => options
             .UseSqlServer(connectionString(sp))
-            .AddInterceptors(sp.GetRequiredService<TenantSessionContextInterceptor>()));
+            .AddInterceptors(
+                sp.GetRequiredService<TenantSessionContextInterceptor>(),
+                sp.GetRequiredService<Vpms.BuildingBlocks.Audit.AuditSaveChangesInterceptor>()));
         return services;
     }
 }

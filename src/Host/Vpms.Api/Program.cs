@@ -5,6 +5,8 @@ using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Authorization;
 using Vpms.Api.Auth;
 using Vpms.BuildingBlocks.Persistence;
+using Vpms.Audit.Application;
+using Vpms.Audit.Infrastructure;
 using Vpms.CustomerAdmin.Infrastructure;
 using Vpms.Identity.Application;
 using Vpms.Identity.Infrastructure;
@@ -19,6 +21,9 @@ builder.Services.Configure<AuthOptions>(builder.Configuration.GetSection(AuthOpt
 builder.Services.AddTenancy();
 builder.Services.AddCustomerAdminModule(ConnectionString);
 builder.Services.AddIdentityModule(ConnectionString);
+builder.Services.AddAuditModule(ConnectionString);
+builder.Services.AddSingleton<IAuditAnchorSink>(sp => new FileAuditAnchorSink(
+    sp.GetRequiredService<IConfiguration>()["Audit:AnchorDirectory"] ?? Path.Combine(Path.GetTempPath(), "vpms-audit-anchors")));
 builder.Services.AddMemoryCache();
 // Per-tenant OIDC schemes are added at runtime; the shared post-configuration (data protection, nonce/state formats) is registered once.
 builder.Services.TryAddEnumerable(
@@ -78,9 +83,11 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseMiddleware<AuditContextMiddleware>();
 app.UseMiddleware<OidcCallbackSchemeMiddleware>();
 app.UseAuthentication();
 app.UseMiddleware<TenantContextMiddleware>();
+app.UseMiddleware<AuditActorMiddleware>();
 app.UseAuthorization();
 app.UseMiddleware<CsrfProtectionMiddleware>();
 

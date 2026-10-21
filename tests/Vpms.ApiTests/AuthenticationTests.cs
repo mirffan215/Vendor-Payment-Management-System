@@ -188,7 +188,7 @@ public sealed class AuthenticationTests : IClassFixture<ApiFixtureHolder>
     // --- helpers -------------------------------------------------------------------------------------------
 
     /// <summary>Drives login -> IdP authorize -> callback by hand (no auto redirects) and returns the final location.</summary>
-    private static async Task<string> TryCompleteLoginAsync(HttpClient browser, FakeOidcProvider idp, Guid providerId, string returnUrl)
+    internal static async Task<string> TryCompleteLoginAsync(HttpClient browser, FakeOidcProvider idp, Guid providerId, string returnUrl)
     {
         var login = await browser.GetAsync($"/auth/login?provider={providerId}&returnUrl={Uri.EscapeDataString(returnUrl)}");
         Assert.Equal(HttpStatusCode.Redirect, login.StatusCode);
@@ -205,7 +205,7 @@ public sealed class AuthenticationTests : IClassFixture<ApiFixtureHolder>
         return done.Headers.Location?.OriginalString ?? throw new InvalidOperationException($"No redirect: {(int)done.StatusCode}");
     }
 
-    private static async Task<string> SignInAsync(HttpClient browser, FakeOidcProvider idp, Guid providerId, string returnUrl)
+    internal static async Task<string> SignInAsync(HttpClient browser, FakeOidcProvider idp, Guid providerId, string returnUrl)
     {
         var location = await TryCompleteLoginAsync(browser, idp, providerId, returnUrl);
         Assert.DoesNotContain("/auth/denied", location, StringComparison.Ordinal);
