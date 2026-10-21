@@ -11,6 +11,7 @@ export default defineConfig({
     proxy: {
       '/api': { target: api, secure: false },
       '/auth': { target: api, secure: false },
+      '/portal/auth': { target: api, secure: false },
     },
   },
   test: {

@@ -34,7 +34,7 @@ describe('translations', () => {
   })
 
   it('actually translates the text (Arabic strings contain Arabic script) except proper names', () => {
-    const properNames = new Set(['language.en', 'login.tenantPlaceholder'])
+    const properNames = new Set(['language.en', 'login.tenantPlaceholder', 'admin.kind.EntraId', 'admin.kind.Google', 'admin.kind.GenericOidc'])
     for (const [key, value] of Object.entries(arabic)) {
       if (properNames.has(key)) continue
       expect(/[؀-ۿ]/.test(value), key).toBe(true)

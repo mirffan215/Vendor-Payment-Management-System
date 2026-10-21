@@ -1,8 +1,26 @@
 {
-  "app": { "name": "Vendor Payment Management" },
-  "nav": { "home": "Home", "audit": "Audit trail", "signOut": "Sign out", "skipToContent": "Skip to content" },
-  "language": { "label": "Language", "en": "English", "ar": "العربية" },
-  "calendar": { "label": "Calendar", "gregorian": "Gregorian", "hijri": "Hijri" },
+  "app": {
+    "name": "Vendor Payment Management"
+  },
+  "nav": {
+    "home": "Home",
+    "audit": "Audit trail",
+    "signOut": "Sign out",
+    "skipToContent": "Skip to content",
+    "vendors": "Vendors",
+    "bankChanges": "Bank changes",
+    "admin": "Administration"
+  },
+  "language": {
+    "label": "Language",
+    "en": "English",
+    "ar": "العربية"
+  },
+  "calendar": {
+    "label": "Calendar",
+    "gregorian": "Gregorian",
+    "hijri": "Hijri"
+  },
   "login": {
     "title": "Sign in",
     "intro": "Enter your organisation's identifier to see how you can sign in.",
@@ -30,7 +48,12 @@
       "entity": "Entity",
       "actor": "Actor"
     },
-    "actor": { "User": "User", "System": "System", "Anonymous": "Anonymous", "Delegate": "Delegate" },
+    "actor": {
+      "User": "User",
+      "System": "System",
+      "Anonymous": "Anonymous",
+      "Delegate": "Delegate"
+    },
     "empty": "There are no audit events to show.",
     "loadMore": "Load more",
     "loading": "Loading…",
@@ -41,7 +64,272 @@
     "unauthenticated": "Please sign in to continue.",
     "forbidden": "You do not have permission to do this.",
     "generic": "Something went wrong. Please try again.",
-    "reference": "Reference: {{id}}"
+    "reference": "Reference: {{id}}",
+    "codes": {
+      "callback_required": "Record the reference of the callback to the vendor before approving.",
+      "sod_violation": "You cannot do this because you took part in the same item. Another person must.",
+      "not_the_maker": "Only the person who made the request can withdraw it.",
+      "change_not_pending": "This change has already been decided.",
+      "change_expired": "This change request has expired. Start a new one.",
+      "change_pending": "There is already a pending change for this currency.",
+      "stale_change": "The details this change replaces are no longer in effect. Start a new request.",
+      "no_change": "These are the bank details already in effect.",
+      "bank_account_shared": "Another vendor already uses this account. Confirm only if this is expected.",
+      "bank_details_not_accepted": "These bank details cannot be accepted online. Please contact the customer.",
+      "invalid_iban": "The IBAN is not valid. Check the number.",
+      "iban_required": "An IBAN is required for banks in this country.",
+      "iban_country_mismatch": "The IBAN country does not match the bank country.",
+      "invalid_swift": "The SWIFT/BIC code looks invalid.",
+      "account_required": "Provide an IBAN or an account number.",
+      "reason_required": "A reason is required.",
+      "invalid_country": "Enter a two-letter country code, for example SA.",
+      "invalid_currency": "Enter a three-letter currency code, for example SAR.",
+      "invalid_email": "The email address is not valid.",
+      "invalid_transition": "That is not possible in the current status.",
+      "vendor_duplicate": "A vendor with this tax number already exists.",
+      "invalid_tax_number": "The tax number is not valid.",
+      "documents_missing": "Required documents are missing or not yet verified.",
+      "document_not_clean": "The file has not been scanned clean yet.",
+      "document_limit": "The maximum number of documents has been reached.",
+      "invalid_document_type": "Unknown document type.",
+      "file_too_large": "The file is too large.",
+      "invalid_message": "Enter a message (up to 4000 characters).",
+      "request_closed": "This request is closed.",
+      "portal_user_exists": "This person already has portal access.",
+      "invalid_credentials": "Sign-in failed. Check your details and try again.",
+      "invalid_code": "The code is not correct. Try the next code shown.",
+      "weak_password_": "This password is too weak. Use at least 12 characters that are hard to guess.",
+      "unknown_legal_entity": "That legal entity does not exist."
+    }
   },
-  "format": { "currencyExample": "Amount" }
+  "format": {
+    "currencyExample": "Amount"
+  },
+  "common": {
+    "loading": "Loading…"
+  },
+  "status": {
+    "Invited": "Invited",
+    "Submitted": "Submitted",
+    "UnderReview": "Under review",
+    "Active": "Active",
+    "Rejected": "Rejected",
+    "Suspended": "Suspended",
+    "Blocked": "Blocked",
+    "Inactive": "Inactive",
+    "Disabled": "Disabled",
+    "Expired": "Expired",
+    "Revoked": "Revoked",
+    "Pending": "Pending"
+  },
+  "documentType": {
+    "CommercialRegistration": "Commercial registration",
+    "TaxCertificate": "Tax certificate",
+    "BankLetter": "Bank letter",
+    "Other": "Other"
+  },
+  "scan": {
+    "Pending": "Scanning",
+    "Clean": "Clean",
+    "Infected": "Infected",
+    "Failed": "Scan failed"
+  },
+  "docStatus": {
+    "Uploaded": "Uploaded",
+    "Verified": "Verified",
+    "Rejected": "Rejected"
+  },
+  "bankStatus": {
+    "Pending": "Pending approval",
+    "Verified": "In effect",
+    "Superseded": "Replaced",
+    "Revoked": "Not approved"
+  },
+  "changeStatus": {
+    "Pending": "Awaiting approval",
+    "Approved": "Approved",
+    "Rejected": "Rejected",
+    "Cancelled": "Withdrawn",
+    "Expired": "Expired"
+  },
+  "bankSource": {
+    "Staff": "Entered by staff",
+    "VendorPortal": "Requested by the vendor"
+  },
+  "requestStatus": {
+    "Open": "Open",
+    "Responded": "Vendor replied",
+    "Closed": "Closed"
+  },
+  "direction": {
+    "ToVendor": "From us",
+    "FromVendor": "From the vendor"
+  },
+  "vendors": {
+    "title": "Vendors",
+    "search": "Search",
+    "status": "Status",
+    "allStatuses": "All statuses",
+    "filter": "Filter",
+    "empty": "No vendors match.",
+    "columns": {
+      "name": "Name",
+      "country": "Country",
+      "status": "Status",
+      "created": "Created"
+    },
+    "newTitle": "New vendor",
+    "legalName": "Legal name",
+    "country": "Country (2 letters)",
+    "taxId": "Tax number",
+    "create": "Create vendor",
+    "back": "← All vendors",
+    "created": "Created",
+    "reason": "Reason",
+    "actions": {
+      "submit": "Submit for review",
+      "start-review": "Start review",
+      "approve": "Approve vendor",
+      "reject": "Reject",
+      "suspend": "Suspend",
+      "reactivate": "Reactivate",
+      "reopen": "Reopen"
+    },
+    "documents": "Documents",
+    "noDocuments": "No documents yet.",
+    "verifyDocument": "Verify",
+    "rejectDocument": "Reject",
+    "entities": "Legal entities",
+    "noEntities": "Not linked to any legal entity yet.",
+    "requests": "Requests and messages",
+    "subject": "Subject",
+    "message": "Message",
+    "sendRequest": "Send request"
+  },
+  "bank": {
+    "title": "Bank details",
+    "twoPersonNote": "Every bank-detail change must be approved by a second, different person before it takes effect.",
+    "propose": "Propose new bank details",
+    "accountName": "Account holder",
+    "bankName": "Bank",
+    "swift": "SWIFT/BIC",
+    "country": "Bank country (2 letters)",
+    "currency": "Currency (3 letters)",
+    "iban": "IBAN",
+    "reason": "Reason for the change",
+    "submitChange": "Submit for approval",
+    "queueTitle": "Bank-detail approvals",
+    "queueIntro": "You cannot approve a change you made yourself. Changes to an existing account, or requested by the vendor, need a callback to a known contact.",
+    "queueEmpty": "Nothing is waiting for approval.",
+    "source": "Source",
+    "proposed": "Proposed",
+    "current": "In effect now",
+    "none": "None",
+    "expires": "Expires",
+    "callbackNeeded": "Call the vendor on a number already on file and record the reference before approving.",
+    "callbackRef": "Callback reference",
+    "comment": "Comment",
+    "approve": "Approve",
+    "reject": "Reject"
+  },
+  "portalAdmin": {
+    "title": "Portal access",
+    "email": "Email",
+    "name": "Name",
+    "invite": "Invite user",
+    "inviteLink": "Invitation link (share it securely):"
+  },
+  "admin": {
+    "title": "Administration",
+    "tabs": {
+      "entities": "Legal entities",
+      "users": "Users",
+      "roles": "Roles",
+      "providers": "Sign-in providers",
+      "authorities": "Approval authorities"
+    },
+    "activate": "Activate",
+    "deactivate": "Deactivate",
+    "newEntity": "New legal entity",
+    "code": "Code",
+    "legalName": "Legal name",
+    "country": "Country",
+    "currency": "Base currency",
+    "create": "Create",
+    "email": "Email",
+    "roles": "Roles",
+    "actions": "Actions",
+    "disable": "Disable",
+    "enable": "Enable",
+    "chooseRole": "Choose a role",
+    "assign": "Assign",
+    "sodNote": "Roles that would let one person both prepare and approve the same thing cannot be assigned together.",
+    "system": "(system)",
+    "assignments": "{{count}} assigned",
+    "kind": {
+      "EntraId": "Microsoft Entra ID",
+      "Google": "Google",
+      "GenericOidc": "OpenID Connect"
+    },
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "authorityNote": "Spending limits per legal entity. Approval rules are applied by the workflow engine in a later release.",
+    "revoke": "Revoke"
+  },
+  "portal": {
+    "brand": "Vendor portal",
+    "invalidLinkTitle": "Link not valid",
+    "invalidLink": "This link is not valid or has expired. Ask your contact for a new one.",
+    "acceptTitle": "Welcome to the {{vendor}} portal",
+    "acceptIntro": "Hello {{name}}, set a password to finish creating your account.",
+    "email": "Email",
+    "newPassword": "New password",
+    "passwordRules": "At least 12 characters. Do not use your email address.",
+    "continue": "Continue",
+    "setupAuthenticator": "Set up your authenticator app",
+    "scanQr": "Scan this code with an authenticator app, then enter the 6-digit code it shows.",
+    "qrLabel": "QR code for your authenticator app",
+    "orEnterSecret": "Or enter this key manually:",
+    "code": "6-digit code",
+    "verify": "Verify",
+    "recoveryTitle": "Save your recovery codes",
+    "recoveryIntro": "Each code works once if you lose your phone. Store them somewhere safe; they are shown only now.",
+    "savedCodes": "I have saved them",
+    "goToSignIn": "Continue to sign in",
+    "signInTitle": "Vendor sign-in",
+    "password": "Password",
+    "enterCode": "Enter the code from your authenticator app.",
+    "signIn": "Sign in",
+    "welcome": "Welcome, {{name}} — {{vendor}}",
+    "sections": "Sections",
+    "tabs": {
+      "profile": "Profile",
+      "documents": "Documents",
+      "bank": "Bank details",
+      "messages": "Messages"
+    },
+    "legalNameLocked": "To change your legal name or tax number, contact the customer.",
+    "legalNameAr": "Legal name (Arabic)",
+    "tradeName": "Trade name",
+    "contactEmail": "Contact email",
+    "contactPhone": "Contact phone",
+    "saved": "Saved.",
+    "save": "Save",
+    "entities": "Customer entities you serve",
+    "download": "Download",
+    "uploadTitle": "Upload a document",
+    "documentType": "Document type",
+    "file": "File",
+    "scanNote": "Files are scanned before they can be used.",
+    "upload": "Upload",
+    "bankNote": "Changes to bank details are checked by the customer, who will call you back before they take effect.",
+    "currentBank": "Bank details in effect",
+    "bankRequests": "Your requests",
+    "withdraw": "Withdraw",
+    "requestBankChange": "Request a bank-detail change",
+    "sendBankRequest": "Send request",
+    "noMessages": "No messages.",
+    "reply": "Reply",
+    "sendReply": "Send reply"
+  }
 }

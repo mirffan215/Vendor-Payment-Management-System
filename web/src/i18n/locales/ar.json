@@ -1,8 +1,26 @@
 {
-  "app": { "name": "إدارة مدفوعات الموردين" },
-  "nav": { "home": "الرئيسية", "audit": "سجل التدقيق", "signOut": "تسجيل الخروج", "skipToContent": "انتقل إلى المحتوى" },
-  "language": { "label": "اللغة", "en": "English", "ar": "العربية" },
-  "calendar": { "label": "التقويم", "gregorian": "ميلادي", "hijri": "هجري" },
+  "app": {
+    "name": "إدارة مدفوعات الموردين"
+  },
+  "nav": {
+    "home": "الرئيسية",
+    "audit": "سجل التدقيق",
+    "signOut": "تسجيل الخروج",
+    "skipToContent": "انتقل إلى المحتوى",
+    "vendors": "الموردون",
+    "bankChanges": "تغييرات البيانات المصرفية",
+    "admin": "الإدارة"
+  },
+  "language": {
+    "label": "اللغة",
+    "en": "English",
+    "ar": "العربية"
+  },
+  "calendar": {
+    "label": "التقويم",
+    "gregorian": "ميلادي",
+    "hijri": "هجري"
+  },
   "login": {
     "title": "تسجيل الدخول",
     "intro": "أدخل معرّف مؤسستك لمعرفة طرق تسجيل الدخول المتاحة.",
@@ -30,7 +48,12 @@
       "entity": "الكيان",
       "actor": "المنفّذ"
     },
-    "actor": { "User": "مستخدم", "System": "النظام", "Anonymous": "مجهول", "Delegate": "مفوَّض" },
+    "actor": {
+      "User": "مستخدم",
+      "System": "النظام",
+      "Anonymous": "مجهول",
+      "Delegate": "مفوَّض"
+    },
     "empty": "لا توجد أحداث تدقيق للعرض.",
     "loadMore": "عرض المزيد",
     "loading": "جارٍ التحميل…",
@@ -41,7 +64,272 @@
     "unauthenticated": "يرجى تسجيل الدخول للمتابعة.",
     "forbidden": "ليست لديك صلاحية لتنفيذ هذا الإجراء.",
     "generic": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
-    "reference": "المرجع: {{id}}"
+    "reference": "المرجع: {{id}}",
+    "codes": {
+      "callback_required": "سجّل مرجع الاتصال بالمورد قبل الاعتماد.",
+      "sod_violation": "لا يمكنك تنفيذ هذا لأنك شاركت في العنصر نفسه. يجب أن يقوم به شخص آخر.",
+      "not_the_maker": "يمكن فقط لمن قدّم الطلب سحبه.",
+      "change_not_pending": "تم البت في هذا التغيير بالفعل.",
+      "change_expired": "انتهت صلاحية طلب التغيير. ابدأ طلباً جديداً.",
+      "change_pending": "يوجد بالفعل تغيير معلّق لهذه العملة.",
+      "stale_change": "لم تعد البيانات التي يستبدلها هذا التغيير سارية. ابدأ طلباً جديداً.",
+      "no_change": "هذه هي البيانات المصرفية السارية بالفعل.",
+      "bank_account_shared": "يستخدم مورد آخر هذا الحساب بالفعل. أكّد فقط إذا كان ذلك متوقعاً.",
+      "bank_details_not_accepted": "لا يمكن قبول هذه البيانات المصرفية عبر الإنترنت. يرجى التواصل مع العميل.",
+      "invalid_iban": "رقم الآيبان غير صالح. تحقق من الرقم.",
+      "iban_required": "يلزم رقم آيبان للبنوك في هذه الدولة.",
+      "iban_country_mismatch": "دولة الآيبان لا تطابق دولة البنك.",
+      "invalid_swift": "رمز SWIFT/BIC يبدو غير صالح.",
+      "account_required": "أدخل رقم الآيبان أو رقم الحساب.",
+      "reason_required": "السبب مطلوب.",
+      "invalid_country": "أدخل رمز دولة من حرفين، مثل SA.",
+      "invalid_currency": "أدخل رمز عملة من ثلاثة أحرف، مثل SAR.",
+      "invalid_email": "عنوان البريد الإلكتروني غير صالح.",
+      "invalid_transition": "هذا غير ممكن في الحالة الحالية.",
+      "vendor_duplicate": "يوجد مورد بهذا الرقم الضريبي بالفعل.",
+      "invalid_tax_number": "الرقم الضريبي غير صالح.",
+      "documents_missing": "المستندات المطلوبة ناقصة أو لم يتم التحقق منها بعد.",
+      "document_not_clean": "لم يتم التأكد من سلامة الملف بعد.",
+      "document_limit": "تم الوصول إلى الحد الأقصى لعدد المستندات.",
+      "invalid_document_type": "نوع المستند غير معروف.",
+      "file_too_large": "الملف كبير جداً.",
+      "invalid_message": "أدخل رسالة (حتى 4000 حرف).",
+      "request_closed": "هذا الطلب مغلق.",
+      "portal_user_exists": "هذا الشخص لديه وصول إلى البوابة بالفعل.",
+      "invalid_credentials": "فشل تسجيل الدخول. تحقق من بياناتك وحاول مرة أخرى.",
+      "invalid_code": "الرمز غير صحيح. جرّب الرمز التالي الذي يظهر.",
+      "weak_password_": "كلمة المرور ضعيفة. استخدم 12 حرفاً على الأقل يصعب تخمينها.",
+      "unknown_legal_entity": "هذا الكيان القانوني غير موجود."
+    }
   },
-  "format": { "currencyExample": "المبلغ" }
+  "format": {
+    "currencyExample": "المبلغ"
+  },
+  "common": {
+    "loading": "جارٍ التحميل…"
+  },
+  "status": {
+    "Invited": "مدعو",
+    "Submitted": "مُقدَّم",
+    "UnderReview": "قيد المراجعة",
+    "Active": "نشط",
+    "Rejected": "مرفوض",
+    "Suspended": "موقوف",
+    "Blocked": "محظور",
+    "Inactive": "غير نشط",
+    "Disabled": "معطّل",
+    "Expired": "منتهي",
+    "Revoked": "ملغى",
+    "Pending": "قيد الانتظار"
+  },
+  "documentType": {
+    "CommercialRegistration": "السجل التجاري",
+    "TaxCertificate": "الشهادة الضريبية",
+    "BankLetter": "خطاب البنك",
+    "Other": "أخرى"
+  },
+  "scan": {
+    "Pending": "قيد الفحص",
+    "Clean": "سليم",
+    "Infected": "مصاب",
+    "Failed": "فشل الفحص"
+  },
+  "docStatus": {
+    "Uploaded": "تم الرفع",
+    "Verified": "تم التحقق",
+    "Rejected": "مرفوض"
+  },
+  "bankStatus": {
+    "Pending": "بانتظار الاعتماد",
+    "Verified": "ساري المفعول",
+    "Superseded": "تم استبداله",
+    "Revoked": "غير معتمد"
+  },
+  "changeStatus": {
+    "Pending": "بانتظار الاعتماد",
+    "Approved": "معتمد",
+    "Rejected": "مرفوض",
+    "Cancelled": "تم سحبه",
+    "Expired": "منتهي"
+  },
+  "bankSource": {
+    "Staff": "أدخله موظف",
+    "VendorPortal": "طلبه المورد"
+  },
+  "requestStatus": {
+    "Open": "مفتوح",
+    "Responded": "ردّ المورد",
+    "Closed": "مغلق"
+  },
+  "direction": {
+    "ToVendor": "منّا",
+    "FromVendor": "من المورد"
+  },
+  "vendors": {
+    "title": "الموردون",
+    "search": "بحث",
+    "status": "الحالة",
+    "allStatuses": "كل الحالات",
+    "filter": "تصفية",
+    "empty": "لا يوجد موردون مطابقون.",
+    "columns": {
+      "name": "الاسم",
+      "country": "الدولة",
+      "status": "الحالة",
+      "created": "تاريخ الإنشاء"
+    },
+    "newTitle": "مورد جديد",
+    "legalName": "الاسم القانوني",
+    "country": "الدولة (حرفان)",
+    "taxId": "الرقم الضريبي",
+    "create": "إنشاء مورد",
+    "back": "→ كل الموردين",
+    "created": "تاريخ الإنشاء",
+    "reason": "السبب",
+    "actions": {
+      "submit": "تقديم للمراجعة",
+      "start-review": "بدء المراجعة",
+      "approve": "اعتماد المورد",
+      "reject": "رفض",
+      "suspend": "إيقاف",
+      "reactivate": "إعادة التفعيل",
+      "reopen": "إعادة الفتح"
+    },
+    "documents": "المستندات",
+    "noDocuments": "لا توجد مستندات بعد.",
+    "verifyDocument": "تحقق",
+    "rejectDocument": "رفض",
+    "entities": "الكيانات القانونية",
+    "noEntities": "غير مرتبط بأي كيان قانوني بعد.",
+    "requests": "الطلبات والرسائل",
+    "subject": "الموضوع",
+    "message": "الرسالة",
+    "sendRequest": "إرسال الطلب"
+  },
+  "bank": {
+    "title": "البيانات المصرفية",
+    "twoPersonNote": "يجب أن يعتمد شخص ثانٍ مختلف كل تغيير في البيانات المصرفية قبل أن يصبح ساري المفعول.",
+    "propose": "اقتراح بيانات مصرفية جديدة",
+    "accountName": "اسم صاحب الحساب",
+    "bankName": "البنك",
+    "swift": "رمز SWIFT/BIC",
+    "country": "دولة البنك (حرفان)",
+    "currency": "العملة (3 أحرف)",
+    "iban": "رقم الآيبان",
+    "reason": "سبب التغيير",
+    "submitChange": "تقديم للاعتماد",
+    "queueTitle": "اعتماد البيانات المصرفية",
+    "queueIntro": "لا يمكنك اعتماد تغيير أجريته بنفسك. التغييرات على حساب قائم أو المطلوبة من المورد تتطلب اتصالاً بجهة اتصال معروفة.",
+    "queueEmpty": "لا شيء بانتظار الاعتماد.",
+    "source": "المصدر",
+    "proposed": "المقترح",
+    "current": "الساري حالياً",
+    "none": "لا يوجد",
+    "expires": "ينتهي",
+    "callbackNeeded": "اتصل بالمورد على رقم مسجل لدينا مسبقاً وسجّل المرجع قبل الاعتماد.",
+    "callbackRef": "مرجع الاتصال",
+    "comment": "تعليق",
+    "approve": "اعتماد",
+    "reject": "رفض"
+  },
+  "portalAdmin": {
+    "title": "الوصول إلى البوابة",
+    "email": "البريد الإلكتروني",
+    "name": "الاسم",
+    "invite": "دعوة مستخدم",
+    "inviteLink": "رابط الدعوة (شاركه بطريقة آمنة):"
+  },
+  "admin": {
+    "title": "الإدارة",
+    "tabs": {
+      "entities": "الكيانات القانونية",
+      "users": "المستخدمون",
+      "roles": "الأدوار",
+      "providers": "مزودو تسجيل الدخول",
+      "authorities": "صلاحيات الاعتماد"
+    },
+    "activate": "تفعيل",
+    "deactivate": "إيقاف التفعيل",
+    "newEntity": "كيان قانوني جديد",
+    "code": "الرمز",
+    "legalName": "الاسم القانوني",
+    "country": "الدولة",
+    "currency": "العملة الأساسية",
+    "create": "إنشاء",
+    "email": "البريد الإلكتروني",
+    "roles": "الأدوار",
+    "actions": "الإجراءات",
+    "disable": "تعطيل",
+    "enable": "تمكين",
+    "chooseRole": "اختر دوراً",
+    "assign": "تعيين",
+    "sodNote": "لا يمكن تعيين أدوار تتيح لشخص واحد إعداد الشيء نفسه واعتماده معاً.",
+    "system": "(نظام)",
+    "assignments": "{{count}} معيّن",
+    "kind": {
+      "EntraId": "Microsoft Entra ID",
+      "Google": "Google",
+      "GenericOidc": "OpenID Connect"
+    },
+    "enabled": "ممكّن",
+    "disabled": "معطّل",
+    "authorityNote": "حدود الإنفاق لكل كيان قانوني. تُطبَّق قواعد الاعتماد بواسطة محرك سير العمل في إصدار لاحق.",
+    "revoke": "إلغاء"
+  },
+  "portal": {
+    "brand": "بوابة الموردين",
+    "invalidLinkTitle": "الرابط غير صالح",
+    "invalidLink": "هذا الرابط غير صالح أو منتهي الصلاحية. اطلب رابطاً جديداً من جهة الاتصال لديك.",
+    "acceptTitle": "مرحباً بك في بوابة {{vendor}}",
+    "acceptIntro": "مرحباً {{name}}، عيّن كلمة مرور لإكمال إنشاء حسابك.",
+    "email": "البريد الإلكتروني",
+    "newPassword": "كلمة المرور الجديدة",
+    "passwordRules": "12 حرفاً على الأقل. لا تستخدم بريدك الإلكتروني.",
+    "continue": "متابعة",
+    "setupAuthenticator": "إعداد تطبيق المصادقة",
+    "scanQr": "امسح هذا الرمز بتطبيق مصادقة ثم أدخل الرمز المكوّن من 6 أرقام الذي يعرضه.",
+    "qrLabel": "رمز QR لتطبيق المصادقة",
+    "orEnterSecret": "أو أدخل هذا المفتاح يدوياً:",
+    "code": "رمز من 6 أرقام",
+    "verify": "تحقق",
+    "recoveryTitle": "احفظ رموز الاسترداد",
+    "recoveryIntro": "يعمل كل رمز مرة واحدة إذا فقدت هاتفك. احتفظ بها في مكان آمن؛ تُعرض الآن فقط.",
+    "savedCodes": "لقد حفظتها",
+    "goToSignIn": "المتابعة إلى تسجيل الدخول",
+    "signInTitle": "تسجيل دخول الموردين",
+    "password": "كلمة المرور",
+    "enterCode": "أدخل الرمز من تطبيق المصادقة.",
+    "signIn": "تسجيل الدخول",
+    "welcome": "مرحباً {{name}} — {{vendor}}",
+    "sections": "الأقسام",
+    "tabs": {
+      "profile": "الملف",
+      "documents": "المستندات",
+      "bank": "البيانات المصرفية",
+      "messages": "الرسائل"
+    },
+    "legalNameLocked": "لتغيير اسمك القانوني أو رقمك الضريبي، تواصل مع العميل.",
+    "legalNameAr": "الاسم القانوني (بالعربية)",
+    "tradeName": "الاسم التجاري",
+    "contactEmail": "البريد الإلكتروني للتواصل",
+    "contactPhone": "هاتف التواصل",
+    "saved": "تم الحفظ.",
+    "save": "حفظ",
+    "entities": "كيانات العميل التي تخدمها",
+    "download": "تنزيل",
+    "uploadTitle": "رفع مستند",
+    "documentType": "نوع المستند",
+    "file": "الملف",
+    "scanNote": "تُفحص الملفات قبل أن يمكن استخدامها.",
+    "upload": "رفع",
+    "bankNote": "يراجع العميل تغييرات البيانات المصرفية وسيتصل بك قبل أن تصبح سارية.",
+    "currentBank": "البيانات المصرفية السارية",
+    "bankRequests": "طلباتك",
+    "withdraw": "سحب",
+    "requestBankChange": "طلب تغيير البيانات المصرفية",
+    "sendBankRequest": "إرسال الطلب",
+    "noMessages": "لا توجد رسائل.",
+    "reply": "رد",
+    "sendReply": "إرسال الرد"
+  }
 }
