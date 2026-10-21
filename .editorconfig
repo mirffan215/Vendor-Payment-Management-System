@@ -17,3 +17,6 @@ dotnet_diagnostic.CA2007.severity = none
 dotnet_diagnostic.CA1716.severity = none
 dotnet_diagnostic.CA1062.severity = none
 csharp_style_namespace_declarations = file_scoped:warning
+
+[**/Migrations/*.cs]
+generated_code = true
