@@ -15,9 +15,17 @@ public sealed class DynamicOidcSchemes(
     IOptionsMonitorCache<OpenIdConnectOptions> optionsCache,
     IEnumerable<IPostConfigureOptions<OpenIdConnectOptions>> postConfigures,
     Microsoft.Extensions.Options.IOptions<AuthOptions> authOptions,
-    OidcBackchannelOptions backchannel)
+    OidcBackchannelOptions backchannel) : IProviderChangeNotifier
 {
     private readonly SemaphoreSlim _gate = new(1, 1);
+
+    /// <summary>Drops the runtime scheme so the next sign-in rebuilds it from the provider's current settings.</summary>
+    public void ProviderChanged(Guid providerId)
+    {
+        var name = SchemeName(providerId);
+        optionsCache.TryRemove(name);
+        schemes.RemoveScheme(name);
+    }
 
     public static string SchemeName(Guid providerId) => $"oidc-{providerId:N}";
 

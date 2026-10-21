@@ -110,6 +110,24 @@ public sealed class ApiFixture : WebApplicationFactory<Program>, IAsyncLifetime
         await roles.AssignAsync(user.Id, user.Id, role.Id, legalEntityId);
     }
 
+    /// <summary>Creates a custom role with the given permissions and assigns it (tenant-wide or to one entity).</summary>
+    public async Task CreateRoleAndAssign(Guid tenantId, string email, string roleName, string[] permissions, Guid? legalEntityId)
+    {
+        await using var scope = Services.CreateAsyncScope();
+        scope.ServiceProvider.GetRequiredService<TenantContext>().SetTenant(tenantId);
+        var db = scope.ServiceProvider.GetRequiredService<IdentityDbContext>();
+        var role = await db.Roles.FirstOrDefaultAsync(r => r.Name == roleName);
+        if (role is null)
+        {
+            role = new Role { Id = Guid.NewGuid(), Name = roleName, Permissions = permissions.Select(p => new RolePermission { Id = Guid.NewGuid(), Permission = p }).ToList() };
+            db.Roles.Add(role);
+            await db.SaveChangesAsync();
+        }
+
+        var user = await db.Users.FirstAsync(u => u.Email == email);
+        await scope.ServiceProvider.GetRequiredService<IRoleAssignmentService>().AssignAsync(user.Id, user.Id, role.Id, legalEntityId);
+    }
+
     private async Task SeedAsync() => await WithDbAsync<int>(async (identity, admin) =>
     {
         admin.Tenants.AddRange(

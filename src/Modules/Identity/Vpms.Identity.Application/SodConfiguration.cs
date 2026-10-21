@@ -12,5 +12,6 @@ public static class SodConfiguration
         new PermissionConflict(Permissions.VendorBankDetailsEdit, Permissions.VendorBankDetailsApprove),
         new PermissionConflict(Permissions.PaymentPrepare, Permissions.PaymentRelease),
         new PermissionConflict(Permissions.InvoiceCreate, Permissions.InvoiceApprove),
+        new PermissionConflict(Permissions.VendorEdit, Permissions.VendorApprove),
     ]);
 }

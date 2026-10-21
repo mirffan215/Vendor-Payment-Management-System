@@ -69,6 +69,27 @@ public sealed class RoleAssignmentService(IdentityDbContext db, ConflictingPermi
         await db.SaveChangesAsync(ct);
     }
 
+    public async Task ApplyPendingAsync(Guid userId, string email, CancellationToken ct = default)
+    {
+        var normalized = email.Trim().ToLowerInvariant();
+        var pending = await db.PendingRoleAssignments.Where(p => p.Email == normalized).ToListAsync(ct);
+        foreach (var item in pending)
+        {
+            try
+            {
+                await AssignAsync(item.CreatedBy, userId, item.RoleId, item.LegalEntityId, ct);
+                db.PendingRoleAssignments.Remove(item);
+                audit.Record(new AuditEntry("role.pending-applied", "PendingRoleAssignment", item.Id.ToString(), item.LegalEntityId,
+                    JsonSerializer.Serialize(new { userId, item.RoleId }), ActorType: AuditActorType.System));
+                await db.SaveChangesAsync(ct);
+            }
+            catch (SegregationOfDutiesException)
+            {
+                // Already audited by AssignAsync. The sign-in must not fail; the prepared role simply stays pending.
+            }
+        }
+    }
+
     private async Task EnsureNoConflictsAudited(IReadOnlySet<string> permissions, Guid actorUserId, Guid userId, Guid roleId,
         Guid? legalEntityId, CancellationToken ct)
     {

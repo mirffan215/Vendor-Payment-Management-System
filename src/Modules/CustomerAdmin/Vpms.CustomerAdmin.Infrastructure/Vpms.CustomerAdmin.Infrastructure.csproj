@@ -4,6 +4,9 @@
     <ProjectReference Include="..\Vpms.CustomerAdmin.Application\Vpms.CustomerAdmin.Application.csproj" />
     <ProjectReference Include="..\Vpms.CustomerAdmin.Domain\Vpms.CustomerAdmin.Domain.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Vpms.BuildingBlocks\Vpms.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\..\Identity\Vpms.Identity.Contracts\Vpms.Identity.Contracts.csproj" />
+    <ProjectReference Include="..\..\Documents\Vpms.Documents.Contracts\Vpms.Documents.Contracts.csproj" />
+    <ProjectReference Include="..\Vpms.CustomerAdmin.Contracts\Vpms.CustomerAdmin.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>

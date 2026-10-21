@@ -8,5 +8,8 @@ public class Tenant
     public string Slug { get; set; } = "";
     public string Status { get; set; } = "Active";
     public string DefaultLocale { get; set; } = "en";
+    public string DefaultCalendar { get; set; } = "gregorian";
+    public string? PrimaryColor { get; set; }
+    public Guid? LogoAttachmentId { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
 }

@@ -38,6 +38,7 @@ public sealed class IntegrationHost : IAsyncDisposable
         services.AddBlobStorage();
         services.Configure<DocumentsOptions>(o => o.Scanner = "Eicar");
         services.AddDocumentsModule(_ => database.AppConnectionString);
+        services.AddSingleton<Vpms.Identity.Application.ISecretResolver, NoSecrets>();
         configure?.Invoke(services);
         _root = services.BuildServiceProvider(validateScopes: true);
     }
@@ -45,9 +46,17 @@ public sealed class IntegrationHost : IAsyncDisposable
     /// <summary>A new request/job scope bound to the tenant (or to no tenant when null).</summary>
     public IServiceProvider Services => _root;
 
-    public AsyncServiceScope Scope(Guid? tenantId)
+    public AsyncServiceScope Scope(Guid? tenantId, Guid? actorId = null)
     {
         var scope = _root.CreateAsyncScope();
+        if (actorId is { } actor)
+        {
+            var audit = scope.ServiceProvider.GetRequiredService<Vpms.BuildingBlocks.Audit.AuditContext>();
+            audit.ActorId = actor;
+            audit.ActorType = Vpms.BuildingBlocks.Audit.AuditActorType.User;
+            audit.CorrelationId = "test-" + Guid.NewGuid().ToString("N")[..8];
+        }
+
         if (tenantId is { } id)
         {
             scope.ServiceProvider.GetRequiredService<TenantContext>().SetTenant(id);
@@ -59,4 +68,10 @@ public sealed class IntegrationHost : IAsyncDisposable
     public IServiceScopeFactory ScopeFactory => _root.GetRequiredService<IServiceScopeFactory>();
 
     public ValueTask DisposeAsync() => _root.DisposeAsync();
+}
+
+/// <summary>No secret store in tests: every reference is "not available".</summary>
+internal sealed class NoSecrets : Vpms.Identity.Application.ISecretResolver
+{
+    public Task<string?> ResolveAsync(string secretRef, CancellationToken ct = default) => Task.FromResult<string?>(null);
 }

@@ -35,6 +35,7 @@ builder.Services.Configure<StorageOptions>(builder.Configuration.GetSection(Stor
 builder.Services.AddBlobStorage();
 builder.Services.Configure<DocumentsOptions>(builder.Configuration.GetSection(DocumentsOptions.Section));
 builder.Services.AddCustomerAdminModule(ConnectionString);
+builder.Services.AddSingleton<IProviderChangeNotifier>(sp => sp.GetRequiredService<DynamicOidcSchemes>());
 builder.Services.AddIdentityModule(ConnectionString);
 builder.Services.AddAuditModule(ConnectionString);
 builder.Services.AddDocumentsModule(ConnectionString);

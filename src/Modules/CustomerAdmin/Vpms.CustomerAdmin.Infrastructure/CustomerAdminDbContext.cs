@@ -13,6 +13,8 @@ public class CustomerAdminDbContext(DbContextOptions<CustomerAdminDbContext> opt
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<LegalEntity> LegalEntities => Set<LegalEntity>();
     public DbSet<TenantKey> TenantKeys => Set<TenantKey>();
+    public DbSet<ApprovalAuthority> ApprovalAuthorities => Set<ApprovalAuthority>();
+    public DbSet<ApprovalMatrixRule> ApprovalMatrixRules => Set<ApprovalMatrixRule>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -27,6 +29,8 @@ public class CustomerAdminDbContext(DbContextOptions<CustomerAdminDbContext> opt
             b.HasIndex(x => x.Slug).IsUnique();
             b.Property(x => x.Status).HasMaxLength(30).IsRequired();
             b.Property(x => x.DefaultLocale).HasMaxLength(10).IsRequired();
+            b.Property(x => x.DefaultCalendar).HasMaxLength(10).IsRequired();
+            b.Property(x => x.PrimaryColor).HasMaxLength(7);
             // The tenant row itself is visible only to its own tenant.
             b.HasQueryFilter(x => x.Id == CurrentTenantId || IsPlatformScope);
         });
@@ -37,10 +41,33 @@ public class CustomerAdminDbContext(DbContextOptions<CustomerAdminDbContext> opt
             b.HasKey(x => x.Id);
             b.Property(x => x.Code).HasMaxLength(50).IsRequired();
             b.Property(x => x.LegalName).HasMaxLength(300).IsRequired();
+            b.Property(x => x.LegalNameAr).HasMaxLength(300);
+            b.Property(x => x.TaxRegistrationNoCipher).HasMaxLength(500);
+            b.Property(x => x.TaxRegistrationNoIndex).HasMaxLength(64).IsFixedLength();
+            b.HasIndex(x => new { x.TenantId, x.TaxRegistrationNoIndex }).IsUnique().HasFilter("[TaxRegistrationNoIndex] IS NOT NULL");
             b.Property(x => x.CountryCode).HasMaxLength(2).IsRequired();
             b.Property(x => x.BaseCurrency).HasMaxLength(3).IsRequired();
             b.Property(x => x.Status).HasMaxLength(30).IsRequired();
             b.HasIndex(x => new { x.TenantId, x.Code }).IsUnique();
+        });
+
+        modelBuilder.Entity<ApprovalAuthority>(b =>
+        {
+            b.ToTable("ApprovalAuthority", t => t.HasCheckConstraint("CK_ApprovalAuthority_Amount", "[MaxAmount] > 0"));
+            b.HasKey(x => x.Id);
+            b.Property(x => x.MaxAmount).HasPrecision(19, 4);
+            b.Property(x => x.CurrencyCode).HasMaxLength(3).IsFixedLength().IsRequired();
+            b.Property(x => x.Status).HasMaxLength(20).IsRequired();
+            b.HasIndex(x => new { x.TenantId, x.LegalEntityId, x.UserId });
+        });
+
+        modelBuilder.Entity<ApprovalMatrixRule>(b =>
+        {
+            b.ToTable("ApprovalMatrixRule");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Name).HasMaxLength(200).IsRequired();
+            b.Property(x => x.Status).HasMaxLength(20).IsRequired();
+            b.HasIndex(x => new { x.TenantId, x.LegalEntityId, x.Priority });
         });
 
         modelBuilder.Entity<TenantKey>(b =>
