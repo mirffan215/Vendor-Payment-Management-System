@@ -14,7 +14,7 @@ phase starts only when told. Phases match `/prompts/phase-N-*.md`.
 Scope: `architecture.md`, `data-model.md`, ADRs 0001-0005, `roadmap.md`, `risks-and-open-questions.md`. No code.
 Acceptance: documents reviewed and approved by the owner; open questions answered or accepted.
 
-## Phase 1: Foundation (`phase-1-foundation.md`)
+## Phase 1: Foundation (`phase-1-foundation.md`) — complete, see [phase-1-summary.md](phase-1-summary.md)
 Scope: Clean Architecture scaffold, React + TS app, Docker, CI, IaC skeleton; multi-tenancy (resolution, query
 filters, scoped storage/cache); authentication (Entra ID, Google, generic OIDC); RBAC and SoD primitives; audit
 foundation; logging, OpenTelemetry, health checks, problem details, OpenAPI; i18n English/Arabic with RTL.

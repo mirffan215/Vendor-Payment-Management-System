@@ -74,6 +74,20 @@ public class LayerDependencyTests
         }
     }
 
+    [Fact]
+    public void IgnoreQueryFilters_detector_finds_real_usages()
+    {
+        // Guards the guard: the IL scan above must actually be able to see the call it bans.
+        Assert.True(ReferencesMethod(typeof(DeliberateViolation), "IgnoreQueryFilters"));
+        Assert.False(ReferencesMethod(typeof(LayerDependencyTests), "ThisMethodDoesNotExist"));
+    }
+
+    private sealed class DeliberateViolation
+    {
+        public static IQueryable<string> Bypass(IQueryable<string> q) =>
+            Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.IgnoreQueryFilters(q);
+    }
+
     private static bool ReferencesMethod(Type t, string name)
     {
         foreach (var m in t.GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public |
