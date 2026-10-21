@@ -11,6 +11,9 @@ public class IdentityDbContext(DbContextOptions<IdentityDbContext> options, ITen
     public const string Schema = "identity";
 
     public DbSet<User> Users => Set<User>();
+    public DbSet<Role> Roles => Set<Role>();
+    public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
+    public DbSet<RoleAssignment> RoleAssignments => Set<RoleAssignment>();
     public DbSet<IdentityProviderConfig> IdentityProviders => Set<IdentityProviderConfig>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -40,6 +43,31 @@ public class IdentityDbContext(DbContextOptions<IdentityDbContext> options, ITen
             b.Property(x => x.ClientSecretRef).HasMaxLength(200).IsRequired();
             b.Property(x => x.Scopes).HasMaxLength(500).IsRequired();
             b.Property(x => x.AllowedEmailDomains).HasMaxLength(1000).IsRequired();
+        });
+
+        modelBuilder.Entity<Role>(b =>
+        {
+            b.ToTable("Role");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Name).HasMaxLength(100).IsRequired();
+            b.HasIndex(x => new { x.TenantId, x.Name }).IsUnique();
+            b.HasMany(x => x.Permissions).WithOne().HasForeignKey(x => x.RoleId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<RolePermission>(b =>
+        {
+            b.ToTable("RolePermission");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Permission).HasMaxLength(100).IsRequired();
+            b.HasIndex(x => new { x.RoleId, x.Permission }).IsUnique();
+        });
+
+        modelBuilder.Entity<RoleAssignment>(b =>
+        {
+            b.ToTable("RoleAssignment");
+            b.HasKey(x => x.Id);
+            b.HasIndex(x => new { x.TenantId, x.UserId });
+            b.HasIndex(x => new { x.TenantId, x.UserId, x.RoleId, x.LegalEntityId }).IsUnique();
         });
 
         base.OnModelCreating(modelBuilder);

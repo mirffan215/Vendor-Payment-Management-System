@@ -54,7 +54,10 @@ builder.Services.AddAuthorizationBuilder()
         .RequireAuthenticatedUser()
         .RequireClaim(VpmsClaims.Context, VpmsClaims.InternalContext)
         .RequireClaim(VpmsClaims.TenantId)
-        .Build());
+        .Build())
+    .AddPermissionPolicies();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IAuthorizationHandler, PermissionHandler>();
 
 builder.Services.AddAntiforgery(o =>
 {

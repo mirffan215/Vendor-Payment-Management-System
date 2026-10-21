@@ -26,6 +26,10 @@
     <ProjectReference Include="..\..\src\Modules\CustomerAdmin\Vpms.CustomerAdmin.Domain\Vpms.CustomerAdmin.Domain.csproj" />
     <ProjectReference Include="..\..\src\Modules\CustomerAdmin\Vpms.CustomerAdmin.Infrastructure\Vpms.CustomerAdmin.Infrastructure.csproj" />
     <ProjectReference Include="..\Vpms.TestSupport\Vpms.TestSupport.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Identity\Vpms.Identity.Application\Vpms.Identity.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Identity\Vpms.Identity.Contracts\Vpms.Identity.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Identity\Vpms.Identity.Domain\Vpms.Identity.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Identity\Vpms.Identity.Infrastructure\Vpms.Identity.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

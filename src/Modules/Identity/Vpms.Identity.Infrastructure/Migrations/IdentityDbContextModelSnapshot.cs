@@ -78,6 +78,97 @@ namespace Vpms.Identity.Infrastructure.Migrations
                     b.ToTable("IdentityProvider", "identity");
                 });
 
+            modelBuilder.Entity("Vpms.Identity.Domain.Role", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsSystem")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("Role", "identity");
+                });
+
+            modelBuilder.Entity("Vpms.Identity.Domain.RoleAssignment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("AssignedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("AssignedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("LegalEntityId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("RoleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "UserId");
+
+                    b.HasIndex("TenantId", "UserId", "RoleId", "LegalEntityId")
+                        .IsUnique()
+                        .HasFilter("[LegalEntityId] IS NOT NULL");
+
+                    b.ToTable("RoleAssignment", "identity");
+                });
+
+            modelBuilder.Entity("Vpms.Identity.Domain.RolePermission", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Permission")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid>("RoleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("RoleId", "Permission")
+                        .IsUnique();
+
+                    b.ToTable("RolePermission", "identity");
+                });
+
             modelBuilder.Entity("Vpms.Identity.Domain.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -129,6 +220,20 @@ namespace Vpms.Identity.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("User", "identity");
+                });
+
+            modelBuilder.Entity("Vpms.Identity.Domain.RolePermission", b =>
+                {
+                    b.HasOne("Vpms.Identity.Domain.Role", null)
+                        .WithMany("Permissions")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Vpms.Identity.Domain.Role", b =>
+                {
+                    b.Navigation("Permissions");
                 });
 #pragma warning restore 612, 618
         }

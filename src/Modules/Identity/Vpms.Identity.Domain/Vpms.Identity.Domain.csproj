@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\BuildingBlocks\Vpms.BuildingBlocks\Vpms.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\Vpms.Identity.Contracts\Vpms.Identity.Contracts.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

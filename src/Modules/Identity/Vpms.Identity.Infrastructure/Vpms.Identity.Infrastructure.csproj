@@ -4,6 +4,7 @@
     <ProjectReference Include="..\Vpms.Identity.Application\Vpms.Identity.Application.csproj" />
     <ProjectReference Include="..\Vpms.Identity.Domain\Vpms.Identity.Domain.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Vpms.BuildingBlocks\Vpms.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\Vpms.Identity.Contracts\Vpms.Identity.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>
