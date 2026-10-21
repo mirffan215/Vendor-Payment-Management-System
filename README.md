@@ -3,17 +3,18 @@
 Multi-tenant SaaS that approves vendor invoices and **prepares** payment instructions. It never transfers money and
 does not issue invoices. Design documents live in [`docs/`](docs/); delivery follows [`docs/roadmap.md`](docs/roadmap.md).
 
-Current status: **Phase 2 (customer administration and vendors) complete** — see [`docs/phase-2-summary.md`](docs/phase-2-summary.md)
-(Phase 1: [`docs/phase-1-summary.md`](docs/phase-1-summary.md)).
+Current status: **Phase 3 (invoices) complete** — see [`docs/phase-3-summary.md`](docs/phase-3-summary.md)
+(earlier: [Phase 2](docs/phase-2-summary.md), [Phase 1](docs/phase-1-summary.md)).
 
 ## Repository layout
 
 | Path | Contents |
 |---|---|
 | `src/BuildingBlocks` | Shared kernel: tenancy, persistence base, audit port, SoD primitives, tenant-scoped storage/cache/jobs |
-| `src/Modules/{Identity,CustomerAdmin,Audit,Documents,Vendors,VendorPortal}` | Modules, each with `Domain`, `Application`, `Infrastructure`, `Contracts` |
+| `src/Modules/{Identity,CustomerAdmin,Audit,Documents,Vendors,VendorPortal,Invoices}` | Modules, each with `Domain`, `Application`, `Infrastructure`, `Contracts` |
 | `src/Host/Vpms.Api` | ASP.NET Core 10 Web API (BFF cookie sessions, per-tenant OIDC) |
-| `src/Host/Vpms.Worker` | Background host (audit chain verification and anchoring, attachment scanning, bank-change expiry) |
+| `src/Modules/Tax/Vpms.Tax.Sa` | Saudi VAT checks for received invoices (plug-in, see [docs/zatca-scope.md](docs/zatca-scope.md)) |
+| `src/Host/Vpms.Worker` | Background host (audit chain verification and anchoring, attachment scanning, bank-change expiry, invoice email intake, extraction and verification sweep) |
 | `src/Host/Vpms.Migrator` | Applies EF Core migrations, provisions the restricted application login, and provisions tenants (`provision-tenant`) |
 | `web/` | React + TypeScript (Vite), English/Arabic, RTL |
 | `tests/` | Unit, architecture, integration (Testcontainers SQL Server), API tests |
@@ -78,8 +79,18 @@ vendor's page. Invitation links are logged in development; email delivery arrive
 | `Portal:PublicBaseUrl` | Base URL used in vendor invitation links |
 | `Portal:PasswordHashIterations` | PBKDF2 iterations (default 600,000; lowered only in tests) |
 | `RateLimiting:PortalAuthPermitLimit` | Requests per window for vendor sign-in endpoints |
+| `Graph:TenantId`, `Graph:ClientId`, `Graph:ClientSecret` | Microsoft Graph app registration for reading invoice mailboxes (application permission `Mail.ReadWrite`); secret from Key Vault. Unset = mailbox reading is off |
+| `Invoices:MailPollSeconds`, `Invoices:ExtractionSeconds`, `Invoices:VerificationSweepSeconds` | Worker intervals |
 
 In production the web server must route `/api`, `/auth` and `/portal/auth` to the API (the Vite dev server does).
+
+## Invoices in brief
+
+Invoices reach VPMS by hand entry, document upload, the vendor portal or email, always as a draft that a person completes.
+OCR output (when an engine is added) is only ever a suggestion. On submit the invoice is verified against its legal entity's
+rules (duplicates, purchase-order match, amounts, VAT, dates, vendor status); failures go to the exceptions queue. Each entity's
+rules are versioned, and making a check weaker needs a second person to approve. Purchase orders are imported by staff until the
+ERP integration supplies them. See ADR-0011 to ADR-0013.
 
 ## Conventions
 

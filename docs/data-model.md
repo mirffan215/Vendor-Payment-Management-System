@@ -182,3 +182,19 @@ duplicate detection works without decrypting. See ADR-0004.
 - `PendingRoleAssignment` lets an administrator grant a role to someone who has not signed in yet.
 - Every vendor-owned table has `VendorId` and the vendor query filter; every tenant-owned table keeps `TenantId`, the
   tenant filter and an RLS policy.
+
+## Phase 3 as built (differences from the logical model above)
+
+- Schema `invoice`. `Invoice` implements legal-entity and vendor scoping. Besides the fields above it has `Version`, a keyed hash
+  of vendor + number + total + date (`DuplicateKeyIndex`) and of vendor + number (`NumberKeyIndex`), `SupplierTaxNumber`,
+  creator kind (Staff, Vendor, System) and received time. Statuses implemented: Draft, Received, InVerification, Exception,
+  Verified, ReadyForApproval, Rejected, Cancelled (approval states join in Phase 4). Rows are never deleted by the application login.
+- `InvoiceAttachment` links documents (roles Original, Supporting). `InvoiceExtraction` holds OCR suggestions only.
+- `InvoiceMailbox` (one per legal entity) and `IntakeMessage` (unique per entity and message id) implement email intake.
+- `VerificationRuleSet` replaces the planned `VerificationRuleSet` per entity: versioned JSON settings, status Active, Pending,
+  Superseded, Rejected or Cancelled, with the rules each version loosens and the maker/checker. Unique: one Active and one
+  Pending per entity.
+- `VerificationResult` (one row per rule per run, with invoice and rule-set versions, never updated or deleted) and
+  `InvoiceException` (one open exception per invoice and rule, waiver reason and person recorded).
+- `PurchaseOrder` and `PurchaseOrderLine`: per legal entity, versioned by the importer, with value and quantity already
+  invoiced outside VPMS. The ERP adapter (Phase 6) replaces the staff import as the source.

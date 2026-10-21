@@ -29,7 +29,7 @@ Depends on: Phase 1.
 Acceptance: a bank-detail change cannot take effect without a second, different approver; vendor users only
 see their own data; tests cover all of it.
 
-## Phase 3: Invoices (`phase-3-invoices.md`)
+## Phase 3: Invoices (`phase-3-invoices.md`) — complete, see [phase-3-summary.md](phase-3-summary.md)
 Scope: intake (manual, portal, email via Graph, document upload, OCR-ready interface); header, lines,
 attachments, lifecycle; verification engine (duplicates, PO matching, tax/amount) configurable per entity;
 exceptions queue; VAT with Saudi rules as a pluggable module.

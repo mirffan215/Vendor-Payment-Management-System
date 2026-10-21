@@ -195,6 +195,7 @@ future integration; v1 never moves money.**
 | Control | Enforced in |
 |---|---|
 | Maker-checker, self-approval blocked | Workflow engine guards; shared `MakerCheckerGuard` |
+| Weakening an invoice check | `VerificationRuleSet` versions: a loosening stays Pending until a different person approves (ADR-0012) |
 | Two-person bank-detail change | Vendor module: `BankDetailChange` state machine requires checker != maker, plus CHECK constraint and triggers (ADR-0008) |
 | Invoice approval vs release separation | Treasury `ReleaseAuthorization` + SoD matrix |
 | Re-approval on material change | Invoice `MaterialityPolicy` -> `InvoiceChangedMaterially` -> new workflow instance |
@@ -231,3 +232,17 @@ future integration; v1 never moves money.**
   blind indexes (ADR-0004).
 - **Worker jobs:** attachment scanning and bank-change expiry join audit chain verification.
 - **Frontend:** staff screens (vendors, bank-change approvals, administration) and a separate `/portal` area.
+
+## 14. Phase 3 additions
+
+- **New module:** `Invoices` (schema `invoice`): invoices and lines, attachments, intake (documents, email, portal), OCR
+  suggestions, versioned verification settings, verification results, exceptions, purchase orders. Country tax providers are
+  separate plug-in assemblies (`Vpms.Tax.Sa`), isolated by an architecture test (ADR-0013).
+- **Flow:** channel -> Draft -> (person completes) -> Submit -> Received -> verification engine (pure rules over facts, entity
+  settings version pinned in the record) -> Verified or Exception -> exceptions queue (accept a flag with a reason; a block needs
+  the override permission and a different person). Approval workflow starts at Verified in Phase 4.
+- **Worker jobs:** email intake per enabled mailbox, extraction of scanned files, verification sweep.
+- **Controls added:** loosening a check needs a second person; blocks cannot be waived by the invoice's maker; vendor status
+  is never waivable; invoices and verification records cannot be deleted by the application login.
+- **Cross-module reads** go through contracts only: vendor status, link currency, ERP account, contact email and tax number
+  (`IVendorLookup`), legal entity country (`ILegalEntityLookup`), file storage (`IAttachmentService`).
