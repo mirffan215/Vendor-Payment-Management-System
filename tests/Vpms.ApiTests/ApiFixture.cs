@@ -54,6 +54,7 @@ public sealed class ApiFixture : WebApplicationFactory<Program>, IAsyncLifetime
             ["ConnectionStrings:Default"] = _db.AppConnectionString,
             ["Secrets:secret-a"] = "secret-a",
             ["Secrets:secret-b"] = "secret-b",
+            ["Encryption:LocalKek"] = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32)),
         }));
         builder.ConfigureTestServices(services =>
         {

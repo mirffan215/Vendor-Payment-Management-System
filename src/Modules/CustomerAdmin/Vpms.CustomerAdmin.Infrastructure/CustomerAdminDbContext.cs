@@ -12,6 +12,7 @@ public class CustomerAdminDbContext(DbContextOptions<CustomerAdminDbContext> opt
 
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<LegalEntity> LegalEntities => Set<LegalEntity>();
+    public DbSet<TenantKey> TenantKeys => Set<TenantKey>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -40,6 +41,20 @@ public class CustomerAdminDbContext(DbContextOptions<CustomerAdminDbContext> opt
             b.Property(x => x.BaseCurrency).HasMaxLength(3).IsRequired();
             b.Property(x => x.Status).HasMaxLength(30).IsRequired();
             b.HasIndex(x => new { x.TenantId, x.Code }).IsUnique();
+        });
+
+        modelBuilder.Entity<TenantKey>(b =>
+        {
+            b.ToTable("TenantKey");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Purpose).HasMaxLength(20).IsRequired();
+            b.Property(x => x.Status).HasMaxLength(20).IsRequired();
+            b.Property(x => x.KekId).HasMaxLength(500).IsRequired();
+            b.Property(x => x.WrappedKey).IsRequired();
+            b.HasIndex(x => new { x.TenantId, x.Purpose, x.Version }).IsUnique();
+            // At most one active key per tenant and purpose.
+            b.HasIndex(x => new { x.TenantId, x.Purpose }).IsUnique().HasFilter("[Status] = 'Active'")
+                .HasDatabaseName("UX_TenantKey_Active");
         });
 
         base.OnModelCreating(modelBuilder);

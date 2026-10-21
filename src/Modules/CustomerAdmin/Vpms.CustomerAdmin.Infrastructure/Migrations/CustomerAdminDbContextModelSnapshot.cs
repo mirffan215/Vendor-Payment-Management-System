@@ -106,6 +106,55 @@ namespace Vpms.CustomerAdmin.Infrastructure.Migrations
 
                     b.ToTable("Tenant", "customer");
                 });
+
+            modelBuilder.Entity("Vpms.CustomerAdmin.Domain.TenantKey", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("KekId")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Purpose")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("WrappedKey")
+                        .IsRequired()
+                        .HasColumnType("varbinary(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "Purpose")
+                        .IsUnique()
+                        .HasDatabaseName("UX_TenantKey_Active")
+                        .HasFilter("[Status] = 'Active'");
+
+                    b.HasIndex("TenantId", "Purpose", "Version")
+                        .IsUnique();
+
+                    b.ToTable("TenantKey", "customer");
+                });
 #pragma warning restore 612, 618
         }
     }

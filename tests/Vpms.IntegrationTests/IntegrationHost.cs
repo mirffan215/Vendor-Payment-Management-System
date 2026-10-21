@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Vpms.Audit.Application;
 using Vpms.Audit.Infrastructure;
 using Vpms.BuildingBlocks.Persistence;
+using Vpms.BuildingBlocks.Security.Encryption;
 using Vpms.BuildingBlocks.Tenancy;
 using Vpms.CustomerAdmin.Infrastructure;
 using Vpms.Identity.Infrastructure;
@@ -24,6 +25,8 @@ public sealed class IntegrationHost : IAsyncDisposable
         services.AddLogging();
         services.AddSingleton(clock ?? TimeProvider.System);
         services.AddTenancy();
+        services.AddFieldEncryption();
+        services.Configure<EncryptionOptions>(o => o.LocalKek = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32)));
         services.AddCustomerAdminModule(_ => database.AppConnectionString);
         services.AddIdentityModule(_ => database.AppConnectionString);
         services.AddAuditModule(_ => database.AppConnectionString);
@@ -32,6 +35,8 @@ public sealed class IntegrationHost : IAsyncDisposable
     }
 
     /// <summary>A new request/job scope bound to the tenant (or to no tenant when null).</summary>
+    public IServiceProvider Services => _root;
+
     public AsyncServiceScope Scope(Guid? tenantId)
     {
         var scope = _root.CreateAsyncScope();

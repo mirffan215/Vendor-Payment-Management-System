@@ -10,6 +10,7 @@ using Vpms.Api.Infrastructure;
 using Vpms.Audit.Application;
 using Vpms.Audit.Infrastructure;
 using Vpms.BuildingBlocks.Persistence;
+using Vpms.BuildingBlocks.Security.Encryption;
 using Vpms.CustomerAdmin.Infrastructure;
 using Vpms.Identity.Application;
 using Vpms.Identity.Infrastructure;
@@ -24,6 +25,8 @@ static string ConnectionString(IServiceProvider sp) =>
 
 builder.Services.Configure<AuthOptions>(builder.Configuration.GetSection(AuthOptions.Section));
 builder.Services.AddTenancy();
+builder.Services.Configure<EncryptionOptions>(builder.Configuration.GetSection(EncryptionOptions.Section));
+builder.Services.AddFieldEncryption();
 builder.Services.AddCustomerAdminModule(ConnectionString);
 builder.Services.AddIdentityModule(ConnectionString);
 builder.Services.AddAuditModule(ConnectionString);
@@ -96,6 +99,12 @@ builder.Services.AddApiVersioning(o =>
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
+
+if (app.Environment.IsProduction()
+    && string.Equals(app.Configuration["Encryption:Provider"] ?? "Local", "Local", StringComparison.OrdinalIgnoreCase))
+{
+    throw new InvalidOperationException("Encryption:Provider must be KeyVault in Production; the Local key is for development only.");
+}
 
 app.UseExceptionHandler();
 app.UseStatusCodePages();
