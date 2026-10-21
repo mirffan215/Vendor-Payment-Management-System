@@ -120,6 +120,20 @@ public sealed class VendorService(
     public async Task<VendorSummary?> FindAsync(Guid vendorId, CancellationToken ct = default) =>
         await db.Vendors.AsNoTracking().Where(v => v.Id == vendorId).Select(v => new VendorSummary(v.Id, v.LegalName, v.Status, v.CountryCode)).FirstOrDefaultAsync(ct);
 
+    public async Task<IReadOnlyList<Guid>> FindActiveByContactEmailAsync(string email, Guid legalEntityId, CancellationToken ct = default)
+    {
+        var normalized = email.Trim().ToLowerInvariant();
+        if (normalized.Length == 0) return [];
+        return await db.Vendors.AsNoTracking()
+            .Where(v => v.Status == VendorStatus.Active && v.ContactEmail != null && v.ContactEmail.ToLower() == normalized
+                        && db.EntityLinks.Any(l => l.VendorId == v.Id && l.LegalEntityId == legalEntityId && l.Status == "Active"))
+            .Select(v => v.Id).ToListAsync(ct);
+    }
+
+    public async Task<string?> GetLinkCurrencyAsync(Guid vendorId, Guid legalEntityId, CancellationToken ct = default) =>
+        await db.EntityLinks.AsNoTracking().Where(l => l.VendorId == vendorId && l.LegalEntityId == legalEntityId)
+            .Select(l => l.DefaultCurrency).FirstOrDefaultAsync(ct);
+
     public async Task<bool> CanTransactAsync(Guid vendorId, Guid legalEntityId, CancellationToken ct = default) =>
         await db.Vendors.AnyAsync(v => v.Id == vendorId && v.Status == VendorStatus.Active, ct)
         && await db.EntityLinks.AnyAsync(l => l.VendorId == vendorId && l.LegalEntityId == legalEntityId && l.Status == "Active", ct);

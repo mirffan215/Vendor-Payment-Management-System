@@ -33,6 +33,7 @@ public static class Permissions
     public const string InvoiceExceptionResolve = "Invoice.Exception.Resolve";
     public const string InvoiceExceptionOverride = "Invoice.Exception.Override";
     public const string InvoicePoImport = "Invoice.PO.Import";
+    public const string InvoiceIntakeManage = "Invoice.Intake.Manage";
     public const string VerificationConfigure = "Verification.Configure";
     public const string VerificationApproveChange = "Verification.ApproveChange";
 
@@ -45,7 +46,7 @@ public static class Permissions
         EntityView, EntityManage, BrandingManage, ProviderManage, AuthorityManage,
         VendorView, VendorEdit, VendorApprove, VendorPortalManage,
         VendorBankDetailsView, VendorBankDetailsReveal, VendorBankDetailsEdit, VendorBankDetailsApprove,
-        InvoiceView, InvoiceCreate, InvoiceEdit, InvoiceApprove, InvoiceExceptionResolve, InvoiceExceptionOverride, InvoicePoImport,
+        InvoiceView, InvoiceCreate, InvoiceEdit, InvoiceApprove, InvoiceExceptionResolve, InvoiceExceptionOverride, InvoicePoImport, InvoiceIntakeManage,
         VerificationConfigure, VerificationApproveChange,
         PaymentPrepare, PaymentRelease,
     ];

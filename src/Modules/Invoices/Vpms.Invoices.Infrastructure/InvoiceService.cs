@@ -53,9 +53,9 @@ public sealed partial class InvoiceService(
         await CreateCoreAsync(r, InvoiceSource.Manual, current.UserId, ActorKind.Staff, ct);
 
     /// <summary>Shared by all intake channels. The channel decides source and creator kind; the rules are the same.</summary>
-    public async Task<InvoiceDto> CreateCoreAsync(CreateInvoice r, string source, Guid createdBy, string createdByKind, CancellationToken ct)
+    public async Task<InvoiceDto> CreateCoreAsync(CreateInvoice r, string source, Guid createdBy, string createdByKind, CancellationToken ct, bool allowIncomplete = false)
     {
-        Validate(r.Data);
+        Validate(r.Data, allowIncomplete);
         if (!InvoiceSource.All.Contains(source)) throw new ValidationFailedException("invalid_source", "Unknown invoice source.");
         if (!await entities.ExistsAsync(r.LegalEntityId, ct)) throw new ValidationFailedException("unknown_legal_entity", "The legal entity does not exist.");
         if (await vendors.FindAsync(r.VendorId, ct) is null) throw new NotFoundException("Vendor");
@@ -77,6 +77,14 @@ public sealed partial class InvoiceService(
         return await GetAsync(invoice.Id, ct);
     }
 
+    /// <summary>An empty draft for a file that arrived through a channel without data (document upload, email).</summary>
+    public async Task<InvoiceDto> CreateIntakeDraftAsync(Guid legalEntityId, Guid vendorId, string source, Guid createdBy, string createdByKind, CancellationToken ct)
+    {
+        var currency = await vendors.GetLinkCurrencyAsync(vendorId, legalEntityId, ct) ?? "SAR";
+        var data = new InvoiceData("", DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime), null, currency, 0, 0, 0, null, null, []);
+        return await CreateCoreAsync(new CreateInvoice(legalEntityId, vendorId, data), source, createdBy, createdByKind, ct, allowIncomplete: true);
+    }
+
     public async Task<InvoiceDto> UpdateAsync(Guid id, InvoiceData data, CancellationToken ct = default)
     {
         Validate(data);
@@ -91,8 +99,17 @@ public sealed partial class InvoiceService(
         return await GetAsync(id, ct);
     }
 
+    /// <summary>A draft from intake may be incomplete; it cannot be submitted until a person has filled in the essentials.</summary>
     public Task<InvoiceDto> SubmitAsync(Guid id, CancellationToken ct = default) =>
-        Transition(id, "invoice.submitted", (i, now) => i.Submit(now), ct);
+        Transition(id, "invoice.submitted", (i, now) =>
+        {
+            if (InvoiceNumber.Normalize(i.InvoiceNumber).Length == 0 || i.Total <= 0)
+            {
+                throw new ValidationFailedException("incomplete_invoice", "Enter the invoice number and total before submitting.");
+            }
+
+            i.Submit(now);
+        }, ct);
 
     public Task<InvoiceDto> CancelAsync(Guid id, string reason, CancellationToken ct = default) =>
         Transition(id, "invoice.cancelled", (i, _) => i.Cancel(reason), ct, reason);
@@ -130,9 +147,10 @@ public sealed partial class InvoiceService(
         invoice.Total = d.Total;
         invoice.PoReference = string.IsNullOrWhiteSpace(d.PoReference) ? null : d.PoReference.Trim();
         invoice.SupplierTaxInvoiceRef = string.IsNullOrWhiteSpace(d.SupplierTaxInvoiceRef) ? null : d.SupplierTaxInvoiceRef.Trim();
-        invoice.NumberKeyIndex = await protector.BlindIndexAsync(NumberKeyColumn, $"{invoice.VendorId:N}|{InvoiceNumber.Canonical(invoice.InvoiceNumber)}", ct);
-        invoice.DuplicateKeyIndex = await protector.BlindIndexAsync(DuplicateKeyColumn,
-            $"{invoice.VendorId:N}|{InvoiceNumber.Canonical(invoice.InvoiceNumber)}|{Money.Round(invoice.Total, invoice.CurrencyCode):F4}|{invoice.InvoiceDate:yyyy-MM-dd}", ct);
+        var canonical = InvoiceNumber.Canonical(invoice.InvoiceNumber);
+        invoice.NumberKeyIndex = canonical.Length == 0 ? null : await protector.BlindIndexAsync(NumberKeyColumn, $"{invoice.VendorId:N}|{canonical}", ct);
+        invoice.DuplicateKeyIndex = canonical.Length == 0 ? null : await protector.BlindIndexAsync(DuplicateKeyColumn,
+            $"{invoice.VendorId:N}|{canonical}|{Money.Round(invoice.Total, invoice.CurrencyCode):F4}|{invoice.InvoiceDate:yyyy-MM-dd}", ct);
 
         var lineNo = 0;
         invoice.Lines = d.Lines.Select(l => new InvoiceLine
@@ -173,10 +191,15 @@ public sealed partial class InvoiceService(
     }
 
     /// <summary>Shape checks only. Business rules (duplicates, totals, tax, PO) belong to the verification engine.</summary>
-    public static void Validate(InvoiceData d)
+    public static void Validate(InvoiceData d, bool allowIncomplete = false)
     {
-        if (string.IsNullOrWhiteSpace(d.InvoiceNumber) || d.InvoiceNumber.Trim().Length > 100) throw new ValidationFailedException("invalid_invoice_number", "An invoice number is required (max 100 characters).");
-        if (InvoiceNumber.Normalize(d.InvoiceNumber).Length == 0) throw new ValidationFailedException("invalid_invoice_number", "The invoice number must contain letters or digits.");
+        var blankNumber = string.IsNullOrWhiteSpace(d.InvoiceNumber);
+        if (!(allowIncomplete && blankNumber))
+        {
+            if (blankNumber || d.InvoiceNumber.Trim().Length > 100) throw new ValidationFailedException("invalid_invoice_number", "An invoice number is required (max 100 characters).");
+            if (InvoiceNumber.Normalize(d.InvoiceNumber).Length == 0) throw new ValidationFailedException("invalid_invoice_number", "The invoice number must contain letters or digits.");
+        }
+
         if (!CurrencyPattern().IsMatch(d.CurrencyCode ?? "")) throw new ValidationFailedException("invalid_currency", "The currency must be an ISO 4217 code, e.g. SAR.");
         if (d.InvoiceDate.Year is < 2000 or > 2100) throw new ValidationFailedException("invalid_date", "The invoice date is not valid.");
         if (d.DueDate is { } due && due.Year is < 2000 or > 2100) throw new ValidationFailedException("invalid_date", "The due date is not valid.");

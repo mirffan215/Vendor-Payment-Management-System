@@ -13,6 +13,9 @@ public class InvoicesDbContext(DbContextOptions<InvoicesDbContext> options, ITen
     public DbSet<Invoice> Invoices => Set<Invoice>();
     public DbSet<InvoiceLine> Lines => Set<InvoiceLine>();
     public DbSet<InvoiceAttachment> Attachments => Set<InvoiceAttachment>();
+    public DbSet<InvoiceExtraction> Extractions => Set<InvoiceExtraction>();
+    public DbSet<InvoiceMailbox> Mailboxes => Set<InvoiceMailbox>();
+    public DbSet<IntakeMessage> IntakeMessages => Set<IntakeMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -65,6 +68,42 @@ public class InvoicesDbContext(DbContextOptions<InvoicesDbContext> options, ITen
             b.Property(x => x.AddedByKind).HasMaxLength(10).IsRequired();
             b.HasIndex(x => x.AttachmentId).IsUnique();
             b.HasIndex(x => new { x.TenantId, x.InvoiceId });
+        });
+
+        modelBuilder.Entity<InvoiceExtraction>(b =>
+        {
+            b.ToTable("InvoiceExtraction");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Engine).HasMaxLength(50).IsRequired();
+            b.Property(x => x.Status).HasMaxLength(20).IsRequired();
+            b.Property(x => x.ResultJson).IsRequired();
+            b.HasIndex(x => x.AttachmentId).IsUnique();
+            b.HasIndex(x => new { x.TenantId, x.InvoiceId });
+        });
+
+        modelBuilder.Entity<InvoiceMailbox>(b =>
+        {
+            b.ToTable("InvoiceMailbox");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Address).HasMaxLength(320).IsRequired();
+            b.Property(x => x.LastError).HasMaxLength(500);
+            b.HasIndex(x => new { x.TenantId, x.LegalEntityId }).IsUnique();
+            b.HasIndex(x => new { x.TenantId, x.Address }).IsUnique();
+        });
+
+        modelBuilder.Entity<IntakeMessage>(b =>
+        {
+            b.ToTable("IntakeMessage");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.ExternalMessageId).HasMaxLength(300).IsRequired();
+            b.Property(x => x.FromAddress).HasMaxLength(320).IsRequired();
+            b.Property(x => x.Subject).HasMaxLength(300).IsRequired();
+            b.Property(x => x.Status).HasMaxLength(20).IsRequired();
+            b.Property(x => x.LastError).HasMaxLength(500);
+            b.Property(x => x.Note).HasMaxLength(500);
+            b.Property(x => x.AttachmentIds).HasMaxLength(1000).IsRequired();
+            b.HasIndex(x => new { x.TenantId, x.LegalEntityId, x.ExternalMessageId }).IsUnique();
+            b.HasIndex(x => new { x.TenantId, x.LegalEntityId, x.Status });
         });
 
         base.OnModelCreating(modelBuilder);

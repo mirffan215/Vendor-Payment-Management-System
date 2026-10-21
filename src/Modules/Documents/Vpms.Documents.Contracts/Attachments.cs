@@ -35,6 +35,12 @@ public interface IAttachmentService
 
     Task<IReadOnlyList<AttachmentInfo>> ListForOwnerAsync(string ownerType, string ownerId, CancellationToken ct = default);
 
+    /// <summary>
+    /// Hands a file that arrived without an owner (owner type "IntakeMessage") to its real owner once it is known. Only intake
+    /// files can be moved; nothing else changes owner.
+    /// </summary>
+    Task<AttachmentInfo> ReassignFromIntakeAsync(Guid id, string newOwnerType, string newOwnerId, Guid? legalEntityId, CancellationToken ct = default);
+
     /// <summary>Only Clean files can be downloaded. The download is audited.</summary>
     Task<AttachmentDownload> OpenDownloadAsync(Guid id, CancellationToken ct = default);
 }

@@ -26,6 +26,7 @@ public static class SystemRoles
             Permissions.EntityView, Permissions.VendorView, Permissions.InvoiceView, Permissions.InvoiceCreate, Permissions.InvoiceEdit,
             Permissions.InvoiceExceptionResolve,
         ],
+        ["Invoice Intake Manager"] = [Permissions.EntityView, Permissions.VendorView, Permissions.InvoiceView, Permissions.InvoiceIntakeManage],
         ["Invoice Exception Reviewer"] = [Permissions.EntityView, Permissions.VendorView, Permissions.InvoiceView, Permissions.InvoiceExceptionOverride],
         ["Verification Administrator"] = [Permissions.EntityView, Permissions.VerificationConfigure, Permissions.InvoicePoImport],
         ["Verification Approver"] = [Permissions.EntityView, Permissions.VerificationApproveChange],

@@ -79,6 +79,26 @@ public sealed class AttachmentService(
         return Map(attachment);
     }
 
+    public async Task<AttachmentInfo> ReassignFromIntakeAsync(Guid id, string newOwnerType, string newOwnerId, Guid? legalEntityId, CancellationToken ct = default)
+    {
+        var attachment = await db.Attachments.FirstOrDefaultAsync(a => a.Id == id, ct) ?? throw new NotFoundException("Attachment");
+        if (attachment.OwnerType != IntakeOwnerType)
+        {
+            throw new ConflictException("attachment_not_movable", "Only files received through intake can be reassigned.");
+        }
+
+        var from = attachment.OwnerId;
+        attachment.OwnerType = newOwnerType;
+        attachment.OwnerId = newOwnerId;
+        attachment.LegalEntityId ??= legalEntityId;
+        audit.Record(new AuditEntry("attachment.reassigned", "Attachment", id.ToString(), attachment.LegalEntityId,
+            JsonSerializer.Serialize(new { fromOwner = from, newOwnerType, newOwnerId })));
+        await db.SaveChangesAsync(ct);
+        return Map(attachment);
+    }
+
+    public const string IntakeOwnerType = "IntakeMessage";
+
     public async Task<AttachmentInfo> GetAsync(Guid id, CancellationToken ct = default) =>
         Map(await db.Attachments.AsNoTracking().FirstOrDefaultAsync(a => a.Id == id, ct)
             ?? throw new NotFoundException("Attachment"));

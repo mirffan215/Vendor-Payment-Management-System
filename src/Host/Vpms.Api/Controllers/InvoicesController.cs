@@ -7,6 +7,7 @@ using Vpms.BuildingBlocks.Security;
 using Vpms.Documents.Contracts;
 using Vpms.Identity.Contracts;
 using Vpms.Invoices.Application;
+using Vpms.BuildingBlocks.Errors;
 
 namespace Vpms.Api.Controllers;
 
@@ -72,6 +73,30 @@ public sealed class InvoicesController(
         var file = await invoiceFiles.OpenAsync(id, attachmentId, ct);
         Response.Headers["X-Content-Type-Options"] = "nosniff";
         return File(file.Content, file.ContentType, file.FileName);
+    }
+
+    // --- document channel and extraction suggestions -----------------------------------------------------------
+
+    [HttpPost("from-document"), RequestSizeLimit(MaxUpload)]
+    public async Task<IActionResult> FromDocument([FromForm] Guid legalEntityId, [FromForm] Guid vendorId, IFormFile file, [FromServices] IInvoiceIntakeService intake, CancellationToken ct)
+    {
+        if (!await permissions.HasAsync(current.UserId, Permissions.InvoiceCreate, legalEntityId, ct)) return Forbid();
+        await using var stream = file.OpenReadStream();
+        var created = await intake.CreateFromDocumentAsync(legalEntityId, vendorId, file.FileName, stream, ct);
+        return CreatedAtAction(nameof(Get), new { id = created.Id }, created);
+    }
+
+    [HttpGet("{id:guid}/extractions")]
+    public async Task<IActionResult> Extractions(Guid id, [FromServices] IInvoiceExtractionService extraction, CancellationToken ct) =>
+        await Can(Permissions.InvoiceView, id, ct) ? Ok(await extraction.ListAsync(id, ct)) : NotFound();
+
+    [HttpPost("{id:guid}/extractions/{extractionId:guid}/dismiss")]
+    public async Task<IActionResult> DismissExtraction(Guid id, Guid extractionId, [FromServices] IInvoiceExtractionService extraction, CancellationToken ct)
+    {
+        if (!await Can(Permissions.InvoiceEdit, id, ct)) return NotFound();
+        if (!(await extraction.ListAsync(id, ct)).Any(e => e.Id == extractionId)) return NotFound();
+        await extraction.DismissAsync(extractionId, ct);
+        return NoContent();
     }
 
     /// <summary>Entity-scoped permission check on an existing invoice. Without it the invoice is reported as not found.</summary>

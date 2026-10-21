@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Vpms.Api.Auth;
 using Vpms.Identity.Contracts;
+using Vpms.Invoices.Application;
 using Vpms.Vendors.Application;
 using Vpms.Vendors.Contracts;
 using Vpms.VendorPortal.Application;
@@ -146,6 +147,30 @@ public sealed class PortalVendorController(IVendorPortalService portal) : Contro
 
     [HttpPost("requests/{requestId:guid}/reply")]
     public async Task<RequestDto> Reply(Guid requestId, ReplyRequest body, CancellationToken ct) => await portal.ReplyToRequestAsync(requestId, body.Body, ct);
+}
+
+/// <summary>Invoices from the vendor's side: submit with a file, and follow the status. Verification detail stays internal.</summary>
+[ApiController, ApiVersion("1.0"), Route("api/v{version:apiVersion}/portal/invoices"), Authorize(AuthenticationSchemes = VpmsAuth.VendorCookieScheme, Policy = VendorClaims.PortalPolicy)]
+public sealed class PortalInvoicesController(IPortalInvoiceService invoices) : ControllerBase
+{
+    private const long MaxUpload = 25 * 1024 * 1024;
+
+    [HttpGet]
+    public async Task<IReadOnlyList<PortalInvoiceDto>> List(CancellationToken ct) => await invoices.ListAsync(ct);
+
+    [HttpGet("{id:guid}")]
+    public async Task<PortalInvoiceDto> Get(Guid id, CancellationToken ct) => await invoices.GetAsync(id, ct);
+
+    [HttpPost, RequestSizeLimit(MaxUpload)]
+    public async Task<PortalInvoiceDto> Submit(
+        [FromForm] Guid legalEntityId, [FromForm] string invoiceNumber, [FromForm] DateOnly invoiceDate, [FromForm] DateOnly? dueDate,
+        [FromForm] string currencyCode, [FromForm] decimal subtotal, [FromForm] decimal taxTotal, [FromForm] decimal total, [FromForm] string? poReference,
+        IFormFile file, CancellationToken ct)
+    {
+        await using var stream = file.OpenReadStream();
+        var data = new InvoiceData(invoiceNumber, invoiceDate, dueDate, currencyCode, subtotal, taxTotal, total, poReference, null, []);
+        return await invoices.SubmitAsync(new PortalSubmitInvoice(legalEntityId, data), file.FileName, stream, ct);
+    }
 }
 
 /// <summary>Customer staff manage who at a vendor can use the portal.</summary>
