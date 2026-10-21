@@ -1,5 +1,5 @@
 # ADR-0003: Audit storage and immutability
-Status: Proposed
+Status: Accepted
 Date: 2026-10-21
 
 ## Context

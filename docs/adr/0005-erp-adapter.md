@@ -1,5 +1,5 @@
 # ADR-0005: ERP adapter
-Status: Proposed
+Status: Accepted
 Date: 2026-10-21
 
 ## Context

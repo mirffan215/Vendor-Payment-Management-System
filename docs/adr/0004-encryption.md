@@ -1,5 +1,5 @@
 # ADR-0004: Encryption and key management
-Status: Proposed
+Status: Accepted
 Date: 2026-10-21
 
 ## Context

@@ -1,6 +1,6 @@
 # VPMS Data Model
 
-Status: Proposed (Phase 0). Logical model; physical details (types, indexes) are finalised per phase.
+Status: Accepted (Phase 0 approved). Logical model; physical details (types, indexes) are finalised per phase.
 
 Conventions
 - Every tenant-owned table has `TenantId` (non-null, indexed first in composite keys) and an EF global query filter.

@@ -1,5 +1,5 @@
 # ADR-0001: Tenancy strategy
-Status: Proposed
+Status: Accepted
 Date: 2026-10-21
 
 ## Context

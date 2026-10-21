@@ -1,5 +1,5 @@
 # ADR-0002: Workflow engine
-Status: Proposed
+Status: Accepted
 Date: 2026-10-21
 
 ## Context

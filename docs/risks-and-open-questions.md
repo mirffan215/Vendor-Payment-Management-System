@@ -1,6 +1,6 @@
 # Risks and Open Questions
 
-Status: Proposed (Phase 0).
+Status: Accepted (Phase 0 approved).
 
 ## 1. Risk register
 

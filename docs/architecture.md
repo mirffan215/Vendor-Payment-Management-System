@@ -1,6 +1,6 @@
 # VPMS Architecture
 
-Status: Proposed (Phase 0). Design only; no application code exists yet.
+Status: Accepted (Phase 0 approved). Design only; no application code exists yet.
 
 VPMS is an independent, multi-tenant SaaS that approves invoices and **prepares** payment instructions.
 It never transfers money. VPMS does not issue invoices; it is used for the payment process only.
