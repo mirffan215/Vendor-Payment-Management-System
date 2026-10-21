@@ -22,6 +22,7 @@ public static class InvoicesModule
         services.AddScoped<IInvoiceIntakeService>(sp => sp.GetRequiredService<InvoiceIntakeService>());
         services.AddScoped<IIntakeScan>(sp => sp.GetRequiredService<InvoiceIntakeService>());
         services.AddScoped<IPortalInvoiceService, PortalInvoiceService>();
+        services.AddScoped<IVerificationRuleSetService, VerificationRuleSetService>();
         // Microsoft Graph by default (does nothing until it is configured); tests and local development replace IMailboxReader.
         services.TryAddSingleton<IMailboxReader>(sp => new GraphMailboxReader(
             new HttpClient(new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }),

@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Vpms.BuildingBlocks.Persistence;
 using Vpms.BuildingBlocks.Tenancy;
 using Vpms.Invoices.Domain;
+using Vpms.Invoices.Domain.Verification;
 
 namespace Vpms.Invoices.Infrastructure;
 
@@ -16,6 +17,7 @@ public class InvoicesDbContext(DbContextOptions<InvoicesDbContext> options, ITen
     public DbSet<InvoiceExtraction> Extractions => Set<InvoiceExtraction>();
     public DbSet<InvoiceMailbox> Mailboxes => Set<InvoiceMailbox>();
     public DbSet<IntakeMessage> IntakeMessages => Set<IntakeMessage>();
+    public DbSet<VerificationRuleSet> RuleSets => Set<VerificationRuleSet>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -104,6 +106,22 @@ public class InvoicesDbContext(DbContextOptions<InvoicesDbContext> options, ITen
             b.Property(x => x.AttachmentIds).HasMaxLength(1000).IsRequired();
             b.HasIndex(x => new { x.TenantId, x.LegalEntityId, x.ExternalMessageId }).IsUnique();
             b.HasIndex(x => new { x.TenantId, x.LegalEntityId, x.Status });
+        });
+
+        modelBuilder.Entity<VerificationRuleSet>(b =>
+        {
+            b.ToTable("VerificationRuleSet");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.ConfigJson).IsRequired();
+            b.Property(x => x.Status).HasMaxLength(20).IsRequired();
+            b.Property(x => x.Note).HasMaxLength(500).IsRequired();
+            b.Property(x => x.LoosenedRules).HasMaxLength(400).IsRequired();
+            b.Property(x => x.DecisionComment).HasMaxLength(500);
+            b.Property(x => x.RowVersion).IsRowVersion();
+            b.HasIndex(x => new { x.TenantId, x.LegalEntityId, x.VersionNo }).IsUnique();
+            // At most one version in force and one waiting for approval per legal entity.
+            b.HasIndex(x => x.LegalEntityId).IsUnique().HasFilter("[Status] = 'Active'").HasDatabaseName("UX_RuleSet_Active");
+            b.HasIndex(x => x.LegalEntityId).IsUnique().HasFilter("[Status] = 'Pending'").HasDatabaseName("UX_RuleSet_Pending");
         });
 
         base.OnModelCreating(modelBuilder);
