@@ -15,6 +15,8 @@ public class VendorsDbContext(DbContextOptions<VendorsDbContext> options, ITenan
     public DbSet<VendorEntityLink> EntityLinks => Set<VendorEntityLink>();
     public DbSet<VendorRequest> Requests => Set<VendorRequest>();
     public DbSet<VendorMessage> Messages => Set<VendorMessage>();
+    public DbSet<BankDetails> BankDetails => Set<BankDetails>();
+    public DbSet<BankDetailChange> BankDetailChanges => Set<BankDetailChange>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -84,6 +86,49 @@ public class VendorsDbContext(DbContextOptions<VendorsDbContext> options, ITenan
             b.Property(x => x.Body).HasMaxLength(4000).IsRequired();
             b.Property(x => x.AuthorKind).HasMaxLength(20).IsRequired();
             b.HasIndex(x => new { x.TenantId, x.RequestId });
+        });
+
+        modelBuilder.Entity<BankDetails>(b =>
+        {
+            b.ToTable("BankDetails", t => t.HasTrigger("trg_BankDetails_VerifiedNeedsApproval"));
+            b.HasKey(x => x.Id);
+            b.Property(x => x.AccountName).HasMaxLength(200).IsRequired();
+            b.Property(x => x.BankName).HasMaxLength(200).IsRequired();
+            b.Property(x => x.SwiftBic).HasMaxLength(11);
+            b.Property(x => x.CountryCode).HasMaxLength(2).IsFixedLength().IsRequired();
+            b.Property(x => x.CurrencyCode).HasMaxLength(3).IsFixedLength().IsRequired();
+            b.Property(x => x.IbanCipher).HasMaxLength(500);
+            b.Property(x => x.IbanIndex).HasMaxLength(64).IsFixedLength();
+            b.Property(x => x.AccountNumberCipher).HasMaxLength(500);
+            b.Property(x => x.AccountNumberIndex).HasMaxLength(64).IsFixedLength();
+            b.Property(x => x.MaskedAccount).HasMaxLength(20).IsRequired();
+            b.Property(x => x.Status).HasMaxLength(20).IsRequired();
+            b.Property(x => x.RowVersion).IsRowVersion();
+            b.HasIndex(x => new { x.TenantId, x.VendorId, x.Status });
+            b.HasIndex(x => new { x.TenantId, x.IbanIndex });
+            // At most one verified set of details per vendor and currency.
+            b.HasIndex(x => new { x.VendorId, x.CurrencyCode }).IsUnique().HasFilter("[Status] = 'Verified'").HasDatabaseName("UX_BankDetails_Verified");
+        });
+
+        modelBuilder.Entity<BankDetailChange>(b =>
+        {
+            b.ToTable("BankDetailChange", t =>
+            {
+                // Two-person rule, enforced by the database as well as by the application.
+                t.HasCheckConstraint("CK_BankDetailChange_DifferentPerson", "[CheckedBy] IS NULL OR [CheckedBy] <> [MadeBy]");
+                t.HasCheckConstraint("CK_BankDetailChange_DecisionHasChecker",
+                    "[Status] NOT IN ('Approved','Rejected') OR ([CheckedBy] IS NOT NULL AND [CheckedAt] IS NOT NULL)");
+                t.HasTrigger("trg_BankDetailChange_Terminal");
+            });
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Reason).HasMaxLength(500).IsRequired();
+            b.Property(x => x.Source).HasMaxLength(20).IsRequired();
+            b.Property(x => x.Status).HasMaxLength(20).IsRequired();
+            b.Property(x => x.CheckerComment).HasMaxLength(500);
+            b.Property(x => x.CallbackVerificationRef).HasMaxLength(500);
+            b.Property(x => x.RowVersion).IsRowVersion();
+            b.HasIndex(x => new { x.TenantId, x.VendorId, x.Status });
+            b.HasIndex(x => x.ProposedBankDetailsId).IsUnique();
         });
 
         base.OnModelCreating(modelBuilder);

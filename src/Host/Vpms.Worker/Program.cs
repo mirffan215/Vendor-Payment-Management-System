@@ -3,8 +3,11 @@ using Vpms.Audit.Infrastructure;
 using Vpms.BuildingBlocks.Cloud;
 using Vpms.BuildingBlocks.Persistence;
 using Vpms.BuildingBlocks.Security.Encryption;
+using Vpms.CustomerAdmin.Infrastructure;
 using Vpms.Documents.Application;
+using Vpms.Identity.Infrastructure;
 using Vpms.Documents.Infrastructure;
+using Vpms.Vendors.Infrastructure;
 using Vpms.Worker;
 
 var builder = Host.CreateApplicationBuilder(args);
@@ -21,10 +24,14 @@ builder.Services.Configure<StorageOptions>(builder.Configuration.GetSection(Stor
 builder.Services.AddBlobStorage();
 builder.Services.Configure<DocumentsOptions>(builder.Configuration.GetSection(DocumentsOptions.Section));
 builder.Services.AddDocumentsModule(ConnectionString);
+builder.Services.AddCustomerAdminModule(ConnectionString);
+builder.Services.AddIdentityModule(ConnectionString);
+builder.Services.AddVendorsModule(ConnectionString);
 builder.Services.AddAuditModule(ConnectionString);
 builder.Services.AddSingleton<IAuditAnchorSink>(sp => new FileAuditAnchorSink(
     sp.GetRequiredService<IConfiguration>()["Audit:AnchorDirectory"] ?? Path.Combine(Path.GetTempPath(), "vpms-audit-anchors")));
 builder.Services.AddHostedService<AuditChainJob>();
 builder.Services.AddHostedService<AttachmentScanJob>();
+builder.Services.AddHostedService<BankChangeExpiryJob>();
 
 await builder.Build().RunAsync();

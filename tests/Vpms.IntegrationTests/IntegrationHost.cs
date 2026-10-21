@@ -27,7 +27,6 @@ public sealed class IntegrationHost : IAsyncDisposable
         Database = database;
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddSingleton(clock ?? TimeProvider.System);
         services.AddTenancy();
         services.AddFieldEncryption();
         services.Configure<EncryptionOptions>(o => o.LocalKek = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32)));
@@ -41,6 +40,8 @@ public sealed class IntegrationHost : IAsyncDisposable
         services.AddDocumentsModule(_ => database.AppConnectionString);
         services.AddVendorsModule(_ => database.AppConnectionString);
         services.AddSingleton<Vpms.Identity.Application.ISecretResolver, NoSecrets>();
+        // Registered last so it wins over the default clock the modules register.
+        services.AddSingleton(clock ?? TimeProvider.System);
         configure?.Invoke(services);
         _root = services.BuildServiceProvider(validateScopes: true);
     }

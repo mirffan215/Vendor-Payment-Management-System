@@ -16,6 +16,10 @@ public static class VendorsModule
         services.AddScoped<IVendorDocumentService, VendorDocumentService>();
         services.AddScoped<IVendorEntityLinkService, VendorEntityLinkService>();
         services.AddScoped<IVendorRequestService, VendorRequestService>();
+        services.AddScoped<BankDetailsService>();
+        services.AddScoped<IBankDetailsService>(sp => sp.GetRequiredService<BankDetailsService>());
+        services.AddScoped<IBankDetailsLookup>(sp => sp.GetRequiredService<BankDetailsService>());
+        services.AddScoped<IBankChangeExpiryScan>(sp => sp.GetRequiredService<BankDetailsService>());
         return services;
     }
 }
