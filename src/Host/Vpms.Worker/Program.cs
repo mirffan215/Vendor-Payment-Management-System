@@ -6,6 +6,7 @@ using Vpms.BuildingBlocks.Security.Encryption;
 using Vpms.CustomerAdmin.Infrastructure;
 using Vpms.Documents.Application;
 using Vpms.Identity.Infrastructure;
+using Vpms.Invoices.Infrastructure;
 using Vpms.Documents.Infrastructure;
 using Vpms.Vendors.Infrastructure;
 using Vpms.Worker;
@@ -27,6 +28,7 @@ builder.Services.AddDocumentsModule(ConnectionString);
 builder.Services.AddCustomerAdminModule(ConnectionString);
 builder.Services.AddIdentityModule(ConnectionString);
 builder.Services.AddVendorsModule(ConnectionString);
+builder.Services.AddInvoicesModule(ConnectionString);
 builder.Services.AddAuditModule(ConnectionString);
 builder.Services.AddSingleton<IAuditAnchorSink>(sp => new FileAuditAnchorSink(
     sp.GetRequiredService<IConfiguration>()["Audit:AnchorDirectory"] ?? Path.Combine(Path.GetTempPath(), "vpms-audit-anchors")));

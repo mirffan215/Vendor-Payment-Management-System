@@ -21,8 +21,15 @@ public static class SystemRoles
         ],
         ["Vendor Approver"] = [Permissions.EntityView, Permissions.VendorView, Permissions.VendorApprove],
         ["Bank Details Approver"] = [Permissions.VendorView, Permissions.VendorBankDetailsView, Permissions.VendorBankDetailsApprove, Permissions.VendorBankDetailsReveal],
-        ["Invoice Clerk"] = [Permissions.InvoiceCreate],
-        ["Invoice Approver"] = [Permissions.InvoiceApprove],
+        ["Invoice Clerk"] =
+        [
+            Permissions.EntityView, Permissions.VendorView, Permissions.InvoiceView, Permissions.InvoiceCreate, Permissions.InvoiceEdit,
+            Permissions.InvoiceExceptionResolve,
+        ],
+        ["Invoice Exception Reviewer"] = [Permissions.EntityView, Permissions.VendorView, Permissions.InvoiceView, Permissions.InvoiceExceptionOverride],
+        ["Verification Administrator"] = [Permissions.EntityView, Permissions.VerificationConfigure, Permissions.InvoicePoImport],
+        ["Verification Approver"] = [Permissions.EntityView, Permissions.VerificationApproveChange],
+        ["Invoice Approver"] = [Permissions.EntityView, Permissions.InvoiceView, Permissions.InvoiceApprove],
         ["Payment Preparer"] = [Permissions.PaymentPrepare],
         ["Payment Releaser"] = [Permissions.PaymentRelease],
     };

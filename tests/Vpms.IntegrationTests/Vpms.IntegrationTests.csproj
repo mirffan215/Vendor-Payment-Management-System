@@ -55,6 +55,14 @@
     <ProjectReference Include="..\..\src\Modules\VendorPortal\Vpms.VendorPortal.Application\Vpms.VendorPortal.Application.csproj" />
     <ProjectReference Include="..\..\src\Modules\VendorPortal\Vpms.VendorPortal.Infrastructure\Vpms.VendorPortal.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\Modules\VendorPortal\Vpms.VendorPortal.Contracts\Vpms.VendorPortal.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Invoices\Vpms.Invoices.Domain\Vpms.Invoices.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Invoices\Vpms.Invoices.Application\Vpms.Invoices.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Invoices\Vpms.Invoices.Infrastructure\Vpms.Invoices.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Invoices\Vpms.Invoices.Contracts\Vpms.Invoices.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Shared\*.cs" Link="Shared\%(Filename)%(Extension)" />
   </ItemGroup>
 
 </Project>

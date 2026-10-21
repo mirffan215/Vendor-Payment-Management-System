@@ -19,6 +19,7 @@ using Vpms.Identity.Application;
 using Vpms.Identity.Infrastructure;
 using Vpms.VendorPortal.Application;
 using Vpms.VendorPortal.Infrastructure;
+using Vpms.Invoices.Infrastructure;
 using Vpms.Vendors.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -43,6 +44,7 @@ builder.Services.AddIdentityModule(ConnectionString);
 builder.Services.AddAuditModule(ConnectionString);
 builder.Services.AddDocumentsModule(ConnectionString);
 builder.Services.AddVendorsModule(ConnectionString);
+builder.Services.AddInvoicesModule(ConnectionString);
 builder.Services.Configure<PortalOptions>(builder.Configuration.GetSection(PortalOptions.Section));
 builder.Services.AddVendorPortalModule(ConnectionString);
 builder.Services.AddSingleton<IAuditAnchorSink>(sp => new FileAuditAnchorSink(

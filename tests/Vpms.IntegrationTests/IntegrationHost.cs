@@ -10,6 +10,7 @@ using Vpms.Documents.Application;
 using Vpms.Documents.Infrastructure;
 using Vpms.VendorPortal.Application;
 using Vpms.VendorPortal.Infrastructure;
+using Vpms.Invoices.Infrastructure;
 using Vpms.Vendors.Infrastructure;
 using Vpms.Identity.Infrastructure;
 using Vpms.TestSupport;
@@ -41,6 +42,7 @@ public sealed class IntegrationHost : IAsyncDisposable
         services.Configure<DocumentsOptions>(o => o.Scanner = "Eicar");
         services.AddDocumentsModule(_ => database.AppConnectionString);
         services.AddVendorsModule(_ => database.AppConnectionString);
+        services.AddInvoicesModule(_ => database.AppConnectionString);
         services.Configure<PortalOptions>(o => o.PasswordHashIterations = 1000); // fast hashing for tests; production uses 600,000
         services.AddVendorPortalModule(_ => database.AppConnectionString);
         services.AddSingleton<Vpms.Identity.Application.ISecretResolver, NoSecrets>();
