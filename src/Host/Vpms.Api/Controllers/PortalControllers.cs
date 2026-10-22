@@ -115,7 +115,7 @@ public sealed class PortalVendorController(IVendorPortalService portal) : Contro
     [HttpGet("documents")]
     public async Task<IReadOnlyList<VendorDocumentDto>> Documents(CancellationToken ct) => await portal.ListDocumentsAsync(ct);
 
-    [HttpPost("documents"), RequestSizeLimit(MaxUpload)]
+    [HttpPost("documents"), RequestSizeLimit(MaxUpload), Microsoft.AspNetCore.RateLimiting.EnableRateLimiting(Vpms.Api.Infrastructure.HostLimits.UploadPolicy)]
     public async Task<VendorDocumentDto> Upload([FromForm] string type, [FromForm] DateOnly? expiresOn, IFormFile file, CancellationToken ct)
     {
         await using var stream = file.OpenReadStream();
@@ -161,7 +161,7 @@ public sealed class PortalInvoicesController(IPortalInvoiceService invoices) : C
     [HttpGet("{id:guid}")]
     public async Task<PortalInvoiceDto> Get(Guid id, CancellationToken ct) => await invoices.GetAsync(id, ct);
 
-    [HttpPost, RequestSizeLimit(MaxUpload)]
+    [HttpPost, RequestSizeLimit(MaxUpload), Microsoft.AspNetCore.RateLimiting.EnableRateLimiting(Vpms.Api.Infrastructure.HostLimits.UploadPolicy)]
     public async Task<PortalInvoiceDto> Submit(
         [FromForm] Guid legalEntityId, [FromForm] string invoiceNumber, [FromForm] DateOnly invoiceDate, [FromForm] DateOnly? dueDate,
         [FromForm] string currencyCode, [FromForm] decimal subtotal, [FromForm] decimal taxTotal, [FromForm] decimal total, [FromForm] string? poReference,

@@ -66,7 +66,7 @@ public sealed class InvoicesController(
     public async Task<IActionResult> Reject(Guid id, ReasonRequest body, CancellationToken ct) =>
         await Can(Permissions.InvoiceExceptionResolve, id, ct) ? Ok(await invoices.RejectAsync(id, body.Reason, ct)) : NotFound();
 
-    [HttpPost("{id:guid}/attachments"), RequestSizeLimit(MaxUpload)]
+    [HttpPost("{id:guid}/attachments"), RequestSizeLimit(MaxUpload), Microsoft.AspNetCore.RateLimiting.EnableRateLimiting(Vpms.Api.Infrastructure.HostLimits.UploadPolicy)]
     public async Task<IActionResult> AddAttachment(Guid id, [FromForm] string role, IFormFile file, CancellationToken ct)
     {
         if (!await Can(Permissions.InvoiceEdit, id, ct)) return NotFound();
@@ -98,7 +98,7 @@ public sealed class InvoicesController(
 
     // --- document channel and extraction suggestions -----------------------------------------------------------
 
-    [HttpPost("from-document"), RequestSizeLimit(MaxUpload)]
+    [HttpPost("from-document"), RequestSizeLimit(MaxUpload), Microsoft.AspNetCore.RateLimiting.EnableRateLimiting(Vpms.Api.Infrastructure.HostLimits.UploadPolicy)]
     public async Task<IActionResult> FromDocument([FromForm] Guid legalEntityId, [FromForm] Guid vendorId, IFormFile file, [FromServices] IInvoiceIntakeService intake, CancellationToken ct)
     {
         if (!await permissions.HasAsync(current.UserId, Permissions.InvoiceCreate, legalEntityId, ct)) return Forbid();

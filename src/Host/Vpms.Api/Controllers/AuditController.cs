@@ -62,7 +62,7 @@ public sealed class AuditController(IAuditQueryService query, IAuditEvidenceServ
 
     /// <summary>Checks a bundle that was produced for this organisation: signature, file hashes, event hashes and links.</summary>
     [HttpPost("evidence/verify")]
-    [RequestSizeLimit(200_000_000)]
+    [RequestSizeLimit(200_000_000), Microsoft.AspNetCore.Mvc.RequestFormLimits(MultipartBodyLengthLimit = 200_000_000)]
     public async Task<IActionResult> VerifyEvidence(IFormFile file, CancellationToken ct)
     {
         var userId = Guid.Parse(User.FindFirst(VpmsClaims.UserId)!.Value);

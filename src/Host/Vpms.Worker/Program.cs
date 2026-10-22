@@ -16,6 +16,7 @@ using Vpms.Vendors.Infrastructure;
 using Vpms.Worker;
 
 var builder = Host.CreateApplicationBuilder(args);
+builder.Configuration.AddVpmsKeyVault();
 
 static string ConnectionString(IServiceProvider sp) =>
     sp.GetRequiredService<IConfiguration>().GetConnectionString("Default")
@@ -65,4 +66,6 @@ builder.Services.AddHostedService<PaymentIntegrityJob>();
 builder.Services.AddHostedService<ErpOutboundJob>();
 builder.Services.AddHostedService<NotificationJob>();
 
-await builder.Build().RunAsync();
+var host = builder.Build();
+ProductionGuards.EnsureSafe(host.Services.GetRequiredService<IConfiguration>(), host.Services.GetRequiredService<IHostEnvironment>(), web: false);
+await host.RunAsync();

@@ -68,7 +68,7 @@ public sealed class VendorsController(
     [HttpGet("{id:guid}/documents"), Authorize(Policy = Permissions.VendorView)]
     public async Task<IReadOnlyList<VendorDocumentDto>> Documents(Guid id, CancellationToken ct) => await documents.ListAsync(id, ct);
 
-    [HttpPost("{id:guid}/documents"), Authorize(Policy = Permissions.VendorEdit), RequestSizeLimit(MaxUpload)]
+    [HttpPost("{id:guid}/documents"), Authorize(Policy = Permissions.VendorEdit), RequestSizeLimit(MaxUpload), Microsoft.AspNetCore.RateLimiting.EnableRateLimiting(Vpms.Api.Infrastructure.HostLimits.UploadPolicy)]
     public async Task<VendorDocumentDto> AddDocument(Guid id, [FromForm] string type, [FromForm] DateOnly? expiresOn, IFormFile file, CancellationToken ct)
     {
         await using var stream = file.OpenReadStream();

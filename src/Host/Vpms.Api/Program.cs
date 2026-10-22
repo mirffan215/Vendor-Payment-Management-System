@@ -29,7 +29,12 @@ using Vpms.Vendors.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Configuration.AddVpmsKeyVault();
 builder.Host.AddVpmsLogging();
+builder.WebHost.ConfigureVpmsKestrel(builder.Configuration);
+builder.Services.AddVpmsRequestLimits(builder.Configuration);
+builder.Services.AddVpmsForwardedHeaders(builder.Configuration);
+builder.Services.AddVpmsDataProtection(builder.Configuration);
 
 static string ConnectionString(IServiceProvider sp) =>
     sp.GetRequiredService<IConfiguration>().GetConnectionString("Default")
@@ -148,6 +153,7 @@ builder.Services.AddAntiforgery(o =>
 
 builder.Services.AddProblemDetails(o => o.CustomizeProblemDetails = ProblemDetailsCustomization.Customize);
 builder.Services.AddExceptionHandler<ProblemDetailsExceptionHandler>();
+builder.Services.AddHsts(o => { o.MaxAge = TimeSpan.FromDays(365); o.IncludeSubDomains = true; });
 builder.Services.AddVpmsRateLimiting();
 builder.Services.AddVpmsTelemetry(builder.Configuration);
 builder.Services.AddVpmsHealthChecks();
@@ -163,18 +169,9 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-if (app.Environment.IsProduction()
-    && string.Equals(app.Configuration["Encryption:Provider"] ?? "Local", "Local", StringComparison.OrdinalIgnoreCase))
-{
-    throw new InvalidOperationException("Encryption:Provider must be KeyVault in Production; the Local key is for development only.");
-}
+ProductionGuards.EnsureSafe(app.Configuration, app.Environment);
 
-if (app.Environment.IsProduction()
-    && string.Equals(app.Configuration["Storage:Provider"] ?? "InMemory", "InMemory", StringComparison.OrdinalIgnoreCase))
-{
-    throw new InvalidOperationException("Storage:Provider must be Azure or S3 in Production.");
-}
-
+app.UseForwardedHeaders();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 app.UseMiddleware<SecurityHeadersMiddleware>();

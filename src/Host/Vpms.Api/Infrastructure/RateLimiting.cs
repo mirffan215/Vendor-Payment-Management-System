@@ -26,13 +26,14 @@ public static class RateLimiting
 {
     public const string AuthPolicy = "auth";
     public const string PortalAuthPolicy = "portal-auth";
+    public const string UploadPolicy = HostLimits.UploadPolicy;
 
     public static IServiceCollection AddVpmsRateLimiting(this IServiceCollection services)
     {
         services.AddOptions<RateLimitSettings>().BindConfiguration(RateLimitSettings.Section);
         services.AddRateLimiter();
         // Configured through IOptions so host configuration (and tests) can change the limits.
-        services.AddOptions<RateLimiterOptions>().Configure<IOptions<RateLimitSettings>>((options, settings) =>
+        services.AddOptions<RateLimiterOptions>().Configure<IOptions<RateLimitSettings>, IOptions<RequestLimitSettings>>((options, settings, uploadSlots) =>
         {
             var s = settings.Value;
             var window = TimeSpan.FromSeconds(s.WindowSeconds);
@@ -50,6 +51,11 @@ public static class RateLimiting
             options.AddPolicy(PortalAuthPolicy, http => RateLimitPartition.GetFixedWindowLimiter(
                 "portal:" + http.Connection.RemoteIpAddress,
                 _ => new FixedWindowRateLimiterOptions { PermitLimit = s.PortalAuthPermitLimit, Window = window, QueueLimit = 0 }));
+
+            // Uploads are held in memory while they are inspected, so an instance only works on a few at a time.
+            options.AddPolicy(UploadPolicy, http => RateLimitPartition.GetConcurrencyLimiter(
+                "uploads",
+                _ => new ConcurrencyLimiterOptions { PermitLimit = uploadSlots.Value.ConcurrentUploads, QueueLimit = 0 }));
 
             options.OnRejected = async (context, ct) =>
             {

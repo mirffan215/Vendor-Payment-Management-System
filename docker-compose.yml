@@ -34,4 +34,6 @@ services:
       ConnectionStrings__Default: Server=sql;Database=Vpms;User Id=vpms_app_login;Password=${VPMS_APP_LOGIN_PASSWORD};TrustServerCertificate=True
   web:
     build: { context: web }
-    ports: ["5173:80"]
+    ports: ["5173:8080"]
+    environment:
+      API_UPSTREAM: http://api:8080
