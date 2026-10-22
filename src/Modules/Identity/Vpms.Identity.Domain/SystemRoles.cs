@@ -13,7 +13,7 @@ public static class SystemRoles
             Permissions.EntityView, Permissions.EntityManage, Permissions.BrandingManage, Permissions.ProviderManage,
             Permissions.AuthorityManage, Permissions.VendorView,
         ],
-        ["Auditor"] = [Permissions.AuditRead, Permissions.EntityView, Permissions.VendorView, Permissions.ReportView],
+        ["Auditor"] = [Permissions.AuditRead, Permissions.AuditExport, Permissions.EntityView, Permissions.VendorView, Permissions.ReportView],
         ["Vendor Manager"] =
         [
             Permissions.EntityView, Permissions.VendorView, Permissions.VendorEdit, Permissions.VendorPortalManage,

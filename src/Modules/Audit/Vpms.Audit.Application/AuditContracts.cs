@@ -21,6 +21,9 @@ public sealed record AuditPage(IReadOnlyList<AuditEvent> Items, long? NextAfterS
 
 public interface IAuditQueryService
 {
+    /// <summary>All matching events in sequence order, without paging limits (used by exports). The caller must bound how many it reads.</summary>
+    IAsyncEnumerable<AuditEvent> StreamAsync(AuditQuery query, IReadOnlySet<Guid>? entityScope, CancellationToken ct = default);
+
     /// <param name="entityScope">null means tenant-wide access; otherwise only events of these legal entities.</param>
     Task<AuditPage> QueryAsync(AuditQuery query, IReadOnlySet<Guid>? entityScope, CancellationToken ct = default);
 }

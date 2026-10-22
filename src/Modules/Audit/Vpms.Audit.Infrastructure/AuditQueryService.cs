@@ -8,7 +8,22 @@ public sealed class AuditQueryService(AuditDbContext db) : IAuditQueryService
     public async Task<AuditPage> QueryAsync(AuditQuery q, IReadOnlySet<Guid>? entityScope, CancellationToken ct = default)
     {
         var limit = Math.Clamp(q.Limit, 1, AuditQuery.MaxLimit);
+        var events = Filter(q, entityScope);
+        var items = await events.OrderBy(e => e.Sequence).Take(limit + 1).ToListAsync(ct);
+        var hasMore = items.Count > limit;
+        if (hasMore)
+        {
+            items.RemoveAt(limit);
+        }
 
+        return new AuditPage(items, hasMore ? items[^1].Sequence : null);
+    }
+
+    public IAsyncEnumerable<Vpms.Audit.Domain.AuditEvent> StreamAsync(AuditQuery q, IReadOnlySet<Guid>? entityScope, CancellationToken ct = default) =>
+        Filter(q, entityScope).OrderBy(e => e.Sequence).AsAsyncEnumerable();
+
+    private IQueryable<Vpms.Audit.Domain.AuditEvent> Filter(AuditQuery q, IReadOnlySet<Guid>? entityScope)
+    {
         // The tenant query filter (and RLS) already restrict this to the caller's tenant.
         IQueryable<Vpms.Audit.Domain.AuditEvent> events = db.Events.AsNoTracking();
 
@@ -27,13 +42,6 @@ public sealed class AuditQueryService(AuditDbContext db) : IAuditQueryService
         if (q.To is { } to) events = events.Where(e => e.OccurredAt <= to);
         if (q.AfterSequence is { } after) events = events.Where(e => e.Sequence > after);
 
-        var items = await events.OrderBy(e => e.Sequence).Take(limit + 1).ToListAsync(ct);
-        var hasMore = items.Count > limit;
-        if (hasMore)
-        {
-            items.RemoveAt(limit);
-        }
-
-        return new AuditPage(items, hasMore ? items[^1].Sequence : null);
+        return events;
     }
 }

@@ -21,6 +21,7 @@ public static class AuditModule
         services.AddScoped<IAuditPort, AuditPort>();
         services.AddScoped<IAuditQueryService, AuditQueryService>();
         services.AddScoped<IAuditChainVerifier, AuditChainVerifier>();
+        services.AddScoped<IAuditEvidenceService, AuditEvidenceService>();
         services.AddScoped<IAuditAnchorService, AuditAnchorService>();
         return services;
     }
