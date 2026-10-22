@@ -246,3 +246,21 @@ future integration; v1 never moves money.**
   is never waivable; invoices and verification records cannot be deleted by the application login.
 - **Cross-module reads** go through contracts only: vendor status, link currency, ERP account, contact email and tax number
   (`IVendorLookup`), legal entity country (`ILegalEntityLookup`), file storage (`IAttachmentService`).
+
+## 15. Phase 4 additions
+
+- **Workflow module** (`src/Modules/Workflow`, schema `wf`): domain (definitions, validator, condition evaluator, run state machine,
+  simulator, delegation, materiality), application contracts, infrastructure (definition, approval, delegation, timer and
+  materiality services). It references no subject module; invoices call `IApprovalStarter` / `IApprovalLifecycle` /
+  `IMaterialityEvaluator` and implement `IApprovalOutcomeHandler` (all in `Vpms.Workflow.Contracts`). See ADR-0014.
+- **Flow:** Verified invoice -> *send for approval* -> run starts on the entity's Active definition version (pinned) -> tasks for
+  eligible approvers (permission, not maker) -> decisions (maker-checker, different person, authority, delegation checked in the
+  engine) -> run ends -> outcome applied to the invoice (Approved / Rejected / Returned), with a sweep if that fails.
+- **Worker jobs:** `WorkflowTimerJob` (reminders, escalation), `ApprovalOutcomeJob` (retry of outcomes).
+- **Approver identity port:** `IApproverDirectory` (Identity) resolves roles and permission holders; `IApprovalDataLookup`
+  (CustomerAdmin) provides matrix rules and approval authorities.
+- **Invoice lifecycle:** Draft -> Received -> InVerification -> Exception | Verified -> InApproval -> Approved | Rejected |
+  Returned (editable again) ; a material revision of an InApproval/Approved invoice goes back to Received. Payment (Phase 5) will
+  consume `Approved` with `ApprovedVersion == Version`.
+- **API:** `/workflow` definitions and changes, `/approvals` inbox/tasks/decisions/notices, `/delegations`,
+  `/approval-materiality`, `POST /invoices/{id}/send-for-approval` and `/revise`.

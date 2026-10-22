@@ -198,3 +198,15 @@ duplicate detection works without decrypting. See ADR-0004.
   `InvoiceException` (one open exception per invoice and rule, waiver reason and person recorded).
 - `PurchaseOrder` and `PurchaseOrderLine`: per legal entity, versioned by the importer, with value and quantity already
   invoiced outside VPMS. The ERP adapter (Phase 6) replaces the staff import as the source.
+
+## Phase 4 as built (schema `wf`, plus invoice columns)
+
+- **WorkflowDefinition**: legal entity, subject type, version, spec JSON, spec hash, source (Authored | Matrix), status
+  (Pending | Active | Superseded | Rejected | Cancelled), maker and checker. Unique Active and Pending per entity and subject.
+- **WorkflowRun**: subject type/id/version, label, pinned definition id/version/hash, status (Active | Approved | Rejected |
+  Returned | Cancelled), makers, facts JSON (amount, currency, vendor, source, dimensions), `OutcomeAppliedAt`. One Active run per
+  subject (filtered unique index).
+- **ApprovalTask**: step, branch path, assignees, mode/quorum, due, reminder sent, escalated at/to. **TaskDecision**: actor, acting-for,
+  decision, comment; unique per task and actor; no update or delete for the application login. **JoinArrival**: parallel join state.
+- **Delegation**, **WorkflowNotice**, **MaterialityPolicy** (versioned like definitions). No deletes for the application login.
+- **Invoice** gained `ApprovalRunId`, `ApprovedVersion`, `ApprovedAt`, `ApprovalBaselineJson` and statuses InApproval, Approved, Returned.

@@ -18,6 +18,9 @@ Phase 0 ADRs were approved by the owner and are **Accepted**.
 | [0011](0011-invoice-intake-and-ocr-boundary.md) | Invoice intake channels and the OCR boundary | Accepted |
 | [0012](0012-verification-engine-and-rule-versioning.md) | Verification engine and per-entity rule versioning | Accepted |
 | [0013](0013-pluggable-tax-providers-and-zatca-scope.md) | Pluggable country tax providers and ZATCA scope | Accepted |
+| [0014](0014-workflow-engine-and-definition-versioning.md) | Workflow engine and definition versioning | Accepted |
+| [0015](0015-approval-controls-sod-delegation-escalation.md) | Approval controls: segregation of duties, authority, delegation, escalation | Accepted |
+| [0016](0016-reapproval-on-material-change.md) | Re-approval on material change | Accepted |
 
 ## Template
 

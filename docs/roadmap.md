@@ -37,7 +37,7 @@ Depends on: Phases 1-2.
 Acceptance: duplicates are blocked or flagged; validation rules are configurable per entity; full test coverage
 of rules.
 
-## Phase 4: Workflow and approvals (`phase-4-workflow-approvals.md`)
+## Phase 4: Workflow and approvals (`phase-4-workflow-approvals.md`) — complete, see [phase-4-summary.md](phase-4-summary.md)
 Scope: versioned data-driven engine (sequential, parallel, conditional, multilevel); approval matrices per entity;
 version pinning; maker-checker and self-approval prevention; delegation, deadlines, reminders, escalation via
 durable jobs; re-approval on material change; approver UI.

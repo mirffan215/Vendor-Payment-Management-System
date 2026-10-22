@@ -7,7 +7,7 @@ Status: Accepted (Phase 0 approved).
 | # | Risk | Impact | Mitigation | Phase |
 |---|---|---|---|---|
 | R1 | Cross-tenant data leakage (missed filter, background job, cache, blob path) | Critical | Global filters + RLS backstop, banned `IgnoreQueryFilters`, tenant in every job/cache/path, mandatory isolation tests | 1+ |
-| R2 | Segregation-of-duties bypass (same person approves and releases; delegate abuse) | Critical | Guards in engine and treasury, not UI; release-time recheck; SoD tests incl. delegation | 4, 5 |
+| R2 | Segregation-of-duties bypass (same person approves and releases; delegate abuse) | Critical | Guards in engine and treasury, not UI; release-time recheck; SoD tests incl. delegation | 4, 5 (engine part built, ADR-0015) |
 | R3 | Fraudulent bank-detail change (vendor impersonation) | Critical | Two-person verification, callback verification field, block release while change open, alerts | 2, 5 |
 | R4 | Audit tampering or gaps | High | Hash chain, DENY update/delete, same-transaction writes, external anchoring | 1 |
 | R5 | ERP drift or duplicate postings | High | Idempotency keys, replay tests, reconciliation job, documented interfaces only | 6 |
@@ -15,7 +15,7 @@ Status: Accepted (Phase 0 approved).
 | R7 | Key management errors (loss, rotation failure) | High | Key Vault with soft-delete/purge protection, versioned ciphertext, rotation runbook, tested restore | 1, 8 |
 | R8 | OCR/extraction inaccuracy leads to wrong data | Medium | OCR output is only a suggestion; human verification; verification rules still apply | 3 |
 | R9 | Arabic/RTL and Hijri handled late and inconsistently | Medium | i18n and RTL from Phase 1; RTL checks in UI tests; localization in definition of done | 1, 7 |
-| R10 | Custom workflow engine complexity | Medium | Small step set, versioned schema, simulation harness, no arbitrary code in conditions | 4 |
+| R10 | Custom workflow engine complexity | Medium | Small step set, versioned schema, simulation harness, no arbitrary code in conditions | 4 (built, ADR-0014) |
 | R11 | Hot-tenant audit chain contention | Low | Per-tenant chains, batch within transaction, measure in load tests | 8 |
 | R12 | Scope creep toward executing payments | High | v1 prepares instructions only; no bank-execution component; ADR needed to change | 5 |
 | R13 | Vendor portal compromise exposes internal data | High | Separate auth context and audience, vendor-scoped queries, rate limiting | 2 |
