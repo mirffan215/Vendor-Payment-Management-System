@@ -16,7 +16,7 @@ public sealed class ErpInboundTests(SqlServerFixture sql) : ErpScenarioBase(sql)
     private Task<InboundResult> Pull() => W.AsAsync(W.TenantA, W.Admin, s => s.GetRequiredService<IErpInbound>().PullAsync());
 
     private Task<List<ErpInboxMessage>> Inbox(string? kind = null) =>
-        W.AsAsync(W.TenantA, W.Admin, s => s.GetRequiredService<ErpDbContext>().Inbox.AsNoTracking().Where(m => kind == null || m.Kind == kind).OrderBy(m => m.ReceivedAt).ToListAsync());
+        W.AsAsync(W.TenantA, W.Admin, s => s.GetRequiredService<ErpDbContext>().Inbox.AsNoTracking().Where(m => kind == null || m.Kind == kind).OrderBy(m => m.ReceivedAt).ThenBy(m => m.Sequence).ToListAsync());
 
     private Task<IReadOnlyList<PurchaseOrderDto>> Orders() =>
         W.AsAsync(W.TenantA, W.Admin, s => s.GetRequiredService<IPurchaseOrderService>().ListAsync(Entity, null, null, 0, 50));
