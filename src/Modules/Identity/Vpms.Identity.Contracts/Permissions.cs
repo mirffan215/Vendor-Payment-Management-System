@@ -55,6 +55,7 @@ public static class Permissions
 
     public const string AuditExport = "Audit.Export";
     public const string NotificationConfigure = "Notification.Configure";
+    public const string NotificationApproveChange = "Notification.ApproveChange";
     public const string ReportView = "Report.View";
     public const string ReportExport = "Report.Export";
     public const string ReportTax = "Report.Tax";
@@ -70,6 +71,6 @@ public static class Permissions
         WorkflowView, WorkflowConfigure, WorkflowApproveChange, WorkflowAdminister,
         PaymentView, PaymentPrepare, PaymentApprove, PaymentRelease, PaymentInstructionDownload,
         ErpView, ErpConfigure, ErpApproveChange, ErpOperate,
-        AuditExport, NotificationConfigure, ReportView, ReportExport, ReportTax,
+        AuditExport, NotificationConfigure, NotificationApproveChange, ReportView, ReportExport, ReportTax,
     ];
 }

@@ -14,6 +14,18 @@ public static class NotificationsModule
         services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<INotificationAdmin, NotificationAdminService>();
         services.AddScoped<INotificationSweep, NotificationSweep>();
+        services.AddScoped<INotificationChannelService, ChannelConfigService>();
+        services.AddScoped<INotificationDelivery, NotificationDeliveryService>();
+        services.AddSingleton<IEmailSender, SmtpEmailSender>();
+        services.AddSingleton<IPushSender, LoggingPushSender>();
+        // One shared HttpClient each (connections are pooled and recycled), like the other outbound clients.
+        services.AddSingleton<IEmailSender>(sp => new GraphEmailSender(
+            new HttpClient(new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }) { Timeout = TimeSpan.FromSeconds(30) },
+            sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<GraphMailOptions>>(), sp.GetRequiredService<TimeProvider>()));
+        services.AddSingleton<IWebhookSender>(sp => new TeamsWebhookSender(
+            new HttpClient(new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5), AllowAutoRedirect = false }) { Timeout = TimeSpan.FromSeconds(30) },
+            sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<NotificationOptions>>()));
+        services.AddOptions<GraphMailOptions>();
         return services;
     }
 }

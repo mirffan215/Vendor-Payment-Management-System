@@ -18,9 +18,14 @@ public abstract class ApprovalScenarioBase(SqlServerFixture sql) : IAsyncLifetim
     protected Guid Entity, Vendor;
     protected Guid Cfg, Chg, Clerk, A1, A2, A3, Dual, Maker, Checker;
 
+    /// <summary>Lets a test class replace or add services (for example fake senders) before the host is built.</summary>
+    protected virtual void ConfigureServices(IServiceCollection services)
+    {
+    }
+
     public virtual async Task InitializeAsync()
     {
-        W = new WorkflowWorld(new IntegrationHost(await sql.CreateDatabaseAsync(), Clock));
+        W = new WorkflowWorld(new IntegrationHost(await sql.CreateDatabaseAsync(), Clock, ConfigureServices));
         await W.InitializeAsync();
         Entity = await W.EntityAsync(W.TenantA, "A1");
         Cfg = await W.UserAsync(W.TenantA, "cfg@t.com", null, "Workflow Administrator");

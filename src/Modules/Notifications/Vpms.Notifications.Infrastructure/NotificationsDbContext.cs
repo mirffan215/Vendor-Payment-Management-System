@@ -13,6 +13,8 @@ public class NotificationsDbContext(DbContextOptions<NotificationsDbContext> opt
     public DbSet<NotificationCursor> Cursors => Set<NotificationCursor>();
     public DbSet<NotificationPreference> Preferences => Set<NotificationPreference>();
     public DbSet<NotificationTemplate> Templates => Set<NotificationTemplate>();
+    public DbSet<NotificationDelivery> Deliveries => Set<NotificationDelivery>();
+    public DbSet<ChannelConfig> ChannelConfigs => Set<ChannelConfig>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -50,6 +52,35 @@ public class NotificationsDbContext(DbContextOptions<NotificationsDbContext> opt
             b.Property(x => x.Kind).HasMaxLength(40).IsRequired();
             b.Property(x => x.Channel).HasMaxLength(12).IsRequired();
             b.HasIndex(x => new { x.TenantId, x.UserId, x.Kind, x.Channel }).IsUnique();
+        });
+
+        modelBuilder.Entity<NotificationDelivery>(b =>
+        {
+            b.ToTable("NotificationDelivery");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Id).ValueGeneratedNever();
+            b.Property(x => x.Channel).HasMaxLength(12).IsRequired();
+            b.Property(x => x.Status).HasMaxLength(12).IsRequired();
+            b.Property(x => x.LastError).HasMaxLength(500);
+            b.Property(x => x.RowVersion).IsRowVersion();
+            b.HasIndex(x => new { x.TenantId, x.NotificationId, x.Channel }).IsUnique();
+            b.HasIndex(x => new { x.TenantId, x.Status, x.NextAttemptAt });
+        });
+
+        modelBuilder.Entity<ChannelConfig>(b =>
+        {
+            b.ToTable("ChannelConfig");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Id).ValueGeneratedNever();
+            b.Property(x => x.Channel).HasMaxLength(12).IsRequired();
+            b.Property(x => x.ConfigJson).IsRequired();
+            b.Property(x => x.Status).HasMaxLength(12).IsRequired();
+            b.Property(x => x.Note).HasMaxLength(500).IsRequired();
+            b.Property(x => x.DecisionComment).HasMaxLength(500);
+            b.Property(x => x.RowVersion).IsRowVersion();
+            b.HasIndex(x => new { x.TenantId, x.Channel, x.VersionNo }).IsUnique();
+            b.HasIndex(x => new { x.TenantId, x.Channel }).IsUnique().HasFilter("[Status] = 'Active'").HasDatabaseName("UX_ChannelConfig_Active");
+            b.HasIndex(x => new { x.TenantId, x.Channel }).IsUnique().HasFilter("[Status] = 'Pending'").HasDatabaseName("UX_ChannelConfig_Pending");
         });
 
         modelBuilder.Entity<NotificationTemplate>(b =>

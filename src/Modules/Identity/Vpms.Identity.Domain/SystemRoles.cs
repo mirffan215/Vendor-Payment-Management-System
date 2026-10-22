@@ -39,6 +39,7 @@ public static class SystemRoles
         ["Report Viewer"] = [Permissions.EntityView, Permissions.ReportView, Permissions.ReportExport],
         ["Tax Reviewer"] = [Permissions.EntityView, Permissions.ReportView, Permissions.ReportExport, Permissions.ReportTax],
         ["Notification Administrator"] = [Permissions.EntityView, Permissions.NotificationConfigure],
+        ["Notification Change Approver"] = [Permissions.EntityView, Permissions.NotificationApproveChange],
         ["ERP Administrator"] = [Permissions.EntityView, Permissions.ErpView, Permissions.ErpConfigure],
         ["ERP Change Approver"] = [Permissions.EntityView, Permissions.ErpView, Permissions.ErpApproveChange],
         ["ERP Operator"] = [Permissions.EntityView, Permissions.VendorView, Permissions.InvoiceView, Permissions.ErpView, Permissions.ErpOperate],

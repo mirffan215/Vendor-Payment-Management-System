@@ -54,7 +54,16 @@ builder.Services.AddWorkflowModule(ConnectionString);
 builder.Services.AddPaymentsModule(ConnectionString);
 builder.Services.AddErpIntegrationModule(ConnectionString);
 builder.Services.AddReportingModule();
-builder.Services.AddNotificationsModule(ConnectionString, o => o.BaseUrl = builder.Configuration["App:BaseUrl"] ?? "");
+builder.Services.AddNotificationsModule(ConnectionString, o =>
+{
+    o.BaseUrl = builder.Configuration["App:BaseUrl"] ?? "";
+    o.AllowInternalHosts = builder.Configuration.GetValue("Notifications:AllowInternalHosts", false);
+});
+builder.Services.Configure<Vpms.Notifications.Infrastructure.GraphMailOptions>(o =>
+{
+    o.BaseUrl = builder.Configuration["Notifications:GraphBaseUrl"] ?? o.BaseUrl;
+    o.AuthorityUrl = builder.Configuration["Notifications:GraphAuthorityUrl"] ?? o.AuthorityUrl;
+});
 builder.Services.AddD365FinanceAdapter(builder.Configuration);
 // The mock ERP is for local development only; production tenants cannot select a provider that is not registered.
 if (builder.Environment.IsDevelopment()) builder.Services.AddSingleton<Vpms.ErpIntegration.Contracts.IErpAdapter, Vpms.ErpIntegration.Infrastructure.MockErpAdapter>();

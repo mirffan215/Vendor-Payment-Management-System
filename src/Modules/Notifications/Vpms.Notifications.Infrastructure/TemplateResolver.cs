@@ -11,6 +11,12 @@ public sealed class NotificationOptions
 {
     /// <summary>The public address of the web app, put in front of a link path in emails and chat messages.</summary>
     public string BaseUrl { get; set; } = "";
+
+    /// <summary>Lets webhooks and mail servers point at private or local addresses. Only for development and tests.</summary>
+    public bool AllowInternalHosts { get; set; }
+
+    /// <summary>Webhook addresses must end with one of these host suffixes (Teams and Power Automate by default).</summary>
+    public IReadOnlyList<string> WebhookHostSuffixes { get; set; } = [".webhook.office.com", ".logic.azure.com", ".powerplatform.com", ".office.com"];
 }
 
 public sealed class TemplateResolver(NotificationsDbContext db, IOptions<NotificationOptions> options)

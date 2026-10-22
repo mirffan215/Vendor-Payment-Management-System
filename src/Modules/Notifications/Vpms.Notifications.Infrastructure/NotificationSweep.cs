@@ -26,6 +26,10 @@ public sealed class NotificationSweep(
         var now = clock.GetUtcNow();
         int events = 0, created = 0;
         var failed = new List<string>();
+        var off = (await db.Preferences.AsNoTracking().Where(p => !p.Enabled).Select(p => new { p.UserId, p.Kind, p.Channel }).ToListAsync(ct)).Select(p => (p.UserId, p.Kind, p.Channel)).ToHashSet();
+        var channels = (await db.ChannelConfigs.AsNoTracking().Where(c => c.Status == ChannelConfigStatus.Active).ToListAsync(ct)).ToDictionary(c => c.Channel);
+        var webhookKinds = channels.TryGetValue(NotificationChannel.Webhook, out var hook) ? ChannelRules.Parse<WebhookChannelConfig>(hook.ConfigJson).Kinds.ToHashSet() : new HashSet<string>();
+        var webhookKeys = new HashSet<string>();
         var switchedOff = (await db.Preferences.AsNoTracking().Where(p => p.Channel == NotificationChannel.InApp && !p.Enabled).Select(p => new { p.UserId, p.Kind }).ToListAsync(ct))
             .Select(p => (p.UserId, p.Kind)).ToHashSet();
 
@@ -56,12 +60,14 @@ public sealed class NotificationSweep(
                     if (known.Contains((user, e.DedupeKey))) continue;
                     known.Add((user, e.DedupeKey));
                     if (!NotificationKinds.Mandatory.Contains(e.Kind) && switchedOff.Contains((user, e.Kind))) continue;
-                    db.Notifications.Add(new Notification
+                    var notification = new Notification
                     {
                         Id = Guid.NewGuid(), TenantId = tenantId, UserId = user, Kind = e.Kind, LegalEntityId = e.LegalEntityId, SubjectLabel = Cut(e.SubjectLabel, 300), Path = e.Path,
                         DataJson = JsonSerializer.Serialize(e.Data), DedupeKey = e.DedupeKey, CreatedAt = now,
-                    });
+                    };
+                    db.Notifications.Add(notification);
                     created++;
+                    await PlanDeliveriesAsync(notification, channels, webhookKinds, webhookKeys, off, now, ct);
                 }
             }
 
@@ -82,6 +88,25 @@ public sealed class NotificationSweep(
 
         return new SweepResult(events, created, failed);
     }
+
+    /// <summary>Email and push go to the person (unless they switched that off; mandatory kinds cannot be). The webhook is a shared channel, so it gets one message per event, not one per recipient.</summary>
+    private async Task PlanDeliveriesAsync(Notification n, Dictionary<string, ChannelConfig> channels, HashSet<string> webhookKinds, HashSet<string> webhookKeys, HashSet<(Guid, string, string)> off, DateTimeOffset now, CancellationToken ct)
+    {
+        var mandatory = NotificationKinds.Mandatory.Contains(n.Kind);
+        foreach (var channel in new[] { NotificationChannel.Email, NotificationChannel.Push })
+        {
+            if (channels.ContainsKey(channel) && (mandatory || !off.Contains((n.UserId, n.Kind, channel)))) AddDelivery(n, channel, now);
+        }
+
+        if (channels.ContainsKey(NotificationChannel.Webhook) && webhookKinds.Contains(n.Kind) && webhookKeys.Add(n.DedupeKey)
+            && !await db.Deliveries.AnyAsync(d => d.Channel == NotificationChannel.Webhook && db.Notifications.Any(x => x.Id == d.NotificationId && x.DedupeKey == n.DedupeKey), ct))
+        {
+            AddDelivery(n, NotificationChannel.Webhook, now);
+        }
+    }
+
+    private void AddDelivery(Notification n, string channel, DateTimeOffset now) =>
+        db.Deliveries.Add(new NotificationDelivery { Id = Guid.NewGuid(), TenantId = n.TenantId, NotificationId = n.Id, UserId = n.UserId, Channel = channel, NextAttemptAt = now, CreatedAt = now });
 
     private async Task<IReadOnlyList<Guid>> AudienceAsync(NotificationEvent e, CancellationToken ct)
     {

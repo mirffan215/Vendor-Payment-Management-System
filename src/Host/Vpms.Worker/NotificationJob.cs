@@ -49,6 +49,8 @@ public sealed class NotificationJob(IServiceScopeFactory scopes, IConfiguration 
                 actor.ActorId = ErpSystemActor.Id;
                 actor.ActorType = AuditActorType.System;
                 var result = await scope.ServiceProvider.GetRequiredService<INotificationSweep>().RunAsync(ct);
+                var delivered = await scope.ServiceProvider.GetRequiredService<INotificationDelivery>().ProcessDueAsync(configuration.GetValue("Notifications:DeliveryBatch", 50), ct);
+                if (delivered.DeadLettered > 0) logger.LogWarning("Notification deliveries dead-lettered for tenant {TenantId}: {Count}.", t.TenantId, delivered.DeadLettered);
                 created += result.Created;
                 foreach (var source in result.FailedSources) logger.LogWarning("Notification source {Source} failed for tenant {TenantId}.", source, t.TenantId);
             }
