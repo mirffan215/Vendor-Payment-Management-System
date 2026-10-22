@@ -27,7 +27,7 @@ public sealed record SignInResult(SignedInUser? User, SignInDenial? Denial)
 /// Maps a validated external identity to a VPMS user. The tenant comes from the provider configuration held by
 /// the server, never from claims inside the external token.
 /// </summary>
-public sealed class UserProvisioner(IIdentityStore store, TenantContext tenant, TimeProvider clock, IAuditPort audit, IRoleAssignmentService roles)
+public sealed class UserProvisioner(IIdentityStore store, TenantContext tenant, TimeProvider clock, IAuditPort audit, IRoleAssignmentService roles, Vpms.CustomerAdmin.Contracts.ITenantLookup? tenants = null)
 {
     public async Task<SignInResult> SignInAsync(IdentityProviderConfig provider, ExternalIdentity identity,
         CancellationToken ct = default)
@@ -57,8 +57,12 @@ public sealed class UserProvisioner(IIdentityStore store, TenantContext tenant, 
                 return await Deny(provider, SignInDenial.EmailDomainNotAllowed, ct);
             }
 
+            // A new person starts with the organisation's language and calendar, and can change them for themselves.
+            var defaults = tenants is null ? null : await tenants.GetDefaultsAsync(provider.TenantId, ct);
             user = new User
             {
+                Locale = defaults?.Locale ?? "en",
+                Calendar = defaults?.Calendar ?? "gregorian",
                 Id = Guid.NewGuid(),
                 TenantId = provider.TenantId,
                 ProviderId = provider.Id,

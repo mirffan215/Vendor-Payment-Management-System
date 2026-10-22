@@ -29,6 +29,7 @@ public class IdentityDbContext(DbContextOptions<IdentityDbContext> options, ITen
             b.Property(x => x.Email).HasMaxLength(320).IsRequired();
             b.Property(x => x.DisplayName).HasMaxLength(200).IsRequired();
             b.Property(x => x.Locale).HasMaxLength(10).IsRequired();
+            b.Property(x => x.Calendar).HasMaxLength(10).IsRequired().HasDefaultValue("gregorian");
             b.Property(x => x.Status).HasMaxLength(20).IsRequired();
             b.HasIndex(x => new { x.TenantId, x.ProviderId, x.ExternalSubject }).IsUnique();
         });

@@ -17,6 +17,7 @@ public class User : ITenantOwned
     public string Email { get; set; } = "";
     public string DisplayName { get; set; } = "";
     public string Locale { get; set; } = "en";
+    public string Calendar { get; set; } = "gregorian";
     public string Status { get; set; } = UserStatus.Active;
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset? LastLoginAt { get; set; }

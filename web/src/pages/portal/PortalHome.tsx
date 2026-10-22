@@ -7,7 +7,7 @@ import {
 import { useAction } from '../../components/Busy'
 import { ProblemAlert } from '../../components/ProblemText'
 import { useLoad } from '../../hooks/useLoad'
-import { formatDate, type CalendarPreference } from '../../i18n/format'
+import { formatDate, formatMoney, type CalendarPreference } from '../../i18n/format'
 
 const TABS = ['profile', 'documents', 'invoices', 'bank', 'messages'] as const
 type Tab = (typeof TABS)[number]
@@ -275,7 +275,7 @@ function Invoices({ calendar }: { calendar: CalendarPreference }) {
             <span dir="ltr">{i.invoiceNumber}</span>
             <span>{i.entityName}</span>
             <span>{formatDate(i.invoiceDate, i18n.language, calendar)}</span>
-            <span dir="ltr">{i.currencyCode} {i.total}</span>
+            <span dir="ltr">{formatMoney(i.total, i.currencyCode, i18n.language)}</span>
             <span>{t(`portalInvoiceStatus.${i.status}`, { defaultValue: i.status })}</span>
           </li>
         ))}

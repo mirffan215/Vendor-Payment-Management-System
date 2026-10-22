@@ -99,9 +99,10 @@ public sealed class NotificationDeliveryService(
                 if (sender is null) return SendResult.Fail("provider_unavailable");
                 var secret = string.IsNullOrEmpty(settings.SecretRef) ? null : await secrets.ReadAsync(settings.SecretRef, ct);
 
-                var (title, html) = await templates.RenderAsync(n, NotificationChannel.Email, locale, ct);
-                var text = (await templates.RenderAsync(n, NotificationChannel.InApp, locale, ct)).Body + "\n" + templates.Absolute(n.Path);
-                var wrapped = $"<div dir=\"{(locale == "ar" ? "rtl" : "ltr")}\" style=\"font-family:sans-serif\"><p>{html}</p></div>";
+                var mailLocale = person.Locale is "ar" ? "ar" : person.Locale is "en" ? "en" : locale;
+                var (title, html) = await templates.RenderAsync(n, NotificationChannel.Email, mailLocale, ct);
+                var text = (await templates.RenderAsync(n, NotificationChannel.InApp, mailLocale, ct)).Body + "\n" + templates.Absolute(n.Path);
+                var wrapped = $"<div dir=\"{(mailLocale == "ar" ? "rtl" : "ltr")}\" style=\"font-family:sans-serif\"><p>{html}</p></div>";
                 return await sender.SendAsync(config.ConfigJson, secret, new OutgoingEmail(person.Email, title, wrapped, text, settings.FromAddress, settings.FromName), ct);
             }
 

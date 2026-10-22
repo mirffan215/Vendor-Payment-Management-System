@@ -21,6 +21,7 @@ public static class IdentityModule
         services.AddScoped<UserAdminService>();
         services.AddScoped<IUserAdminService>(sp => sp.GetRequiredService<UserAdminService>());
         services.AddScoped<IUserDirectory>(sp => sp.GetRequiredService<UserAdminService>());
+        services.AddScoped<IUserPreferences>(sp => sp.GetRequiredService<UserAdminService>());
         services.AddScoped<IProviderAdminService, ProviderAdminService>();
         services.TryAddSingleton<IProviderChangeNotifier, NoOpProviderChangeNotifier>();
         services.AddSingleton(TimeProvider.System);

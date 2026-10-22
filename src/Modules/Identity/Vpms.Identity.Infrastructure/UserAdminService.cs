@@ -9,7 +9,7 @@ using Vpms.Identity.Domain;
 
 namespace Vpms.Identity.Infrastructure;
 
-public sealed class UserAdminService(IdentityDbContext db, ICurrentUser current, IAuditPort audit) : IUserAdminService, IUserDirectory
+public sealed class UserAdminService(IdentityDbContext db, ICurrentUser current, IAuditPort audit) : IUserAdminService, IUserDirectory, IUserPreferences
 {
     public async Task<IReadOnlyList<UserDto>> ListAsync(string? search, int skip, int take, CancellationToken ct = default)
     {
@@ -61,7 +61,30 @@ public sealed class UserAdminService(IdentityDbContext db, ICurrentUser current,
     {
         var ids = userIds.Distinct().ToList();
         return await db.Users.AsNoTracking().Where(u => ids.Contains(u.Id))
-            .ToDictionaryAsync(u => u.Id, u => new UserSummary(u.Id, u.Email, u.DisplayName, u.Status), ct);
+            .ToDictionaryAsync(u => u.Id, u => new UserSummary(u.Id, u.Email, u.DisplayName, u.Status, u.Locale, u.Calendar), ct);
+    }
+
+    public async Task<UserPreferencesDto> GetAsync(Guid userId, CancellationToken ct = default)
+    {
+        var u = await db.Users.AsNoTracking().FirstOrDefaultAsync(x => x.Id == userId, ct) ?? throw new NotFoundException("User");
+        return new UserPreferencesDto(u.Locale, u.Calendar);
+    }
+
+    public async Task<UserPreferencesDto> SetMineAsync(string locale, string calendar, CancellationToken ct = default)
+    {
+        if (locale is not ("en" or "ar")) throw new ValidationFailedException("invalid_locale", "Choose English or Arabic.");
+        if (calendar is not ("gregorian" or "hijri")) throw new ValidationFailedException("invalid_calendar", "Choose the Gregorian or the Hijri calendar.");
+        var userId = current.UserId;
+        var u = await db.Users.FirstOrDefaultAsync(x => x.Id == userId, ct) ?? throw new NotFoundException("User");
+        if (u.Locale != locale || u.Calendar != calendar)
+        {
+            u.Locale = locale;
+            u.Calendar = calendar;
+            audit.Record(new AuditEntry("user.preferences.changed", "User", userId.ToString(), null, JsonSerializer.Serialize(new { locale, calendar })));
+            await db.SaveChangesAsync(ct);
+        }
+
+        return new UserPreferencesDto(locale, calendar);
     }
 
     private async Task<bool> IsLastAdminAsync(Guid userId, CancellationToken ct)

@@ -1,9 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { BrowserRouter, Link, Navigate, Route, Routes } from 'react-router-dom'
+import { savePreferences } from './api/client'
 import { SessionProvider } from './auth/SessionContext'
 import { useSession } from './auth/session'
+import { NotificationBell } from './components/NotificationBell'
 import { Preferences } from './components/Preferences'
+import { setLocale, type Locale } from './i18n'
 import type { CalendarPreference } from './i18n/format'
 import { AuditPage } from './pages/AuditPage'
 import { HomePage } from './pages/HomePage'
@@ -16,7 +19,10 @@ import { WorkflowAdminPage } from './pages/staff/WorkflowAdminPage'
 import { ErpAdminPage } from './pages/staff/ErpAdminPage'
 import { ErpReconciliationPage } from './pages/staff/ErpReconciliationPage'
 import { ErpSyncPage } from './pages/staff/ErpSyncPage'
+import { NotificationAdminPage } from './pages/staff/NotificationAdminPage'
+import { NotificationsPage } from './pages/staff/NotificationsPage'
 import { PaymentsPage } from './pages/staff/PaymentsPage'
+import { ReportsPage } from './pages/staff/ReportsPage'
 import { ProposalDetailPage } from './pages/staff/ProposalDetailPage'
 import { AdminPage } from './pages/staff/AdminPage'
 import { ExceptionsPage } from './pages/staff/ExceptionsPage'
@@ -34,8 +40,17 @@ interface CalendarProps {
 }
 
 function StaffShell({ calendar, onCalendarChange }: CalendarProps) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { state, signOut } = useSession()
+  const session = state.status === 'authenticated' ? state.session : undefined
+
+  // A saved server-side choice wins when the person signs in on a new browser. Older servers send no calendar; then the browser's own choice stands.
+  useEffect(() => {
+    if (!session?.calendar) return
+    if ((session.locale === 'en' || session.locale === 'ar') && session.locale !== i18n.language) void setLocale(i18n, session.locale as Locale)
+    if (session.calendar === 'gregorian' || session.calendar === 'hijri') onCalendarChange(session.calendar)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.userId])
 
   if (state.status === 'loading') return <p role="status">…</p>
 
@@ -56,15 +71,22 @@ function StaffShell({ calendar, onCalendarChange }: CalendarProps) {
             <Link to="/intake">{t('nav.intake')}</Link>
             <Link to="/verification">{t('nav.verification')}</Link>
             <Link to="/payments">{t('nav.payments')}</Link>
+            <Link to="/reports">{t('nav.reports')}</Link>
             <Link to="/erp/sync">{t('nav.erp')}</Link>
             <Link to="/delegations">{t('nav.delegations')}</Link>
             <Link to="/workflow">{t('nav.workflow')}</Link>
             <Link to="/bank-changes">{t('nav.bankChanges')}</Link>
             <Link to="/admin">{t('nav.admin')}</Link>
+            <Link to="/admin/notifications">{t('nav.notificationAdmin')}</Link>
             <Link to="/audit">{t('nav.audit')}</Link>
           </nav>
         )}
-        <Preferences calendar={calendar} onCalendarChange={onCalendarChange} />
+        <Preferences
+          calendar={calendar}
+          onCalendarChange={onCalendarChange}
+          onSave={state.status === 'authenticated' ? (locale, cal) => void savePreferences(locale, cal).catch(() => undefined) : undefined}
+        />
+        {state.status === 'authenticated' && <NotificationBell />}
         {state.status === 'authenticated' && (
           <button type="button" onClick={() => void signOut()}>
             {t('nav.signOut')}
@@ -88,6 +110,9 @@ function StaffShell({ calendar, onCalendarChange }: CalendarProps) {
               <Route path="/erp" element={<ErpAdminPage calendar={calendar} />} />
               <Route path="/erp/sync" element={<ErpSyncPage calendar={calendar} />} />
               <Route path="/erp/reconciliation" element={<ErpReconciliationPage calendar={calendar} />} />
+              <Route path="/reports" element={<ReportsPage calendar={calendar} />} />
+              <Route path="/notifications" element={<NotificationsPage calendar={calendar} />} />
+              <Route path="/admin/notifications" element={<NotificationAdminPage calendar={calendar} />} />
               <Route path="/delegations" element={<DelegationsPage calendar={calendar} />} />
               <Route path="/workflow" element={<WorkflowAdminPage />} />
               <Route path="/exceptions" element={<ExceptionsPage calendar={calendar} />} />

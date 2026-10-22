@@ -156,6 +156,35 @@ public sealed class NotificationDeliveryTests(SqlServerFixture sql) : PaymentSce
     }
 
     [Fact]
+    public async Task Email_is_written_in_the_recipients_own_language_and_direction()
+    {
+        await ActivateEmailAsync();
+        await W.AsAsync(W.TenantA, A1, async s => await s.GetRequiredService<Vpms.Identity.Contracts.IUserPreferences>().SetMineAsync("ar", "hijri"));
+        await ApprovalWaiting();
+        await Sweep();
+        await Deliver();
+
+        var mail = Assert.Single(_email.Sent);
+        Assert.StartsWith("مطلوب اعتمادك:", mail.Subject);
+        Assert.Contains("dir=\"rtl\"", mail.HtmlBody);
+        Assert.Matches(@"\p{IsArabic}", mail.TextBody);
+    }
+
+    [Fact]
+    public async Task Preferences_are_saved_per_person_checked_and_audited()
+    {
+        var prefs = await W.AsAsync(W.TenantA, A1, s => s.GetRequiredService<Vpms.Identity.Contracts.IUserPreferences>().GetAsync(A1));
+        Assert.Equal(new Vpms.Identity.Contracts.UserPreferencesDto("en", "gregorian"), prefs);
+        await Assert.ThrowsAsync<ValidationFailedException>(() => W.AsAsync(W.TenantA, A1, s => s.GetRequiredService<Vpms.Identity.Contracts.IUserPreferences>().SetMineAsync("fr", "gregorian")));
+        await Assert.ThrowsAsync<ValidationFailedException>(() => W.AsAsync(W.TenantA, A1, s => s.GetRequiredService<Vpms.Identity.Contracts.IUserPreferences>().SetMineAsync("ar", "lunar")));
+        await W.AsAsync(W.TenantA, A1, s => s.GetRequiredService<Vpms.Identity.Contracts.IUserPreferences>().SetMineAsync("ar", "hijri"));
+        Assert.Equal("ar", (await W.AsAsync(W.TenantA, A1, s => s.GetRequiredService<Vpms.Identity.Contracts.IUserPreferences>().GetAsync(A1))).Locale);
+        Assert.Equal("en", (await W.AsAsync(W.TenantA, A2, s => s.GetRequiredService<Vpms.Identity.Contracts.IUserPreferences>().GetAsync(A2))).Locale);
+        var audited = await W.AsAsync(W.TenantA, W.Admin, s => s.GetRequiredService<Vpms.Audit.Infrastructure.AuditDbContext>().Events.CountAsync(e => e.Action == "user.preferences.changed"));
+        Assert.Equal(1, audited);
+    }
+
+    [Fact]
     public async Task Nothing_is_queued_for_a_channel_that_is_not_configured()
     {
         await ApprovalWaiting();

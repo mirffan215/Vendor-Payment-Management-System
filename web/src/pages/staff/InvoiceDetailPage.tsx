@@ -10,7 +10,7 @@ import { useAction } from '../../components/Busy'
 import { FindingText, RuleName } from '../../components/Findings'
 import { ProblemAlert } from '../../components/ProblemText'
 import { useLoad } from '../../hooks/useLoad'
-import { formatDate, formatMoney, type CalendarPreference } from '../../i18n/format'
+import { formatDate, formatMoney, formatNumber, type CalendarPreference } from '../../i18n/format'
 import { ApprovalHistory } from './ApprovalHistory'
 import { InvoiceEditor } from './InvoiceEditor'
 
@@ -141,8 +141,9 @@ export function InvoiceDetailPage({ calendar }: { calendar: CalendarPreference }
               <tbody>
                 {inv.lines.map((l, n) => (
                   <tr key={n}>
-                    <td>{l.description}</td><td dir="ltr">{l.quantity}</td><td dir="ltr">{l.unitPrice}</td><td dir="ltr">{l.lineAmount}</td>
-                    <td dir="ltr">{l.taxCode ?? '—'}</td><td dir="ltr">{l.taxAmount}</td>
+                    <td>{l.description}</td><td dir="ltr">{formatNumber(l.quantity, i18n.language)}</td><td dir="ltr">{formatMoney(l.unitPrice, inv.currencyCode, i18n.language)}</td>
+                    <td dir="ltr">{formatMoney(l.lineAmount, inv.currencyCode, i18n.language)}</td>
+                    <td dir="ltr">{l.taxCode ?? '—'}</td><td dir="ltr">{formatMoney(l.taxAmount, inv.currencyCode, i18n.language)}</td>
                   </tr>
                 ))}
               </tbody>
