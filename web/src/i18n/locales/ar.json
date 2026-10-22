@@ -21,7 +21,8 @@
     "erp": "تخطيط الموارد",
     "reports": "التقارير",
     "notifications": "الإشعارات",
-    "notificationAdmin": "إعدادات الإشعارات"
+    "notificationAdmin": "إعدادات الإشعارات",
+    "signOutEverywhere": "تسجيل الخروج من كل الأجهزة"
   },
   "language": {
     "label": "اللغة",
@@ -286,7 +287,8 @@
       "unknown_template": "هذا القالب غير موجود.",
       "user_disabled": "هذا المستخدم معطّل.",
       "webhook_host_not_allowed": "خادم خطاف الويب هذا ليس ضمن قائمة الخوادم المسموح بها.",
-      "webhook_url_invalid": "يجب أن يكون عنوان خطاف الويب عنوان https."
+      "webhook_url_invalid": "يجب أن يكون عنوان خطاف الويب عنوان https.",
+      "step_up_required": "حرصاً على أمانك، يرجى تأكيد هويتك قبل تنفيذ هذا الإجراء."
     }
   },
   "format": {
@@ -1324,5 +1326,8 @@
     "preview": "معاينة",
     "save": "حفظ القالب",
     "reset": "إعادة إلى الافتراضي"
+  },
+  "stepUp": {
+    "confirm": "تأكيد هويتي"
   }
 }

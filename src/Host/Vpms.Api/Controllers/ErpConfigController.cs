@@ -53,6 +53,7 @@ public sealed class ErpConfigController(IErpConfigService erp, IPermissionEvalua
     }
 
     [HttpPost("erp-changes/{id:guid}/approve")]
+    [Vpms.Api.Auth.RequireStepUp]
     public async Task<IActionResult> Approve(Guid id, ErpChangeDecision body, CancellationToken ct) =>
         await Has(Permissions.ErpApproveChange, await erp.EntityOfChangeAsync(id, ct), ct) ? Ok(await erp.ApproveAsync(id, body.Comment, ct)) : NotFound();
 

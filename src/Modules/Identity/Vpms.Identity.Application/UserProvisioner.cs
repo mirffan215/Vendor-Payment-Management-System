@@ -16,6 +16,9 @@ public enum SignInDenial
     EmailDomainNotAllowed,
     NotProvisioned,
     UserDisabled,
+
+    /// <summary>A step-up sign-in came back without proof that the person authenticated again just now.</summary>
+    StepUpNotPerformed,
 }
 
 public sealed record SignInResult(SignedInUser? User, SignInDenial? Denial)

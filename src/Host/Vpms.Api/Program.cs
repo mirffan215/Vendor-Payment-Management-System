@@ -30,7 +30,6 @@ using Vpms.Vendors.Infrastructure;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration.AddVpmsKeyVault();
-builder.Host.AddVpmsLogging();
 builder.WebHost.ConfigureVpmsKestrel(builder.Configuration);
 builder.Services.AddVpmsRequestLimits(builder.Configuration);
 builder.Services.AddVpmsForwardedHeaders(builder.Configuration);
@@ -114,12 +113,13 @@ builder.Services.AddAuthentication()
         o.Cookie.SameSite = SameSiteMode.Strict;
         o.Cookie.Path = "/";
         o.SlidingExpiration = true;
-        o.ExpireTimeSpan = TimeSpan.FromMinutes(20);
         o.Events.OnValidatePrincipal = VendorCookieValidator.ValidateAsync;
         o.Events.OnRedirectToLogin = ctx => { ctx.Response.StatusCode = StatusCodes.Status401Unauthorized; return Task.CompletedTask; };
         o.Events.OnRedirectToAccessDenied = ctx => { ctx.Response.StatusCode = StatusCodes.Status403Forbidden; return Task.CompletedTask; };
     });
 
+builder.Services.AddOptions<CookieAuthenticationOptions>(VpmsAuth.VendorCookieScheme)
+    .Configure<IOptions<PortalOptions>>((cookie, portal) => cookie.ExpireTimeSpan = portal.Value.SessionIdleTimeout);
 builder.Services.AddOptions<CookieAuthenticationOptions>(VpmsAuth.CookieScheme)
     .Configure<IOptions<AuthOptions>>((cookie, auth) => cookie.ExpireTimeSpan = auth.Value.IdleTimeout);
 
@@ -175,6 +175,7 @@ app.UseForwardedHeaders();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 app.UseMiddleware<SecurityHeadersMiddleware>();
+app.UseMiddleware<SecurityEventMiddleware>();
 if (!app.Environment.IsDevelopment())
 {
     app.UseHsts();

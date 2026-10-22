@@ -98,6 +98,8 @@ public sealed class EndpointSweepTests : IClassFixture<ApiFixtureHolder>
         var crashed = new List<string>();
         foreach (var (method, template, url, anonymous) in Routes().Where(r => !r.Anonymous))
         {
+            // Ending the person's own sessions would stop the rest of the sweep (it has its own test).
+            if (template.EndsWith("session/revoke-all", StringComparison.Ordinal)) continue;
             var request = new HttpRequestMessage(new HttpMethod(method), url) { Content = Body(method) };
             request.Headers.Add("X-XSRF-TOKEN", csrf);
             var response = await browser.SendAsync(request);

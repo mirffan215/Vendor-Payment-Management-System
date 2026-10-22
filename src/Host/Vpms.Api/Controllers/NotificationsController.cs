@@ -72,6 +72,7 @@ public sealed class NotificationsController(INotificationService notifications, 
     public async Task<IActionResult> ChannelChanges(CancellationToken ct) => await CanApprove(ct) ? Ok(await channels.ListPendingAsync(ct)) : Forbid();
 
     [HttpPost("notification-channel-changes/{id:guid}/approve")]
+    [Vpms.Api.Auth.RequireStepUp]
     public async Task<IActionResult> ApproveChannel(Guid id, ChannelDecisionRequest body, CancellationToken ct) => await CanApprove(ct) ? Ok(await channels.ApproveAsync(id, body.Comment, ct)) : NotFound();
 
     [HttpPost("notification-channel-changes/{id:guid}/reject")]

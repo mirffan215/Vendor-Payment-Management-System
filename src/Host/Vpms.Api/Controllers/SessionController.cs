@@ -14,7 +14,7 @@ public sealed record PreferencesRequest(string Locale, string Calendar);
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/session")]
 [Authorize(Policy = VpmsAuth.InternalPolicy)]
-public sealed class SessionController(IAntiforgery antiforgery, IUserPreferences preferences) : ControllerBase
+public sealed class SessionController(IAntiforgery antiforgery, IUserPreferences preferences, Vpms.Identity.Application.IUserAdminService users, Microsoft.Extensions.Caching.Memory.IMemoryCache cache) : ControllerBase
 {
     /// <summary>The signed-in user, their tenant, and the antiforgery token to send with state-changing calls.</summary>
     [HttpGet]
@@ -32,6 +32,16 @@ public sealed class SessionController(IAntiforgery antiforgery, IUserPreferences
             calendar = mine.Calendar,
             csrfToken = tokens.RequestToken,
         });
+    }
+
+    /// <summary>"Sign out everywhere": ends every session of the signed-in person, including this one.</summary>
+    [HttpPost("revoke-all")]
+    public async Task<IActionResult> RevokeAll(CancellationToken ct)
+    {
+        var userId = Guid.Parse(User.FindFirstValue(VpmsClaims.UserId)!);
+        await users.RevokeSessionsAsync(userId, ct);
+        cache.Remove(CookieSessionValidator.StateKey(userId));
+        return NoContent();
     }
 
     /// <summary>Saves the signed-in person's language and calendar.</summary>

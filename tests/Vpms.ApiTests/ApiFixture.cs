@@ -44,6 +44,7 @@ public sealed class ApiFixture : WebApplicationFactory<Program>, IAsyncLifetime
         _db = await _sql.CreateDatabaseAsync();
         IdpA = await FakeOidcProvider.StartAsync("a", "client-a", "secret-a");
         IdpB = await FakeOidcProvider.StartAsync("b", "client-b", "secret-b");
+        IdpA.Now = IdpB.Now = () => Clock.GetUtcNow();
         await SeedAsync();
     }
 

@@ -21,4 +21,7 @@ public class User : ITenantOwned
     public string Status { get; set; } = UserStatus.Active;
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset? LastLoginAt { get; set; }
+
+    /// <summary>Sessions that began at or before this moment are no longer valid ("sign out everywhere").</summary>
+    public DateTimeOffset? SessionsValidFrom { get; set; }
 }

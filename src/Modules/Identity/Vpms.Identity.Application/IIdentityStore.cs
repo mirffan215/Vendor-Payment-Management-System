@@ -13,8 +13,11 @@ public interface IIdentityStore
     Task<User?> FindUserAsync(Guid providerId, string externalSubject, CancellationToken ct = default);
     Task AddUserAsync(User user, CancellationToken ct = default);
     Task SaveChangesAsync(CancellationToken ct = default);
-    Task<bool> IsUserActiveAsync(Guid userId, CancellationToken ct = default);
+    Task<SessionState> GetSessionStateAsync(Guid userId, CancellationToken ct = default);
 }
+
+/// <summary>What the session check needs to know about a signed-in person: still active, and since when are their sessions valid.</summary>
+public sealed record SessionState(bool Active, DateTimeOffset? ValidFrom);
 
 public sealed record ProviderSummary(Guid Id, string DisplayName, IdentityProviderKind Kind);
 

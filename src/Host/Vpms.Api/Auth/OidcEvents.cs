@@ -32,6 +32,17 @@ internal static class OidcEvents
         }
 
         var external = ctx.Principal;
+        if (ctx.Properties?.Items.ContainsKey(AuthEndpoints.StepUpItem) == true)
+        {
+            // We asked for a fresh authentication (max_age=0), so the token must say when it happened and it must be recent. A provider that ignores the request fails here.
+            var asserted = long.TryParse(external.FindFirstValue("auth_time"), System.Globalization.CultureInfo.InvariantCulture, out var at) ? DateTimeOffset.FromUnixTimeSeconds(at) : (DateTimeOffset?)null;
+            if (asserted is null || clock.GetUtcNow() - asserted.Value > TimeSpan.FromMinutes(2))
+            {
+                ctx.Fail("denied:StepUpNotPerformed");
+                return;
+            }
+        }
+
         var emailVerified = external.FindFirstValue("email_verified");
         var email = string.Equals(emailVerified, "false", StringComparison.OrdinalIgnoreCase)
             ? null

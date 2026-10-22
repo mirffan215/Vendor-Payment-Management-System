@@ -13,7 +13,7 @@ public sealed class ApprovalOutcomeJob(IServiceScopeFactory scopes, IConfigurati
         {
             try
             {
-                await RunOnceAsync(stoppingToken);
+                await JobTelemetry.RunAsync(GetType().Name, () => RunOnceAsync(stoppingToken));
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {

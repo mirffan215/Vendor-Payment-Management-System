@@ -29,9 +29,18 @@ public sealed class FakeOidcProvider : IAsyncDisposable
     public string ClientId { get; }
     public string ClientSecret { get; }
     public FakeUser? NextUser { get; set; }
+
+    /// <summary>The time the provider reports as "when the person authenticated" (the application's clock in tests).</summary>
+    public Func<DateTimeOffset>? Now { get; set; }
+
+    /// <summary>Simulates a provider that ignores max_age and does not say when authentication happened.</summary>
+    public bool IgnoreMaxAge { get; set; }
+
+    /// <summary>The query of the most recent authorization request, to check what the application asked for.</summary>
+    public string? LastAuthorizeQuery { get; private set; }
     public HttpMessageHandler Handler => _app.GetTestServer().CreateHandler();
 
-    private sealed record Grant(FakeUser User, string ClientId, string Nonce, string CodeChallenge);
+    private sealed record Grant(FakeUser User, string ClientId, string Nonce, string CodeChallenge, bool MaxAgeRequested);
 
     private FakeOidcProvider(string name, string clientId, string clientSecret, WebApplication app, RSA rsa)
     {
@@ -82,7 +91,8 @@ public sealed class FakeOidcProvider : IAsyncDisposable
             var q = ctx.Request.Query;
             var user = NextUser ?? throw new InvalidOperationException("No fake user queued.");
             var code = Guid.NewGuid().ToString("N");
-            _grants[code] = new Grant(user, q["client_id"]!, q["nonce"]!, q["code_challenge"]!);
+            LastAuthorizeQuery = ctx.Request.QueryString.Value;
+            _grants[code] = new Grant(user, q["client_id"]!, q["nonce"]!, q["code_challenge"]!, q.ContainsKey("max_age"));
             var redirect = q["redirect_uri"] + (q["redirect_uri"].ToString().Contains('?', StringComparison.Ordinal) ? "&" : "?")
                            + $"code={code}&state={Uri.EscapeDataString(q["state"]!)}";
             return Results.Redirect(redirect);
@@ -107,6 +117,7 @@ public sealed class FakeOidcProvider : IAsyncDisposable
                 ["name"] = u.Name,
                 ["nonce"] = grant.Nonce,
             };
+            if (grant.MaxAgeRequested && !IgnoreMaxAge) claims["auth_time"] = (Now?.Invoke() ?? DateTimeOffset.UtcNow).ToUnixTimeSeconds();
             foreach (var (k, v) in u.ExtraClaims ?? new Dictionary<string, object>())
             {
                 claims[k] = v;

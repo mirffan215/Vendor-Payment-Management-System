@@ -20,6 +20,7 @@ public sealed class CsrfProtectionMiddleware(RequestDelegate next)
             }
             catch (AntiforgeryValidationException)
             {
+                context.Items[Infrastructure.SecurityEventMiddleware.ItemKey] = "csrf_failed";
                 context.Response.StatusCode = StatusCodes.Status400BadRequest;
                 await context.Response.WriteAsJsonAsync(new Microsoft.AspNetCore.Mvc.ProblemDetails
                 {

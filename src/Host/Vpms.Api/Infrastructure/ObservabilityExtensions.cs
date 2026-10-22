@@ -1,43 +1,17 @@
-using OpenTelemetry;
 using OpenTelemetry.Metrics;
-using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
-using Serilog;
-using Serilog.Formatting.Compact;
+using Vpms.BuildingBlocks.Observability;
 using Vpms.CustomerAdmin.Infrastructure;
 
 namespace Vpms.Api.Infrastructure;
 
 public static class ObservabilityExtensions
 {
-    public static void AddVpmsLogging(this IHostBuilder host) =>
-        host.UseSerilog((context, services, logger) => logger
-            .ReadFrom.Configuration(context.Configuration)
-            .ReadFrom.Services(services)
-            .Enrich.FromLogContext()
-            .Enrich.WithProperty("Service", "vpms-api")
-            .WriteTo.Console(new RenderedCompactJsonFormatter()));
-
-    public static IServiceCollection AddVpmsTelemetry(this IServiceCollection services, IConfiguration configuration)
-    {
-        var otel = services.AddOpenTelemetry()
-            .ConfigureResource(r => r.AddService("vpms-api"))
-            .WithTracing(t => t
-                .AddAspNetCoreInstrumentation(o => o.Filter = http => !http.Request.Path.StartsWithSegments("/health"))
-                .AddHttpClientInstrumentation())
-            .WithMetrics(m => m
-                .AddAspNetCoreInstrumentation()
-                .AddHttpClientInstrumentation()
-                .AddRuntimeInstrumentation());
-
-        // Export only when a collector is configured (OTEL_EXPORTER_OTLP_ENDPOINT or Otlp:Endpoint).
-        if (!string.IsNullOrEmpty(configuration["OTEL_EXPORTER_OTLP_ENDPOINT"]))
-        {
-            otel.UseOtlpExporter();
-        }
-
-        return services;
-    }
+    /// <summary>Logs (scrubbed), traces and metrics through the shared setup, plus ASP.NET Core request instrumentation.</summary>
+    public static IServiceCollection AddVpmsTelemetry(this IServiceCollection services, IConfiguration configuration) =>
+        services.AddVpmsObservability(configuration, "vpms-api",
+            tracing: t => t.AddAspNetCoreInstrumentation(o => o.Filter = http => !http.Request.Path.StartsWithSegments("/health")),
+            metrics: m => m.AddAspNetCoreInstrumentation());
 
     public static IServiceCollection AddVpmsHealthChecks(this IServiceCollection services)
     {

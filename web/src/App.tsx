@@ -41,7 +41,7 @@ interface CalendarProps {
 
 function StaffShell({ calendar, onCalendarChange }: CalendarProps) {
   const { t, i18n } = useTranslation()
-  const { state, signOut } = useSession()
+  const { state, signOut, signOutEverywhere } = useSession()
   const session = state.status === 'authenticated' ? state.session : undefined
 
   // A saved server-side choice wins when the person signs in on a new browser. Older servers send no calendar; then the browser's own choice stands.
@@ -88,9 +88,14 @@ function StaffShell({ calendar, onCalendarChange }: CalendarProps) {
         />
         {state.status === 'authenticated' && <NotificationBell />}
         {state.status === 'authenticated' && (
-          <button type="button" onClick={() => void signOut()}>
-            {t('nav.signOut')}
-          </button>
+          <>
+            <button type="button" onClick={() => void signOut()}>
+              {t('nav.signOut')}
+            </button>
+            <button type="button" className="link" onClick={() => void signOutEverywhere()}>
+              {t('nav.signOutEverywhere')}
+            </button>
+          </>
         )}
       </header>
       <main id="main">

@@ -24,6 +24,7 @@ public sealed class BankDetailsController(IBankDetailsService service) : Control
         await service.ListChangesAsync(vendorId, status, ct);
 
     [HttpPost("bank-detail-changes/{changeId:guid}/approve"), Authorize(Policy = Permissions.VendorBankDetailsApprove)]
+    [Vpms.Api.Auth.RequireStepUp]
     public async Task<BankDetailChangeDto> Approve(Guid changeId, ApproveChangeRequest body, CancellationToken ct) =>
         await service.ApproveAsync(changeId, body.CallbackVerificationRef, body.Comment, ct);
 
@@ -35,5 +36,6 @@ public sealed class BankDetailsController(IBankDetailsService service) : Control
 
     // POST rather than GET: the full account number is never cached or linked, and the call needs the antiforgery token.
     [HttpPost("bank-details/{bankDetailsId:guid}/reveal"), Authorize(Policy = Permissions.VendorBankDetailsReveal)]
+    [Vpms.Api.Auth.RequireStepUp]
     public async Task<RevealedBankDetails> Reveal(Guid bankDetailsId, CancellationToken ct) => await service.RevealAsync(bankDetailsId, ct);
 }

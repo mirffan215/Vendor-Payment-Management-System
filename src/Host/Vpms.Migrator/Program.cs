@@ -28,8 +28,29 @@ internal static class MigratorEntry
             return 0;
         }
 
-        await DatabaseMigrator.MigrateAsync(cs);
-        Console.WriteLine("Migrations applied.");
+        // A database that is still starting, failing over or throttling answers with a transient error: wait and try again before failing the deployment.
+        for (var attempt = 1; ; attempt++)
+        {
+            try
+            {
+                await DatabaseMigrator.MigrateAsync(cs);
+                break;
+            }
+            catch (Microsoft.Data.SqlClient.SqlException ex) when (attempt < 6 && Transient(ex))
+            {
+                var delay = TimeSpan.FromSeconds(Math.Pow(2, attempt) * 5);
+                Console.WriteLine($"{{\"level\":\"warning\",\"message\":\"Migration attempt {attempt} hit a transient SQL error ({ex.Number}); retrying in {delay.TotalSeconds:0}s.\"}}");
+                await Task.Delay(delay);
+            }
+            catch (Exception ex)
+            {
+                // The type and message only: the connection string is never part of an exception text we print.
+                Console.Error.WriteLine($"{{\"level\":\"error\",\"message\":\"Migration failed: {ex.GetType().Name}\"}}");
+                return 1;
+            }
+        }
+
+        Console.WriteLine("{\"level\":\"information\",\"message\":\"Migrations applied.\"}");
 
         // Optional: provision the restricted application login (local development and first deployment).
         var appLogin = Environment.GetEnvironmentVariable("VPMS_APP_LOGIN");
@@ -42,6 +63,9 @@ internal static class MigratorEntry
 
         return 0;
     }
+
+    static bool Transient(Microsoft.Data.SqlClient.SqlException ex) =>
+        ex.Number is -2 or 20 or 64 or 233 or 953 or 4060 or 10928 or 10929 or 40197 or 40501 or 40613 or 49918 or 49919 or 49920 || ex.IsTransient;
 
     static Dictionary<string, string> ParseOptions(string[] a)
     {

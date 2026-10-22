@@ -16,7 +16,7 @@ public sealed class NotificationJob(IServiceScopeFactory scopes, IConfiguration 
         {
             try
             {
-                await RunOnceAsync(stoppingToken);
+                await JobTelemetry.RunAsync(GetType().Name, () => RunOnceAsync(stoppingToken));
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {

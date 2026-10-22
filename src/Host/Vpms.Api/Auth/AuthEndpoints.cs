@@ -9,6 +9,9 @@ namespace Vpms.Api.Auth;
 
 public static class AuthEndpoints
 {
+    /// <summary>Marks a sign-in that was started to re-authenticate an existing session; the identity provider must prove it happened just now.</summary>
+    public const string StepUpItem = "vpms:step_up";
+
     public static void MapAuthEndpoints(this WebApplication app)
     {
         var auth = app.MapGroup("/auth").AllowAnonymous().RequireRateLimiting(Infrastructure.RateLimiting.AuthPolicy);
@@ -40,6 +43,23 @@ public static class AuthEndpoints
             Results.Problem(statusCode: StatusCodes.Status403Forbidden, title: "Sign-in was not permitted.",
                 type: "https://vpms.dev/problems/signin-denied",
                 extensions: new Dictionary<string, object?> { ["reason"] = reason is not null && Enum.GetNames<Vpms.Identity.Application.SignInDenial>().Contains(reason) ? reason : "failed" }));
+
+        // Asks the signed-in person's identity provider to authenticate them again (prompt=login, max_age=0). On return the session is rebuilt with a fresh sign-in time.
+        auth.MapGet("/step-up", async (string? returnUrl, HttpContext http, IIdentityStore store, ISecretResolver secrets, DynamicOidcSchemes schemes, CancellationToken ct) =>
+        {
+            if (!Guid.TryParse(http.User.FindFirstValue(VpmsClaims.ProviderId), out var providerId)) return Results.Unauthorized();
+            var config = await store.FindProviderAsync(providerId, ct);
+            if (config is not { Enabled: true }) return Results.NotFound();
+            var scheme = await schemes.EnsureAsync(config, secrets, ct);
+            var props = new Microsoft.AspNetCore.Authentication.OpenIdConnect.OpenIdConnectChallengeProperties
+            {
+                RedirectUri = SafeReturnUrl(returnUrl),
+                Prompt = "login",
+                MaxAge = TimeSpan.Zero,
+            };
+            props.Items[StepUpItem] = "1";
+            return Results.Challenge(props, [scheme]);
+        }).RequireAuthorization();
 
         // Logout is POST-only and CSRF protected (see CsrfProtectionMiddleware).
         auth.MapPost("/logout", async (HttpContext http) =>

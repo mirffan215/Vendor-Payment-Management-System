@@ -1,10 +1,11 @@
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0@sha256:747cbade5bfd918a175ac32f8f1d931edec2c7d0d5397a3de72eaef1ac1f66d2 AS build
 WORKDIR /src
 COPY . .
 RUN dotnet publish src/Host/Vpms.Worker/Vpms.Worker.csproj -c Release -o /app /p:UseAppHost=false
 
-FROM mcr.microsoft.com/dotnet/runtime:10.0
+FROM mcr.microsoft.com/dotnet/runtime:10.0@sha256:0cf09aaccf6a9f68900aed4c73fb28fe25bb59ec85de4dea08ba02240a8635f3
 WORKDIR /app
 COPY --from=build /app .
 USER $APP_UID
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 CMD ["dotnet", "Vpms.Worker.dll", "--healthcheck"]
 ENTRYPOINT ["dotnet", "Vpms.Worker.dll"]

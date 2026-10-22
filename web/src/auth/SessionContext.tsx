@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { ApiError, getSession, setCsrfToken, signOut as apiSignOut } from '../api/client'
+import { ApiError, getSession, setCsrfToken, signOut as apiSignOut, signOutEverywhere as apiSignOutEverywhere } from '../api/client'
 import { SessionContext, type SessionState } from './session'
 
 export function SessionProvider({ children }: { children: ReactNode }) {
@@ -28,6 +28,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     setState({ status: 'anonymous' })
   }, [])
 
-  const value = useMemo(() => ({ state, signOut }), [state, signOut])
+  const signOutEverywhere = useCallback(async () => {
+    await apiSignOutEverywhere()
+    setCsrfToken(undefined)
+    setState({ status: 'anonymous' })
+  }, [])
+
+  const value = useMemo(() => ({ state, signOut, signOutEverywhere }), [state, signOut, signOutEverywhere])
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>
 }

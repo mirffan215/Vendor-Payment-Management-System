@@ -14,7 +14,7 @@ public sealed class AttachmentScanJob(IServiceScopeFactory scopes, IConfiguratio
         {
             try
             {
-                await RunOnceAsync(stoppingToken);
+                await JobTelemetry.RunAsync(GetType().Name, () => RunOnceAsync(stoppingToken));
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {

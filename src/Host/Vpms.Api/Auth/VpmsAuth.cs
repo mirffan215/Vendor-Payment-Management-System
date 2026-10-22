@@ -28,6 +28,9 @@ public sealed class AuthOptions
     public TimeSpan IdleTimeout { get; set; } = TimeSpan.FromMinutes(30);
     public TimeSpan AbsoluteTimeout { get; set; } = TimeSpan.FromHours(8);
 
+    /// <summary>How recently a person must have signed in at their identity provider for high-risk actions (bank details, payment release, access changes).</summary>
+    public TimeSpan StepUpWindow { get; set; } = TimeSpan.FromMinutes(15);
+
     /// <summary>Allows http:// OIDC metadata. Development and tests only; must be false in production.</summary>
     public bool AllowInsecureMetadata { get; set; }
 }

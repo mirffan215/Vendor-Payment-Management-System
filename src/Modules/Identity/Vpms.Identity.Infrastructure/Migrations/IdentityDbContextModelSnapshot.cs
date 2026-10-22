@@ -248,6 +248,9 @@ namespace Vpms.Identity.Infrastructure.Migrations
                     b.Property<Guid>("ProviderId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTimeOffset?>("SessionsValidFrom")
+                        .HasColumnType("datetimeoffset");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)

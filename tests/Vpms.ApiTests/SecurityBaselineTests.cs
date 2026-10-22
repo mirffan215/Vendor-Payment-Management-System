@@ -122,6 +122,11 @@ public sealed class SecurityBaselineTests : IClassFixture<ApiFixtureHolder>
         Assert.True(vendor.HttpOnly);
         Assert.Equal(CookieSecurePolicy.Always, vendor.SecurePolicy);
         Assert.Equal(SameSiteMode.Strict, vendor.SameSite);
+        // lifetimes come from configuration, with these defaults
+        Assert.Equal(TimeSpan.FromMinutes(20), options.Get(VpmsAuth.VendorCookieScheme).ExpireTimeSpan);
+        Assert.Equal(TimeSpan.FromMinutes(30), options.Get(VpmsAuth.CookieScheme).ExpireTimeSpan);
+        var portal = _api.Services.GetRequiredService<IOptions<Vpms.VendorPortal.Application.PortalOptions>>().Value;
+        Assert.Equal(TimeSpan.FromHours(8), portal.SessionAbsoluteTimeout);
     }
 
     [Fact]

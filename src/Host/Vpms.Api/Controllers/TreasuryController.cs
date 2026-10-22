@@ -12,6 +12,7 @@ namespace Vpms.Api.Controllers;
 public sealed class TreasuryController(ITreasuryService treasury, IPaymentProposalService proposals, IPermissionEvaluator permissions) : ControllerBase
 {
     [HttpPost("proposals/{id:guid}/release")]
+    [Vpms.Api.Auth.RequireStepUp]
     public async Task<IActionResult> Release(Guid id, CancellationToken ct) =>
         await Has(Permissions.PaymentRelease, await proposals.EntityOfAsync(id, ct), ct) ? Ok(await treasury.ReleaseAsync(id, ct)) : NotFound();
 
@@ -32,6 +33,7 @@ public sealed class TreasuryController(ITreasuryService treasury, IPaymentPropos
         await Has(Permissions.PaymentInstructionDownload, await treasury.EntityOfInstructionAsync(id, ct), ct) ? Ok(await treasury.VerifyAsync(id, ct)) : NotFound();
 
     [HttpGet("instructions/{id:guid}/download")]
+    [Vpms.Api.Auth.RequireStepUp]
     public async Task<IActionResult> Download(Guid id, [FromQuery] string kind = "csv", CancellationToken ct = default)
     {
         if (!await Has(Permissions.PaymentInstructionDownload, await treasury.EntityOfInstructionAsync(id, ct), ct)) return NotFound();

@@ -8,7 +8,7 @@ using Vpms.Identity.Application;
 
 namespace Vpms.Api.Auth;
 
-/// <summary>Rejects sessions past their absolute lifetime or whose user was disabled (re-checked every minute).</summary>
+/// <summary>Rejects sessions past their absolute lifetime, whose user was disabled, or that began before the person ended all sessions (re-checked every minute).</summary>
 public static class CookieSessionValidator
 {
     public static async Task ValidateAsync(CookieValidatePrincipalContext ctx)
@@ -35,18 +35,22 @@ public static class CookieSessionValidator
         }
 
         var cache = sp.GetRequiredService<IMemoryCache>();
-        var active = await cache.GetOrCreateAsync($"session-active:{userId:N}", async entry =>
+        var state = await cache.GetOrCreateAsync(StateKey(userId), async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1);
             sp.GetRequiredService<TenantContext>().SetTenant(tenantId);
-            return await sp.GetRequiredService<IIdentityStore>().IsUserActiveAsync(userId, ctx.HttpContext.RequestAborted);
+            return await sp.GetRequiredService<IIdentityStore>().GetSessionStateAsync(userId, ctx.HttpContext.RequestAborted);
         });
 
-        if (active != true)
+        // Disabled, or the person (or an administrator) ended all sessions at or after this one began.
+        if (state is not { Active: true } || (state.ValidFrom is { } from && authTime <= from.ToUnixTimeSeconds()))
         {
             await Reject(ctx);
         }
     }
+
+    /// <summary>Forget what is known about a person so the next request re-reads it (used right after sessions are revoked on this instance).</summary>
+    public static string StateKey(Guid userId) => $"session-state:{userId:N}";
 
     private static async Task Reject(CookieValidatePrincipalContext ctx)
     {

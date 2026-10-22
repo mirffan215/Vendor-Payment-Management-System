@@ -21,7 +21,8 @@
     "erp": "ERP",
     "reports": "Reports",
     "notifications": "Notifications",
-    "notificationAdmin": "Notification settings"
+    "notificationAdmin": "Notification settings",
+    "signOutEverywhere": "Sign out everywhere"
   },
   "language": {
     "label": "Language",
@@ -286,7 +287,8 @@
       "unknown_template": "That template does not exist.",
       "user_disabled": "This user is disabled.",
       "webhook_host_not_allowed": "That webhook host is not on the list of allowed hosts.",
-      "webhook_url_invalid": "The webhook address must be an https address."
+      "webhook_url_invalid": "The webhook address must be an https address.",
+      "step_up_required": "For your security, please confirm it is you before doing this."
     }
   },
   "format": {
@@ -1324,5 +1326,8 @@
     "preview": "Preview",
     "save": "Save template",
     "reset": "Reset to default"
+  },
+  "stepUp": {
+    "confirm": "Confirm it is me"
   }
 }

@@ -11,15 +11,12 @@
     <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" />
-    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
-    <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
     <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" />
-    <PackageReference Include="OpenTelemetry.Instrumentation.Http" />
-    <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" />
     <PackageReference Include="Serilog.AspNetCore" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\BuildingBlocks\Vpms.BuildingBlocks.Observability\Vpms.BuildingBlocks.Observability.csproj" />
     <ProjectReference Include="..\..\Modules\Identity\Vpms.Identity.Infrastructure\Vpms.Identity.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Identity\Vpms.Identity.Application\Vpms.Identity.Application.csproj" />
     <ProjectReference Include="..\..\Modules\CustomerAdmin\Vpms.CustomerAdmin.Infrastructure\Vpms.CustomerAdmin.Infrastructure.csproj" />

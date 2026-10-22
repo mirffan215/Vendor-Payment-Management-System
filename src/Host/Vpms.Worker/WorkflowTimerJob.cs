@@ -13,7 +13,7 @@ public sealed class WorkflowTimerJob(IServiceScopeFactory scopes, IConfiguration
         {
             try
             {
-                await RunOnceAsync(stoppingToken);
+                await JobTelemetry.RunAsync(GetType().Name, () => RunOnceAsync(stoppingToken));
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {

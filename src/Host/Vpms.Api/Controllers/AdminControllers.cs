@@ -80,13 +80,16 @@ public sealed class RolesController(IRoleAdminService service) : ControllerBase
     public IReadOnlyList<string> PermissionCatalogue() => Permissions.All;
 
     [HttpPost("roles")]
+    [Vpms.Api.Auth.RequireStepUp]
     public async Task<RoleDto> Create(RoleRequest body, CancellationToken ct) => await service.CreateRoleAsync(body.Name, body.Permissions, ct);
 
     [HttpPut("roles/{roleId:guid}/permissions")]
+    [Vpms.Api.Auth.RequireStepUp]
     public async Task<RoleDto> Update(Guid roleId, PermissionsRequest body, CancellationToken ct) =>
         await service.UpdateRolePermissionsAsync(roleId, body.Permissions, ct);
 
     [HttpDelete("roles/{roleId:guid}")]
+    [Vpms.Api.Auth.RequireStepUp]
     public async Task<IActionResult> Delete(Guid roleId, CancellationToken ct)
     {
         await service.DeleteRoleAsync(roleId, ct);
@@ -98,10 +101,12 @@ public sealed class RolesController(IRoleAdminService service) : ControllerBase
         await service.ListAssignmentsAsync(userId, ct);
 
     [HttpPost("role-assignments")]
+    [Vpms.Api.Auth.RequireStepUp]
     public async Task<RoleAssignmentDto> Assign(AssignRequest body, CancellationToken ct) =>
         await service.AssignAsync(body.UserId, body.RoleId, body.LegalEntityId, ct);
 
     [HttpDelete("role-assignments/{assignmentId:guid}")]
+    [Vpms.Api.Auth.RequireStepUp]
     public async Task<IActionResult> Revoke(Guid assignmentId, CancellationToken ct)
     {
         await service.RevokeAsync(assignmentId, ct);
@@ -112,6 +117,7 @@ public sealed class RolesController(IRoleAdminService service) : ControllerBase
     public async Task<IReadOnlyList<PendingAssignmentDto>> Pending(CancellationToken ct) => await service.ListPendingAssignmentsAsync(ct);
 
     [HttpPost("pending-role-assignments")]
+    [Vpms.Api.Auth.RequireStepUp]
     public async Task<PendingAssignmentDto> AddPending(PendingRequest body, CancellationToken ct) =>
         await service.AddPendingAssignmentAsync(body.Email, body.RoleId, body.LegalEntityId, ct);
 }
@@ -128,6 +134,15 @@ public sealed class UsersController(IUserAdminService service) : ControllerBase
 
     [HttpPost("{userId:guid}/disable")]
     public async Task<UserDto> Disable(Guid userId, CancellationToken ct) => await service.SetStatusAsync(userId, false, ct);
+
+    /// <summary>Ends all of a person's sessions (a lost laptop, a suspected account takeover). Takes effect within a minute on every instance.</summary>
+    [HttpPost("{userId:guid}/revoke-sessions")]
+    public async Task<IActionResult> RevokeSessions(Guid userId, [FromServices] Microsoft.Extensions.Caching.Memory.IMemoryCache cache, CancellationToken ct)
+    {
+        await service.RevokeSessionsAsync(userId, ct);
+        cache.Remove(Vpms.Api.Auth.CookieSessionValidator.StateKey(userId));
+        return NoContent();
+    }
 }
 
 [ApiController, ApiVersion("1.0"), Route("api/v{version:apiVersion}/admin/identity-providers"), Authorize(Policy = Permissions.ProviderManage)]
@@ -137,15 +152,19 @@ public sealed class IdentityProvidersController(IProviderAdminService service) :
     public async Task<IReadOnlyList<ProviderDto>> List(CancellationToken ct) => await service.ListAsync(ct);
 
     [HttpPost]
+    [Vpms.Api.Auth.RequireStepUp]
     public async Task<ProviderDto> Create(SaveProvider body, CancellationToken ct) => await service.CreateAsync(body, ct);
 
     [HttpPut("{providerId:guid}")]
+    [Vpms.Api.Auth.RequireStepUp]
     public async Task<ProviderDto> Update(Guid providerId, SaveProvider body, CancellationToken ct) => await service.UpdateAsync(providerId, body, ct);
 
     [HttpPost("{providerId:guid}/enable")]
+    [Vpms.Api.Auth.RequireStepUp]
     public async Task<ProviderDto> Enable(Guid providerId, CancellationToken ct) => await service.SetEnabledAsync(providerId, true, ct);
 
     [HttpPost("{providerId:guid}/disable")]
+    [Vpms.Api.Auth.RequireStepUp]
     public async Task<ProviderDto> Disable(Guid providerId, CancellationToken ct) => await service.SetEnabledAsync(providerId, false, ct);
 }
 

@@ -27,6 +27,8 @@ Phase 0 ADRs were approved by the owner and are **Accepted**.
 | [0020](0020-d365-adapter-mapping-and-limits.md) | Dynamics 365 Finance adapter, mapping, secrets, and what was not verified | Accepted |
 | [0021](0021-reporting-and-export.md) | Reporting, export formats and audit evidence bundles | Accepted |
 | [0022](0022-notifications.md) | Notifications: sweep, outbox, channels and mandatory kinds | Accepted |
+| [0023](0023-step-up-sessions-and-security-logging.md) | Step-up authentication, ending sessions, and security logging | Accepted |
+| [0024](0024-retention-legal-hold-and-offboarding.md) | Retention, legal hold, disposal and tenant offboarding | Accepted |
 
 ## Template
 

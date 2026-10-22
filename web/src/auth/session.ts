@@ -10,6 +10,7 @@ export type SessionState =
 export interface SessionContextValue {
   state: SessionState
   signOut: () => Promise<void>
+  signOutEverywhere: () => Promise<void>
 }
 
 export const SessionContext = createContext<SessionContextValue | undefined>(undefined)

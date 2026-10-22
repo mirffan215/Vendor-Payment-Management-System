@@ -199,3 +199,5 @@ textarea.map { inline-size: 100%; min-block-size: 4rem; font-family: ui-monospac
 .badge { background: var(--accent, #b00020); color: #fff; border-radius: 999px; padding: 0 0.4rem; font-size: 0.75rem; }
 .badge-inline { color: var(--accent, #b00020); font-weight: 600; }
 pre.config { white-space: pre-wrap; overflow-wrap: anywhere; max-inline-size: 100%; }
+
+button.link { background: none; border: 0; padding: 0; color: inherit; text-decoration: underline; cursor: pointer; font: inherit; }

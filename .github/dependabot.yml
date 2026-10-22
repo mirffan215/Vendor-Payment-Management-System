@@ -1,0 +1,27 @@
+version: 2
+updates:
+  - package-ecosystem: nuget
+    directory: /
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 10
+    groups:
+      microsoft: { patterns: ["Microsoft.*", "System.*"] }
+      opentelemetry: { patterns: ["OpenTelemetry*"] }
+      serilog: { patterns: ["Serilog*"] }
+      azure: { patterns: ["Azure.*"] }
+  - package-ecosystem: npm
+    directory: /web
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 10
+    groups:
+      react: { patterns: ["react", "react-dom", "@types/react*"] }
+      tooling: { patterns: ["vite*", "vitest*", "@playwright/*", "typescript*", "oxlint*"] }
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: weekly }
+  - package-ecosystem: docker
+    directory: /
+    schedule: { interval: weekly }
+  - package-ecosystem: docker
+    directory: /web
+    schedule: { interval: weekly }

@@ -39,6 +39,9 @@ public interface IUserAdminService
 
     /// <summary>Disabling takes effect on the user's next request. You cannot disable yourself or the last administrator.</summary>
     Task<UserDto> SetStatusAsync(Guid userId, bool active, CancellationToken ct = default);
+
+    /// <summary>Ends every session the person has now ("sign out everywhere"). A person may do it for themselves; an administrator may do it for anyone. Audited.</summary>
+    Task RevokeSessionsAsync(Guid userId, CancellationToken ct = default);
 }
 
 public sealed record ProviderDto(

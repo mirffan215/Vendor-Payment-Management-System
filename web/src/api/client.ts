@@ -117,3 +117,6 @@ export const verifyAuditEvidence = (file: File) => {
   return api<EvidenceVerification>('/api/v1/audit/evidence/verify', { method: 'POST', body: form })
 }
 export const signOut = () => api<void>('/auth/logout', { method: 'POST' })
+
+/** Ends every session of the signed-in person, on every device, including this one. */
+export const signOutEverywhere = () => api<void>('/api/v1/session/revoke-all', { method: 'POST' })

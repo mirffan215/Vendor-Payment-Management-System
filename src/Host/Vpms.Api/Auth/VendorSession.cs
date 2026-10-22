@@ -35,13 +35,12 @@ public static class VendorSessionFactory
 /// <summary>Rejects vendor sessions past their absolute lifetime or whose user was disabled (re-checked every minute).</summary>
 public static class VendorCookieValidator
 {
-    public static readonly TimeSpan AbsoluteTimeout = TimeSpan.FromHours(8);
-
     public static async Task ValidateAsync(CookieValidatePrincipalContext ctx)
     {
         var sp = ctx.HttpContext.RequestServices;
         var clock = sp.GetRequiredService<TimeProvider>();
         var p = ctx.Principal;
+        var absolute = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Vpms.VendorPortal.Application.PortalOptions>>().Value.SessionAbsoluteTimeout;
 
         if (p is null
             || p.FindFirst(VpmsClaims.Context)?.Value != VendorClaims.VendorContext
@@ -49,7 +48,7 @@ public static class VendorCookieValidator
             || !Guid.TryParse(p.FindFirst(VpmsClaims.TenantId)?.Value, out var tenantId)
             || !Guid.TryParse(p.FindFirst(VendorClaims.VendorId)?.Value, out _)
             || !long.TryParse(p.FindFirst(VpmsClaims.AuthTime)?.Value, CultureInfo.InvariantCulture, out var authTime)
-            || clock.GetUtcNow() - DateTimeOffset.FromUnixTimeSeconds(authTime) > AbsoluteTimeout)
+            || clock.GetUtcNow() - DateTimeOffset.FromUnixTimeSeconds(authTime) > absolute)
         {
             await Reject(ctx);
             return;

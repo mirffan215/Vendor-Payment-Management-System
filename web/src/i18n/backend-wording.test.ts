@@ -25,6 +25,7 @@ describe('backend wording', () => {
     /ConfigIssue\(\s*"([a-z_]+)"/g,
     /issues\.Add\(new\(\s*"([a-z_]+)"/g,
     /problems\.Add\(\s*"([a-z_]+)/g,
+    /\bErrorCode = "([a-z_]+)"/g,
   ])
   const findingKeys = collect([/Finding\.Of\(\s*"([a-z_.]+)"/g])
 

@@ -12,6 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\BuildingBlocks\Vpms.BuildingBlocks.Observability\Vpms.BuildingBlocks.Observability.csproj" />
     <ProjectReference Include="..\..\Modules\Identity\Vpms.Identity.Infrastructure\Vpms.Identity.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Identity\Vpms.Identity.Application\Vpms.Identity.Application.csproj" />
     <ProjectReference Include="..\..\Modules\CustomerAdmin\Vpms.CustomerAdmin.Infrastructure\Vpms.CustomerAdmin.Infrastructure.csproj" />

@@ -30,6 +30,9 @@ public sealed class IdentityStore(IdentityDbContext db, TenantContext tenant) : 
 
     public Task SaveChangesAsync(CancellationToken ct = default) => db.SaveChangesAsync(ct);
 
-    public Task<bool> IsUserActiveAsync(Guid userId, CancellationToken ct = default) =>
-        db.Users.AnyAsync(u => u.Id == userId && u.Status == UserStatus.Active, ct);
+    public async Task<SessionState> GetSessionStateAsync(Guid userId, CancellationToken ct = default)
+    {
+        var user = await db.Users.AsNoTracking().Where(u => u.Id == userId).Select(u => new { u.Status, u.SessionsValidFrom }).FirstOrDefaultAsync(ct);
+        return user is null ? new SessionState(false, null) : new SessionState(user.Status == UserStatus.Active, user.SessionsValidFrom);
+    }
 }

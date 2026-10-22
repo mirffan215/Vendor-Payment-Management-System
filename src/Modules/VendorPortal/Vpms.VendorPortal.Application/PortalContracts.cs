@@ -13,6 +13,12 @@ public sealed class PortalOptions
     public TimeSpan ChallengeLifetime { get; set; } = TimeSpan.FromMinutes(5);
     public int PasswordHashIterations { get; set; } = 600_000;
     public string Issuer { get; set; } = "VPMS";
+
+    /// <summary>A vendor session ends after this long without activity.</summary>
+    public TimeSpan SessionIdleTimeout { get; set; } = TimeSpan.FromMinutes(20);
+
+    /// <summary>A vendor session ends this long after sign-in, however active it is.</summary>
+    public TimeSpan SessionAbsoluteTimeout { get; set; } = TimeSpan.FromHours(8);
 }
 
 public sealed record PortalUserDto(

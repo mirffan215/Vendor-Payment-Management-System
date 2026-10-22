@@ -9,7 +9,7 @@ using Vpms.Identity.Domain;
 
 namespace Vpms.Identity.Infrastructure;
 
-public sealed class UserAdminService(IdentityDbContext db, ICurrentUser current, IAuditPort audit) : IUserAdminService, IUserDirectory, IUserPreferences
+public sealed class UserAdminService(IdentityDbContext db, ICurrentUser current, IAuditPort audit, TimeProvider clock) : IUserAdminService, IUserDirectory, IUserPreferences
 {
     public async Task<IReadOnlyList<UserDto>> ListAsync(string? search, int skip, int take, CancellationToken ct = default)
     {
@@ -29,6 +29,15 @@ public sealed class UserAdminService(IdentityDbContext db, ICurrentUser current,
                            select new { a.UserId, r.Name }).ToListAsync(ct);
         return users.Select(u => new UserDto(u.Id, u.Email, u.DisplayName, u.Status, u.LastLoginAt,
             roles.Where(r => r.UserId == u.Id).Select(r => r.Name).Distinct().Order().ToList())).ToList();
+    }
+
+    public async Task RevokeSessionsAsync(Guid userId, CancellationToken ct = default)
+    {
+        var user = await db.Users.FirstOrDefaultAsync(u => u.Id == userId, ct) ?? throw new NotFoundException("User");
+        user.SessionsValidFrom = clock.GetUtcNow();
+        audit.Record(new AuditEntry("user.sessions.revoked", "User", userId.ToString(),
+            ChangeSummaryJson: JsonSerializer.Serialize(new { by = current.UserId == userId ? "self" : "administrator" })));
+        await db.SaveChangesAsync(ct);
     }
 
     public async Task<UserDto> SetStatusAsync(Guid userId, bool active, CancellationToken ct = default)

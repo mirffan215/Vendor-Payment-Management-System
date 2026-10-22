@@ -20,7 +20,7 @@ public sealed class ErpOutboundJob(IServiceScopeFactory scopes, IConfiguration c
         {
             try
             {
-                await RunOnceAsync(stoppingToken);
+                await JobTelemetry.RunAsync(GetType().Name, () => RunOnceAsync(stoppingToken));
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {

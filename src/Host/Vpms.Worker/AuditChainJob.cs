@@ -17,7 +17,7 @@ public sealed class AuditChainJob(IServiceScopeFactory scopes, IConfiguration co
         {
             try
             {
-                await RunOnceAsync(stoppingToken);
+                await JobTelemetry.RunAsync(GetType().Name, () => RunOnceAsync(stoppingToken));
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {

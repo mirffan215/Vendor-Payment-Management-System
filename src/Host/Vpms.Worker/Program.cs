@@ -3,6 +3,7 @@ using Vpms.Notifications.Infrastructure;
 using Vpms.Audit.Application;
 using Vpms.Audit.Infrastructure;
 using Vpms.BuildingBlocks.Cloud;
+using Vpms.BuildingBlocks.Observability;
 using Vpms.BuildingBlocks.Persistence;
 using Vpms.BuildingBlocks.Security.Encryption;
 using Vpms.CustomerAdmin.Infrastructure;
@@ -16,7 +17,12 @@ using Vpms.Vendors.Infrastructure;
 using Vpms.Worker;
 
 var builder = Host.CreateApplicationBuilder(args);
+
+// Container liveness probe: "Vpms.Worker --healthcheck" exits 0 while the heartbeat file is fresh.
+if (args.Contains("--healthcheck")) return WorkerHeartbeat.IsAlive(builder.Configuration, TimeSpan.FromSeconds(60)) ? 0 : 1;
+
 builder.Configuration.AddVpmsKeyVault();
+builder.Services.AddVpmsObservability(builder.Configuration, "vpms-worker");
 
 static string ConnectionString(IServiceProvider sp) =>
     sp.GetRequiredService<IConfiguration>().GetConnectionString("Default")
@@ -66,6 +72,8 @@ builder.Services.AddHostedService<PaymentIntegrityJob>();
 builder.Services.AddHostedService<ErpOutboundJob>();
 builder.Services.AddHostedService<NotificationJob>();
 
+builder.Services.AddHostedService<WorkerHeartbeat>();
 var host = builder.Build();
 ProductionGuards.EnsureSafe(host.Services.GetRequiredService<IConfiguration>(), host.Services.GetRequiredService<IHostEnvironment>(), web: false);
 await host.RunAsync();
+return 0;

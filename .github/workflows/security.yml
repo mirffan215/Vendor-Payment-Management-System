@@ -1,0 +1,101 @@
+name: Security
+on:
+  pull_request:
+  push:
+    branches: [main, "claude/**"]
+  schedule:
+    - cron: "17 3 * * 1" # weekly, so new advisories against unchanged code are found
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  codeql:
+    runs-on: ubuntu-latest
+    permissions: { contents: read, security-events: write }
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [csharp, javascript-typescript]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: github/codeql-action/init@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: none
+          queries: security-extended
+      - uses: github/codeql-action/analyze@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        with: { category: "/language:${{ matrix.language }}" }
+
+  # Source, configuration and dependencies. Fails on HIGH or CRITICAL findings that have a fix.
+  trivy-repo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with: { dotnet-version: "10.0.x" }
+      - name: Compile the Bicep so its resources can be checked
+        run: az bicep build --file infra/main.bicep --outfile infra/main.json
+      - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          scanners: vuln,secret,misconfig
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+
+  # The four images are built (not pushed), scanned, and described by an SBOM.
+  images:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: api, file: Dockerfile.api, context: . }
+          - { name: worker, file: Dockerfile.worker, context: . }
+          - { name: migrator, file: Dockerfile.migrator, context: . }
+          - { name: web, file: web/Dockerfile, context: web }
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Build
+        run: docker build -f ${{ matrix.file }} -t vpms-${{ matrix.name }}:ci ${{ matrix.context }}
+      - name: The web image's nginx configuration is valid
+        if: matrix.name == 'web'
+        run: docker run --rm --entrypoint sh -e API_UPSTREAM=http://api:8080 vpms-web:ci -c "/docker-entrypoint.sh nginx -t"
+      - name: The images run as a non-root user
+        run: |
+          user=$(docker inspect --format '{{.Config.User}}' vpms-${{ matrix.name }}:ci)
+          echo "user: '$user'"
+          test -n "$user" && test "$user" != "root" && test "$user" != "0"
+      - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: vpms-${{ matrix.name }}:ci
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+      - uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
+        with:
+          image: vpms-${{ matrix.name }}:ci
+          format: cyclonedx-json
+          artifact-name: sbom-image-${{ matrix.name }}.cdx.json
+          upload-release-assets: false
+
+  # Bills of materials for the source dependencies (the images above carry their own).
+  sbom:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with: { dotnet-version: "10.0.x" }
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with: { node-version: 22, cache: npm, cache-dependency-path: web/package-lock.json }
+      - run: dotnet tool install --global CycloneDX
+      - run: dotnet restore Vpms.sln --locked-mode
+      - run: dotnet CycloneDX Vpms.sln --output sbom --filename dotnet.cdx.json --json --exclude-test-projects
+      - run: npm ci
+        working-directory: web
+      - run: npx --yes @cyclonedx/cyclonedx-npm --output-file ../sbom/web.cdx.json --omit dev
+        working-directory: web
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with: { name: sbom-source, path: sbom, retention-days: 90 }
