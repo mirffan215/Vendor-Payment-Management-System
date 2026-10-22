@@ -52,7 +52,7 @@ Depends on: Phases 2-4.
 Acceptance: the same user cannot approve an invoice and release its payment; a changed invoice invalidates its
 proposal; everything is audited.
 
-## Phase 6: ERP / Dynamics 365 Finance (`phase-6-erp-d365.md`)
+## Phase 6: ERP / Dynamics 365 Finance (`phase-6-erp-d365.md`) — complete, see [phase-6-summary.md](phase-6-summary.md)
 Scope: `IErpAdapter` and D365 implementation (documented interfaces only); entity and dimension mapping with
 Key Vault secrets; idempotent retryable sync with dead-lettering; reconciliation and manual resolution; mock adapter.
 Depends on: Phases 3-5.

@@ -278,3 +278,26 @@ future integration; v1 never moves money.**
   re-checks at submit/approve/release, and by `PaymentIntegrityJob` (worker).
 - **API:** `/payments/payable`, `/requests`, `/proposals` (+ `submit`, `approve`, `send-back`, `cancel`, `recheck`, `release`,
   `authorizations`, `instruction`), `/instructions/{id}/download|verify`.
+
+## 17. Phase 6 additions
+
+- **ErpIntegration module** (`src/Modules/ErpIntegration`, schema `erp`). Core modules never reference it or any ERP type. It reads
+  invoices through `Invoices.Contracts.IInvoicePostingSource`, vendors through `Vendors.Contracts.IVendorErpSource` (the one write it
+  may make is recording the account number the ERP assigned), payments through `Payments.Contracts.IPaymentLifecycle`
+  (`HasReleasedPaymentAsync`), and feeds purchase orders into `Invoices.Contracts.IPurchaseOrderSink`. The architecture test lists the
+  module, so it can reach others only through Contracts.
+- **`IErpAdapter`** (capability-based, typed outcomes `Succeeded | AlreadyExists | Rejected | Transient`): validate connection, upsert
+  vendor, list vendors, create vendor invoice, attach document, list invoices, vendor payments, purchase orders, dimension values, and
+  `DocumentReference(key)`. Implementations: `MockErpAdapter` (scriptable, plantable, development and tests only) and
+  `D365FinanceAdapter` (OData, Entra client credentials). A shared contract suite runs against both. See ADR-0019 and ADR-0020.
+- **Configuration:** `ErpConfig` rows (kind `Connection` for the tenant, `Mapping` per legal entity), versioned, each needing a second
+  person; the connection stores the *name* of its secret, resolved through `ISecretReader` (`Secrets:{name}`; Key Vault in production).
+- **Outbound:** `ErpSyncRecord` outbox with unique idempotency key, leases, backoff with jitter, dead letter, append-only
+  `ErpSyncAttempt`. `ErpOutboundJob` (worker) sweeps and sends per tenant, vendors first. The worker acts as a fixed system actor.
+- **Inbound:** `ErpInboxMessage` (content-addressed, replay-safe) and `ErpPullState`; purchase orders, invoice status, payments.
+- **Reconciliation:** `ReconciliationRun` and `ReconciliationItem`; six kinds of difference; two-person acceptance for amount and payee.
+- **API:** `/admin/erp/connection`, `/admin/legal-entities/{id}/erp-mapping` and `/erp/test`, `/erp-changes` (+ approve, reject,
+  cancel), `/erp/sync` (summary, list, detail, retry, resolve), `/erp/reconciliation` (run, runs, summary, items, export, resolve,
+  propose-acceptance, approve-acceptance, reject-acceptance).
+- **Web:** `/erp` (connection, mapping, change inbox), `/erp/sync`, `/erp/reconciliation`.
+- **Settings:** `Erp:OutboundSeconds` (30), `Erp:OutboundBatch` (50), `Erp:InboundSeconds` (300), `Erp:D365:Authority`.

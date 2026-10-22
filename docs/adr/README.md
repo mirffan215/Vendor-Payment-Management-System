@@ -23,6 +23,8 @@ Phase 0 ADRs were approved by the owner and are **Accepted**.
 | [0016](0016-reapproval-on-material-change.md) | Re-approval on material change | Accepted |
 | [0017](0017-payment-preparation-and-treasury-controls.md) | Payment preparation and treasury controls | Accepted |
 | [0018](0018-payment-instruction-format-signing-and-reveal.md) | Payment instruction format, signing and bank-detail reveal | Accepted |
+| [0019](0019-erp-sync-queue-and-idempotency.md) | ERP sync queue, idempotency and reconciliation | Accepted |
+| [0020](0020-d365-adapter-mapping-and-limits.md) | Dynamics 365 Finance adapter, mapping, secrets, and what was not verified | Accepted |
 
 ## Template
 

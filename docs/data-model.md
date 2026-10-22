@@ -220,3 +220,17 @@ duplicate detection works without decrypting. See ADR-0004.
 - **ReleaseAuthorization**: every release attempt, allowed or refused, with re-check and separation findings. No update, no delete.
 - **PaymentInstruction**: CSV and JSON ciphertext, SHA-256 hash, signature, status (Prepared | HandedOff). No execution status exists.
 - Nothing in this schema can be deleted by the application login, except the items of a draft proposal.
+
+## Phase 6 as built (schema `erp`)
+
+- **ErpConfig**: `Kind` (Connection | Mapping), `LegalEntityId` (null for the tenant-wide connection), `VersionNo`, `ConfigJson` (secret *name*
+  only), status (Pending | Active | Superseded | Rejected | Cancelled), maker, decision. One Active and one Pending per kind and entity
+  (filtered unique indexes). Never deleted.
+- **ErpSyncRecord**: type (PostInvoice | UpsertVendor), object, object version, payload hash, **unique idempotency key**, status (Pending |
+  InFlight | Succeeded | DeadLetter | Resolved | Superseded), attempts, next attempt, lease, last error, ERP reference, source time,
+  who handled it and why. **ErpSyncAttempt**: append-only, one row per try. Neither can be deleted; attempts cannot be updated.
+- **ErpInboxMessage**: kind (PurchaseOrder | InvoiceStatus | Payment), external id, content hash, **unique message id**, sequence, payload,
+  status. **ErpPullState**: last pull per entity and kind.
+- **ReconciliationRun** and **ReconciliationItem**: type, natural key (**unique per entity**), both values, status (Open |
+  PendingAcceptance | Accepted | Resolved | Cleared), proposer, decider, reasons. Never deleted.
+- Vendor-entity links gained no column: `ErpVendorAccount` (already there) is where the ERP's account is stored.

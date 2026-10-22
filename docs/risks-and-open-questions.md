@@ -10,8 +10,8 @@ Status: Accepted (Phase 0 approved).
 | R2 | Segregation-of-duties bypass (same person approves and releases; delegate abuse) | Critical | Guards in engine and treasury, not UI; release-time recheck; SoD tests incl. delegation | 4, 5 (built: ADR-0015, ADR-0017) |
 | R3 | Fraudulent bank-detail change (vendor impersonation) | Critical | Two-person verification, callback verification field, block release while change open, alerts | 2, 5 (built: ADR-0017) |
 | R4 | Audit tampering or gaps | High | Hash chain, DENY update/delete, same-transaction writes, external anchoring | 1 |
-| R5 | ERP drift or duplicate postings | High | Idempotency keys, replay tests, reconciliation job, documented interfaces only | 6 |
-| R6 | D365 interface limits (throttling, entity availability, versions) differ from assumptions | Medium | Early spike in Phase 6, adapter capability model, mock adapter | 6 |
+| R5 | ERP drift or duplicate postings | High | Idempotency keys, replay tests, reconciliation job, documented interfaces only | 6 (built: ADR-0019) |
+| R6 | D365 interface limits (throttling, entity availability, versions) differ from assumptions | **High until a spike is done**: the adapter has only been tested against a stub | Configurable entity names, adapter capability model, mock adapter, shared contract suite; **a sandbox spike is still required before the first live posting** (ADR-0020) | 6, before go-live |
 | R7 | Key management errors (loss, rotation failure) | High | Key Vault with soft-delete/purge protection, versioned ciphertext, rotation runbook, tested restore | 1, 8 |
 | R8 | OCR/extraction inaccuracy leads to wrong data | Medium | OCR output is only a suggestion; human verification; verification rules still apply | 3 |
 | R9 | Arabic/RTL and Hijri handled late and inconsistently | Medium | i18n and RTL from Phase 1; RTL checks in UI tests; localization in definition of done | 1, 7 |
@@ -20,6 +20,8 @@ Status: Accepted (Phase 0 approved).
 | R12 | Scope creep toward executing payments | High | v1 prepares instructions only; no bank-execution component; ADR needed to change | 5 |
 | R13 | Vendor portal compromise exposes internal data | High | Separate auth context and audience, vendor-scoped queries, rate limiting | 2 |
 | R14 | Data residency and retention requirements differ by country | Medium | Dedicated-DB path in ADR-0001, per-tenant retention policy | 8 |
+| R15 | The ERP credential is stolen or leaks | High | Only a vault name is stored; the secret is read at send time and held in memory; never in API, audit, queue or logs; least-privilege D365 role; rotation by changing the vault value | 6, 8 |
+| R16 | Wrong coding posted to the ledger | High | Unmapped tax code or dimension is a permanent error, never a guess; mapping changes need a second person; reconciliation flags amount differences | 6 |
 
 ## 2. ZATCA obligations and VPMS's role
 
@@ -61,3 +63,5 @@ Consequences for the design:
 | Q10 | Data residency: required regions per tenant? | Single Azure region at first | Phase 8 |
 | Q11 | Email intake: shared mailbox per tenant or per legal entity? | Per legal entity mailbox | Phase 3 |
 | Q12 | Expected scale (tenants, invoices per month) for sizing and load tests? | Unknown | Phase 8 |
+| Q13 | Which D365 Finance version and which posting route (journal posts automatically, or needs a separate posting step) does the first customer use? | Journal created; entity names configurable; field names to be confirmed in a spike | Before first live posting |
+| Q14 | Who should receive an alert when messages are dead-lettered or a reconciliation finds differences? | Visible on the monitor only until notifications exist | Phase 7 |

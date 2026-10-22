@@ -3,18 +3,18 @@
 Multi-tenant SaaS that approves vendor invoices and **prepares** payment instructions. It never transfers money and
 does not issue invoices. Design documents live in [`docs/`](docs/); delivery follows [`docs/roadmap.md`](docs/roadmap.md).
 
-Current status: **Phase 5 (payments and treasury) complete** — see [`docs/phase-5-summary.md`](docs/phase-5-summary.md)
-(earlier: [Phase 2](docs/phase-2-summary.md), [Phase 1](docs/phase-1-summary.md)).
+Current status: **Phase 6 (ERP / Dynamics 365 Finance) complete** — see [`docs/phase-6-summary.md`](docs/phase-6-summary.md)
+(earlier: [Phase 5](docs/phase-5-summary.md), [Phase 4](docs/phase-4-summary.md), [Phase 3](docs/phase-3-summary.md), [Phase 2](docs/phase-2-summary.md), [Phase 1](docs/phase-1-summary.md)).
 
 ## Repository layout
 
 | Path | Contents |
 |---|---|
 | `src/BuildingBlocks` | Shared kernel: tenancy, persistence base, audit port, SoD primitives, tenant-scoped storage/cache/jobs |
-| `src/Modules/{Identity,CustomerAdmin,Audit,Documents,Vendors,VendorPortal,Invoices}` | Modules, each with `Domain`, `Application`, `Infrastructure`, `Contracts` |
+| `src/Modules/{Identity,CustomerAdmin,Audit,Documents,Vendors,VendorPortal,Invoices,Workflow,Payments,ErpIntegration}` | Modules, each with `Domain`, `Application`, `Infrastructure`, `Contracts` |
 | `src/Host/Vpms.Api` | ASP.NET Core 10 Web API (BFF cookie sessions, per-tenant OIDC) |
 | `src/Modules/Tax/Vpms.Tax.Sa` | Saudi VAT checks for received invoices (plug-in, see [docs/zatca-scope.md](docs/zatca-scope.md)) |
-| `src/Host/Vpms.Worker` | Background host (audit chain verification and anchoring, attachment scanning, bank-change expiry, invoice email intake, extraction and verification sweep) |
+| `src/Host/Vpms.Worker` | Background host (audit chain verification and anchoring, attachment scanning, bank-change expiry, invoice email intake, extraction and verification sweep, approval timers, payment integrity sweep, ERP outbound queue and inbound pull) |
 | `src/Host/Vpms.Migrator` | Applies EF Core migrations, provisions the restricted application login, and provisions tenants (`provision-tenant`) |
 | `web/` | React + TypeScript (Vite), English/Arabic, RTL |
 | `tests/` | Unit, architecture, integration (Testcontainers SQL Server), API tests |
