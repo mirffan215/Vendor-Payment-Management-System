@@ -7,6 +7,7 @@ using Vpms.CustomerAdmin.Infrastructure;
 using Vpms.Documents.Infrastructure;
 using Vpms.Identity.Infrastructure;
 using Vpms.Invoices.Infrastructure;
+using Vpms.Payments.Infrastructure;
 using Vpms.Workflow.Infrastructure;
 using Vpms.VendorPortal.Infrastructure;
 using Vpms.Vendors.Infrastructure;
@@ -47,6 +48,11 @@ public static class DatabaseMigrator
         }
 
         await using (var ctx = new WorkflowDbContext(Options<WorkflowDbContext>(connectionString), tenant))
+        {
+            await ctx.Database.MigrateAsync(ct);
+        }
+
+        await using (var ctx = new PaymentsDbContext(Options<PaymentsDbContext>(connectionString), tenant))
         {
             await ctx.Database.MigrateAsync(ct);
         }

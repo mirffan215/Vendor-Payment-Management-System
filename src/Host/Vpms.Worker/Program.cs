@@ -7,6 +7,7 @@ using Vpms.CustomerAdmin.Infrastructure;
 using Vpms.Documents.Application;
 using Vpms.Identity.Infrastructure;
 using Vpms.Invoices.Infrastructure;
+using Vpms.Payments.Infrastructure;
 using Vpms.Workflow.Infrastructure;
 using Vpms.Documents.Infrastructure;
 using Vpms.Vendors.Infrastructure;
@@ -31,6 +32,7 @@ builder.Services.AddIdentityModule(ConnectionString);
 builder.Services.AddVendorsModule(ConnectionString);
 builder.Services.AddInvoicesModule(ConnectionString);
 builder.Services.AddWorkflowModule(ConnectionString);
+builder.Services.AddPaymentsModule(ConnectionString);
 // Country tax rule plug-ins for received invoices. Removing a line switches that country back to the standard checks.
 builder.Services.AddSingleton<Vpms.Invoices.Domain.Tax.ITaxRuleProvider, Vpms.Tax.Sa.SaudiVatProvider>();
 builder.Services.Configure<GraphOptions>(builder.Configuration.GetSection(GraphOptions.Section));
@@ -45,5 +47,6 @@ builder.Services.AddHostedService<InvoiceExtractionJob>();
 builder.Services.AddHostedService<InvoiceVerificationJob>();
 builder.Services.AddHostedService<ApprovalOutcomeJob>();
 builder.Services.AddHostedService<WorkflowTimerJob>();
+builder.Services.AddHostedService<PaymentIntegrityJob>();
 
 await builder.Build().RunAsync();

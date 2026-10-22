@@ -42,8 +42,11 @@ public static class Permissions
     public const string WorkflowApproveChange = "Workflow.ApproveChange";
     public const string WorkflowAdminister = "Workflow.Administer";
 
+    public const string PaymentView = "Payment.View";
     public const string PaymentPrepare = "Payment.Prepare";
+    public const string PaymentApprove = "Payment.Approve";
     public const string PaymentRelease = "Payment.Release";
+    public const string PaymentInstructionDownload = "Payment.Instruction.Download";
 
     public static readonly IReadOnlyList<string> All =
     [
@@ -54,6 +57,6 @@ public static class Permissions
         InvoiceView, InvoiceCreate, InvoiceEdit, InvoiceApprove, InvoiceExceptionResolve, InvoiceExceptionOverride, InvoicePoImport, InvoiceIntakeManage,
         VerificationConfigure, VerificationApproveChange,
         WorkflowView, WorkflowConfigure, WorkflowApproveChange, WorkflowAdminister,
-        PaymentPrepare, PaymentRelease,
+        PaymentView, PaymentPrepare, PaymentApprove, PaymentRelease, PaymentInstructionDownload,
     ];
 }

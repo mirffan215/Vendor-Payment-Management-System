@@ -59,6 +59,26 @@ public static class ActiveVendorKit
         return vendor.Id;
     }
 
+    /// <summary>A random but valid Saudi IBAN (correct mod-97 check digits).</summary>
+    public static string NewIban()
+    {
+        var bban = string.Concat(Enumerable.Range(0, 20).Select(_ => Random.Shared.Next(10)));
+        var rearranged = bban + "2810" + "00"; // S=28, A=10, check digits 00
+        var remainder = 0;
+        foreach (var ch in rearranged) remainder = (remainder * 10 + (ch - '0')) % 97;
+        return "SA" + (98 - remainder).ToString("D2") + bban;
+    }
+
+    /// <summary>Verified bank details for the vendor in a currency, through the real two-person change (maker proposes, checker approves).</summary>
+    public static async Task<Guid> VerifiedBankDetailsAsync(IServiceProvider root, Guid tenant, Guid vendorId, Guid maker, Guid checker, string currency = "SAR", string? iban = null)
+    {
+        iban ??= NewIban(); // a fresh account per vendor: shared accounts are flagged as possible fraud
+        var change = await AsAsync(root, tenant, maker, s => s.GetRequiredService<Vpms.Vendors.Application.IBankDetailsService>().ProposeAsync(vendorId,
+            new Vpms.Vendors.Application.ProposeBankDetails("Al Amal Trading", "Example Bank", "EXMPSARI", iban[..2], currency, iban, null, "Initial bank details")));
+        await AsAsync(root, tenant, checker, s => s.GetRequiredService<Vpms.Vendors.Application.IBankDetailsService>().ApproveAsync(change.Id, null, "checked"));
+        return change.ProposedBankDetailsId;
+    }
+
     /// <summary>Links an existing active vendor to another entity.</summary>
     public static Task LinkAsync(IServiceProvider root, Guid tenant, Guid actor, Guid vendorId, Guid entityId, string currency = "SAR") =>
         AsAsync(root, tenant, actor, s => s.GetRequiredService<IVendorEntityLinkService>()

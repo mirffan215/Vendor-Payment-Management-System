@@ -13,6 +13,7 @@
     <ProjectReference Include="..\..\Modules\VendorPortal\Vpms.VendorPortal.Infrastructure\Vpms.VendorPortal.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Invoices\Vpms.Invoices.Infrastructure\Vpms.Invoices.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Workflow\Vpms.Workflow.Infrastructure\Vpms.Workflow.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Payments\Vpms.Payments.Infrastructure\Vpms.Payments.Infrastructure.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

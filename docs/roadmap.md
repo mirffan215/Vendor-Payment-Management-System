@@ -44,7 +44,7 @@ durable jobs; re-approval on material change; approver UI.
 Depends on: Phases 1-3.
 Acceptance: simulation tests for each workflow pattern; self-approval impossible; delegation and escalation tested.
 
-## Phase 5: Payments and treasury (`phase-5-payments-treasury.md`)
+## Phase 5: Payments and treasury (`phase-5-payments-treasury.md`) — complete, see [phase-5-summary.md](phase-5-summary.md)
 Scope: payment requests from approved invoices; payment proposals grouped by vendor, due date, entity, currency;
 treasury controls with separate approval and release; prepared, signed-off payment instruction (no transfers);
 release-time re-check of bank details and invoice integrity.

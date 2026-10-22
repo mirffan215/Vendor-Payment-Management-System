@@ -16,7 +16,8 @@
     "verification": "Verification rules",
     "approvals": "Approvals",
     "delegations": "Delegations",
-    "workflow": "Approval workflow"
+    "workflow": "Approval workflow",
+    "payments": "Payments"
   },
   "language": {
     "label": "Language",
@@ -168,7 +169,20 @@
       "absolute_invalid": "The amount allowance cannot be negative.",
       "field_unknown": "A listed field is not known.",
       "field_duplicate": "A field is listed twice.",
-      "not_pending": "This change has already been decided."
+      "not_pending": "This change has already been decided.",
+      "invoice_not_payable": "Only an invoice that is approved for its current version can be paid.",
+      "invoice_not_found": "The invoice was not found.",
+      "request_exists": "This invoice already has a payment request.",
+      "no_verified_bank_details": "The vendor has no verified bank details in the invoice currency.",
+      "bank_change_pending": "A bank-detail change for this vendor is waiting for a decision.",
+      "bank_details_not_verified": "These bank details are no longer verified.",
+      "request_not_available": "Some of the chosen requests do not exist, belong to another legal entity, or are already in a proposal.",
+      "recheck_failed": "Something changed since this proposal was prepared, so it was invalidated. Prepare it again.",
+      "recheck_blocked": "A bank-detail change for one of the vendors is waiting for a decision. Try again once it is decided.",
+      "empty_proposal": "A proposal needs at least one payment request.",
+      "instruction_tampered": "The stored instruction no longer matches its signature and cannot be handed off.",
+      "format_invalid": "Choose csv or json.",
+      "payment_released": "A payment instruction has already been prepared for this invoice, so it can no longer be changed."
     }
   },
   "format": {
@@ -842,6 +856,95 @@
       "supplierTaxNumber": "Supplier tax number",
       "lineCount": "Number of lines",
       "dimensions": "Financial dimensions"
+    }
+  },
+  "payments": {
+    "title": "Payments",
+    "intro": "Approved invoices become payment requests, requests are grouped into proposals, a proposal is approved by a second person and released by a third. Release prepares a signed instruction file.",
+    "noTransfer": "This system prepares instructions only. It never sends money to a bank.",
+    "payableTitle": "Approved invoices ready for payment",
+    "payableEmpty": "No approved invoices are waiting for a payment request.",
+    "dueOn": "Due {{date}}",
+    "createRequests": "Create payment requests ({{count}})",
+    "requestsCreated": "{{count}} payment request(s) created.",
+    "blocker": {
+      "vendor_cannot_transact": "The vendor cannot be paid now.",
+      "no_verified_bank_details": "No verified bank details.",
+      "bank_change_pending": "A bank change is awaiting a decision."
+    },
+    "requestsTitle": "Payment requests",
+    "requestsEmpty": "No payment requests.",
+    "cancelReason": "Reason for cancelling a request",
+    "cancelRequest": "Cancel request",
+    "requestStatus": {
+      "Created": "Ready for a proposal",
+      "InProposal": "In a proposal",
+      "Released": "Released",
+      "Invalidated": "Invalidated",
+      "Cancelled": "Cancelled"
+    },
+    "createProposals": "Group ready requests into proposals",
+    "proposalsTitle": "Payment proposals",
+    "proposalsEmpty": "No proposals yet.",
+    "proposalStatus": {
+      "Draft": "Draft",
+      "PendingApproval": "Waiting for approval",
+      "Approved": "Approved, waiting for release",
+      "Released": "Released",
+      "Invalidated": "Invalidated",
+      "Cancelled": "Cancelled"
+    },
+    "back": "Back to payments",
+    "dueLabel": "Due date",
+    "removeItem": "Take out",
+    "recheckTitle": "Checks before approval and release",
+    "recheckPassed": "All checks pass: the invoices are unchanged and the bank details are still the verified ones.",
+    "recheck": {
+      "invoice_missing": "An invoice no longer exists.",
+      "invoice_not_approved": "An invoice is no longer approved.",
+      "invoice_changed": "An invoice changed after it was approved.",
+      "vendor_cannot_transact": "The vendor can no longer be paid.",
+      "bank_details_not_verified": "The vendor's bank details are no longer verified.",
+      "bank_details_changed": "The vendor's bank details changed.",
+      "bank_change_pending": "A bank-detail change is waiting for a decision.",
+      "request_not_in_proposal": "A request left the proposal."
+    },
+    "severity": {
+      "Invalidates": "invalidates the proposal",
+      "Blocks": "holds it back for now"
+    },
+    "actions": "Actions",
+    "separationNote": "Preparing, approving and releasing are done by three different people. Anyone who took part in the invoices or the vendor's bank details cannot approve or release.",
+    "comment": "Comment or reason",
+    "submit": "Submit for approval",
+    "approve": "Approve",
+    "sendBack": "Send back",
+    "release": "Release and prepare the instruction",
+    "cancel": "Cancel proposal",
+    "instructionTitle": "Payment instruction",
+    "instructionNote": "Prepared and signed. Hand it to the people who make the bank transfer; nothing has been sent.",
+    "instructionStatus": {
+      "Prepared": "Prepared",
+      "HandedOff": "Handed off"
+    },
+    "prepared": "Prepared",
+    "items": "Payments",
+    "fingerprint": "Fingerprint",
+    "downloadCsv": "Download CSV",
+    "downloadJson": "Download JSON",
+    "verify": "Check signature",
+    "verified": "The instruction matches its signature.",
+    "notVerified": "The instruction does NOT match its signature. Do not use it.",
+    "attempts": "Release attempts",
+    "decision": {
+      "Released": "Released",
+      "Denied": "Refused"
+    },
+    "separation": {
+      "releaser_is_maker": "The releaser prepared the proposal.",
+      "releaser_is_submitter": "The releaser submitted the proposal.",
+      "releaser_is_approver": "The releaser approved the proposal.",
+      "releaser_took_part_in_invoice_or_bank_details": "The releaser took part in the invoices or the vendor's bank details."
     }
   }
 }

@@ -16,7 +16,8 @@
     "verification": "قواعد التحقق",
     "approvals": "الموافقات",
     "delegations": "التفويضات",
-    "workflow": "مسار الموافقة"
+    "workflow": "مسار الموافقة",
+    "payments": "المدفوعات"
   },
   "language": {
     "label": "اللغة",
@@ -168,7 +169,20 @@
       "absolute_invalid": "لا يمكن أن يكون المبلغ المسموح به سالبًا.",
       "field_unknown": "أحد الحقول المذكورة غير معروف.",
       "field_duplicate": "تم ذكر حقل مرتين.",
-      "not_pending": "تم اتخاذ قرار بشأن هذا التغيير بالفعل."
+      "not_pending": "تم اتخاذ قرار بشأن هذا التغيير بالفعل.",
+      "invoice_not_payable": "لا يمكن دفع إلا فاتورة معتمدة لإصدارها الحالي.",
+      "invoice_not_found": "لم يتم العثور على الفاتورة.",
+      "request_exists": "هذه الفاتورة لها طلب دفع بالفعل.",
+      "no_verified_bank_details": "ليس لدى المورد بيانات بنكية موثقة بعملة الفاتورة.",
+      "bank_change_pending": "هناك تغيير في البيانات البنكية لهذا المورد بانتظار القرار.",
+      "bank_details_not_verified": "لم تعد هذه البيانات البنكية موثقة.",
+      "request_not_available": "بعض الطلبات المختارة غير موجودة أو تخص كيانًا قانونيًا آخر أو موجودة بالفعل في اقتراح.",
+      "recheck_failed": "تغيّر شيء منذ إعداد هذا الاقتراح فتم إبطاله. أعدّه من جديد.",
+      "recheck_blocked": "هناك تغيير في البيانات البنكية لأحد الموردين بانتظار القرار. حاول مجددًا بعد البتّ فيه.",
+      "empty_proposal": "يحتاج الاقتراح إلى طلب دفع واحد على الأقل.",
+      "instruction_tampered": "لم تعد التعليمات المخزَّنة مطابقة لتوقيعها ولا يمكن تسليمها.",
+      "format_invalid": "اختر csv أو json.",
+      "payment_released": "تم إعداد تعليمات دفع لهذه الفاتورة بالفعل، لذلك لم يعد ممكنًا تغييرها."
     }
   },
   "format": {
@@ -842,6 +856,95 @@
       "supplierTaxNumber": "الرقم الضريبي للمورد",
       "lineCount": "عدد البنود",
       "dimensions": "الأبعاد المالية"
+    }
+  },
+  "payments": {
+    "title": "المدفوعات",
+    "intro": "تتحول الفواتير المعتمدة إلى طلبات دفع، وتُجمَّع الطلبات في اقتراحات، يعتمد الاقتراحَ شخص ثانٍ ويُفرج عنه شخص ثالث. الإفراج يجهّز ملف تعليمات موقّعًا.",
+    "noTransfer": "يجهّز هذا النظام التعليمات فقط ولا يرسل أموالًا إلى أي بنك.",
+    "payableTitle": "فواتير معتمدة جاهزة للدفع",
+    "payableEmpty": "لا توجد فواتير معتمدة بانتظار طلب دفع.",
+    "dueOn": "الاستحقاق {{date}}",
+    "createRequests": "إنشاء طلبات الدفع ({{count}})",
+    "requestsCreated": "تم إنشاء {{count}} من طلبات الدفع.",
+    "blocker": {
+      "vendor_cannot_transact": "لا يمكن الدفع للمورد الآن.",
+      "no_verified_bank_details": "لا توجد بيانات بنكية موثقة.",
+      "bank_change_pending": "تغيير بنكي بانتظار القرار."
+    },
+    "requestsTitle": "طلبات الدفع",
+    "requestsEmpty": "لا توجد طلبات دفع.",
+    "cancelReason": "سبب إلغاء الطلب",
+    "cancelRequest": "إلغاء الطلب",
+    "requestStatus": {
+      "Created": "جاهز للاقتراح",
+      "InProposal": "في اقتراح",
+      "Released": "تم الإفراج",
+      "Invalidated": "أُبطل",
+      "Cancelled": "ملغى"
+    },
+    "createProposals": "تجميع الطلبات الجاهزة في اقتراحات",
+    "proposalsTitle": "اقتراحات الدفع",
+    "proposalsEmpty": "لا توجد اقتراحات بعد.",
+    "proposalStatus": {
+      "Draft": "مسودة",
+      "PendingApproval": "بانتظار الاعتماد",
+      "Approved": "معتمد بانتظار الإفراج",
+      "Released": "تم الإفراج",
+      "Invalidated": "أُبطل",
+      "Cancelled": "ملغى"
+    },
+    "back": "العودة إلى المدفوعات",
+    "dueLabel": "تاريخ الاستحقاق",
+    "removeItem": "إخراج",
+    "recheckTitle": "الفحوص قبل الاعتماد والإفراج",
+    "recheckPassed": "تنجح جميع الفحوص: الفواتير لم تتغير والبيانات البنكية ما زالت هي الموثقة.",
+    "recheck": {
+      "invoice_missing": "فاتورة لم تعد موجودة.",
+      "invoice_not_approved": "فاتورة لم تعد معتمدة.",
+      "invoice_changed": "تغيّرت فاتورة بعد اعتمادها.",
+      "vendor_cannot_transact": "لم يعد ممكنًا الدفع للمورد.",
+      "bank_details_not_verified": "لم تعد البيانات البنكية للمورد موثقة.",
+      "bank_details_changed": "تغيّرت البيانات البنكية للمورد.",
+      "bank_change_pending": "تغيير في البيانات البنكية بانتظار القرار.",
+      "request_not_in_proposal": "خرج طلب من الاقتراح."
+    },
+    "severity": {
+      "Invalidates": "يبطل الاقتراح",
+      "Blocks": "يوقفه مؤقتًا"
+    },
+    "actions": "الإجراءات",
+    "separationNote": "الإعداد والاعتماد والإفراج يقوم بها ثلاثة أشخاص مختلفون. لا يستطيع من شارك في الفواتير أو في البيانات البنكية للمورد أن يعتمد أو يفرج.",
+    "comment": "تعليق أو سبب",
+    "submit": "إرسال للاعتماد",
+    "approve": "اعتماد",
+    "sendBack": "إعادة",
+    "release": "إفراج وتجهيز التعليمات",
+    "cancel": "إلغاء الاقتراح",
+    "instructionTitle": "تعليمات الدفع",
+    "instructionNote": "مجهّزة وموقّعة. سلّمها لمن ينفّذ التحويل البنكي؛ لم يُرسل شيء.",
+    "instructionStatus": {
+      "Prepared": "مجهّزة",
+      "HandedOff": "سُلّمت"
+    },
+    "prepared": "تاريخ التجهيز",
+    "items": "المدفوعات",
+    "fingerprint": "البصمة",
+    "downloadCsv": "تنزيل CSV",
+    "downloadJson": "تنزيل JSON",
+    "verify": "التحقق من التوقيع",
+    "verified": "التعليمات مطابقة لتوقيعها.",
+    "notVerified": "التعليمات غير مطابقة لتوقيعها. لا تستخدمها.",
+    "attempts": "محاولات الإفراج",
+    "decision": {
+      "Released": "تم الإفراج",
+      "Denied": "مرفوضة"
+    },
+    "separation": {
+      "releaser_is_maker": "من يفرج هو من أعدّ الاقتراح.",
+      "releaser_is_submitter": "من يفرج هو من أرسل الاقتراح.",
+      "releaser_is_approver": "من يفرج هو من اعتمد الاقتراح.",
+      "releaser_took_part_in_invoice_or_bank_details": "من يفرج شارك في الفواتير أو في البيانات البنكية للمورد."
     }
   }
 }

@@ -264,3 +264,17 @@ future integration; v1 never moves money.**
   consume `Approved` with `ApprovedVersion == Version`.
 - **API:** `/workflow` definitions and changes, `/approvals` inbox/tasks/decisions/notices, `/delegations`,
   `/approval-materiality`, `POST /invoices/{id}/send-for-approval` and `/revise`.
+
+## 16. Phase 5 additions
+
+- **Payments module** (`src/Modules/Payments`, schema `payment`): payment requests, proposals, release authorisations, instructions.
+  It reads invoices through `Invoices.Contracts.IPayableInvoiceLookup`, bank details through `Vendors.Contracts.IBankDetailsLookup`
+  (verified details, maker/checker, audited reveal), approvers through `Workflow.Contracts.IApprovalHistory`. Invoices call back
+  through `Payments.Contracts.IPaymentLifecycle`. See ADR-0017 and ADR-0018.
+- **Flow:** approved invoice -> payment request (frozen hash, bank fingerprint, involved people) -> proposal per entity/vendor/
+  currency/due date -> submit -> treasury approval -> release (separation, full re-check, reveal, sign) -> instruction Prepared ->
+  download = hand-off. Nothing is sent to a bank.
+- **Invalidation:** one place (`PaymentInvalidation`) voids a request and its proposal; triggered by invoice revision (eager), by the
+  re-checks at submit/approve/release, and by `PaymentIntegrityJob` (worker).
+- **API:** `/payments/payable`, `/requests`, `/proposals` (+ `submit`, `approve`, `send-back`, `cancel`, `recheck`, `release`,
+  `authorizations`, `instruction`), `/instructions/{id}/download|verify`.

@@ -44,12 +44,12 @@ public abstract class ApprovalScenarioBase(SqlServerFixture sql) : IAsyncLifetim
         await W.Workflows(W.TenantA, Chg, s => s.ApproveAsync(p.Id!.Value, null));
     }
 
-    protected async Task<InvoiceDto> VerifiedInvoice(Guid creator, string number = "INV-1", decimal net = 100m)
+    protected async Task<InvoiceDto> VerifiedInvoice(Guid creator, string number = "INV-1", decimal net = 100m, Guid? vendor = null)
     {
         var tax = Math.Round(net * 0.15m, 2);
         var data = new InvoiceData(number, TestDates.Ago(10), TestDates.Ago(10).AddDays(30), "SAR", net, tax, net + tax, null, null,
             [new InvoiceLineInput("Consulting", 1, net, net, "S", 0.15m, tax, null, null)]);
-        var created = await W.AsAsync(W.TenantA, creator, s => s.GetRequiredService<IInvoiceService>().CreateAsync(new CreateInvoice(Entity, Vendor, data)));
+        var created = await W.AsAsync(W.TenantA, creator, s => s.GetRequiredService<IInvoiceService>().CreateAsync(new CreateInvoice(Entity, vendor ?? Vendor, data)));
         var submitted = await W.AsAsync(W.TenantA, creator, s => s.GetRequiredService<IInvoiceService>().SubmitAsync(created.Id));
         Assert.Equal(InvoiceStatus.Verified, submitted.Status);
         return submitted;

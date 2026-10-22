@@ -210,3 +210,13 @@ duplicate detection works without decrypting. See ADR-0004.
   decision, comment; unique per task and actor; no update or delete for the application login. **JoinArrival**: parallel join state.
 - **Delegation**, **WorkflowNotice**, **MaterialityPolicy** (versioned like definitions). No deletes for the application login.
 - **Invoice** gained `ApprovalRunId`, `ApprovedVersion`, `ApprovedAt`, `ApprovalBaselineJson` and statuses InApproval, Approved, Returned.
+
+## Phase 5 as built (schema `payment`)
+
+- **PaymentRequest**: invoice, version, amount, currency, due date, invoice integrity hash, bank-details id and fingerprint, involved people,
+  status (Created | InProposal | Released | Invalidated | Cancelled). One open request per invoice (filtered unique index).
+- **PaymentProposal** (+ **PaymentProposalItem**): per entity, sequence number, vendor, due date, currency, total, status (Draft |
+  PendingApproval | Approved | Released | Invalidated | Cancelled), maker, submitter, approver, releaser.
+- **ReleaseAuthorization**: every release attempt, allowed or refused, with re-check and separation findings. No update, no delete.
+- **PaymentInstruction**: CSV and JSON ciphertext, SHA-256 hash, signature, status (Prepared | HandedOff). No execution status exists.
+- Nothing in this schema can be deleted by the application login, except the items of a draft proposal.

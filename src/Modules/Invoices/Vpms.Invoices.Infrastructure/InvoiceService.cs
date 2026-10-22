@@ -18,7 +18,7 @@ namespace Vpms.Invoices.Infrastructure;
 public sealed partial class InvoiceService(
     InvoicesDbContext db, IFieldProtector protector, IVendorLookup vendors, ILegalEntityLookup entities, IAttachmentService attachments,
     IAuditPort audit, ICurrentUser current, TimeProvider clock, IInvoiceVerifier verifier, IApprovalStarter approvals,
-    IMaterialityEvaluator materiality, IApprovalLifecycle lifecycle, Microsoft.Extensions.Logging.ILogger<InvoiceService> logger) : IInvoiceService
+    IMaterialityEvaluator materiality, IApprovalLifecycle lifecycle, Vpms.Payments.Contracts.IPaymentLifecycle payments, Microsoft.Extensions.Logging.ILogger<InvoiceService> logger) : IInvoiceService
 {
     public const string DuplicateKeyColumn = "invoice.Invoice.DuplicateKey";
     public const string NumberKeyColumn = "invoice.Invoice.NumberKey";
@@ -153,6 +153,7 @@ public sealed partial class InvoiceService(
         Validate(data);
         var invoice = await LoadAsync(id, track: true, ct);
         if (!invoice.CanRevise) throw new ConflictException("invalid_transition", "Only an invoice in approval or already approved can be revised this way.");
+        if (await payments.HasReleasedPaymentAsync(id, ct)) throw new ConflictException("payment_released", "A payment instruction has already been prepared for this invoice, so it can no longer be changed.");
 
         var baseline = string.IsNullOrEmpty(invoice.ApprovalBaselineJson)
             ? Snapshot(invoice)
@@ -169,6 +170,9 @@ public sealed partial class InvoiceService(
         audit.Record(new AuditEntry("invoice.revised", "Invoice", id.ToString(),
             ChangeSummaryJson: JsonSerializer.Serialize(new { invoice.Version, from = wasStatus, to = invoice.Status, material = result.Material, result.ChangedFields, reason, invoice.Total })));
         await db.SaveChangesAsync(ct);
+
+        // Any change to an approved invoice invalidates the payment proposal it sits in. Not optional, so a failure here is surfaced.
+        await payments.InvoiceChangedAsync(id, "The invoice was revised: " + (result.ChangedFields.Count > 0 ? string.Join(", ", result.ChangedFields) : "version " + invoice.Version), ct);
 
         try
         {

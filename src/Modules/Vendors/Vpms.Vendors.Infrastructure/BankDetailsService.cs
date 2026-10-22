@@ -227,7 +227,20 @@ public sealed class BankDetailsService(
     public async Task<VerifiedBankDetails?> GetVerifiedAsync(Guid vendorId, string currencyCode, CancellationToken ct = default)
     {
         var b = await db.BankDetails.AsNoTracking().FirstOrDefaultAsync(x => x.VendorId == vendorId && x.CurrencyCode == currencyCode && x.Status == BankDetailsStatus.Verified, ct);
-        return b is null ? null : new VerifiedBankDetails(b.Id, b.MaskedAccount, b.CurrencyCode, b.VerifiedAt!.Value, b.IbanIndex ?? b.AccountNumberIndex ?? b.Id.ToString("N"));
+        if (b is null) return null;
+        var change = await db.BankDetailChanges.AsNoTracking().Where(c => c.ProposedBankDetailsId == b.Id && c.Status == ChangeStatus.Approved).OrderByDescending(c => c.CheckedAt).FirstOrDefaultAsync(ct);
+        return new VerifiedBankDetails(b.Id, b.MaskedAccount, b.CurrencyCode, b.VerifiedAt!.Value, b.IbanIndex ?? b.AccountNumberIndex ?? b.Id.ToString("N"), change?.MadeBy, change?.CheckedBy);
+    }
+
+    public async Task<PaymentBankDetails> RevealForPaymentAsync(Guid bankDetailsId, CancellationToken ct = default)
+    {
+        var b = await db.BankDetails.AsNoTracking().FirstOrDefaultAsync(x => x.Id == bankDetailsId, ct) ?? throw new NotFoundException("Bank details");
+        if (b.Status != BankDetailsStatus.Verified) throw new ConflictException("bank_details_not_verified", "These bank details are no longer verified.");
+        audit.Record(new AuditEntry("bank-details.revealed-for-payment", "BankDetails", bankDetailsId.ToString(),
+            ChangeSummaryJson: JsonSerializer.Serialize(new { vendorId = b.VendorId, account = b.MaskedAccount })));
+        await db.SaveChangesAsync(ct); // the audit record is written before anything is returned
+        return new PaymentBankDetails(b.Id, b.AccountName, b.BankName, b.SwiftBic, b.CountryCode, b.CurrencyCode,
+            await protector.UnprotectAsync(IbanColumn, b.IbanCipher, ct), await protector.UnprotectAsync(AccountColumn, b.AccountNumberCipher, ct));
     }
 
     public Task<bool> HasPendingChangeAsync(Guid vendorId, CancellationToken ct = default) =>

@@ -45,6 +45,10 @@
     <ProjectReference Include="..\..\src\Modules\Workflow\Vpms.Workflow.Application\Vpms.Workflow.Application.csproj" />
     <ProjectReference Include="..\..\src\Modules\Workflow\Vpms.Workflow.Infrastructure\Vpms.Workflow.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\Modules\Workflow\Vpms.Workflow.Contracts\Vpms.Workflow.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Payments\Vpms.Payments.Domain\Vpms.Payments.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Payments\Vpms.Payments.Application\Vpms.Payments.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Payments\Vpms.Payments.Infrastructure\Vpms.Payments.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Payments\Vpms.Payments.Contracts\Vpms.Payments.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

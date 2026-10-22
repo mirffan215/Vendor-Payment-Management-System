@@ -16,7 +16,7 @@ namespace Vpms.Workflow.Infrastructure;
 public sealed class ApprovalService(
     WorkflowDbContext db, WorkflowDefinitionService definitions, ApproverResolverFactory resolvers, IApprovalDataLookup approvalData,
     IApproverDirectory directory, IUserDirectory users, IEnumerable<IApprovalOutcomeHandler> handlers, TenantContext tenant,
-    IAuditPort audit, ICurrentUser current, TimeProvider clock, ILogger<ApprovalService> logger) : IApprovalService, IApprovalScan, IApprovalLifecycle
+    IAuditPort audit, ICurrentUser current, TimeProvider clock, ILogger<ApprovalService> logger) : IApprovalService, IApprovalScan, IApprovalLifecycle, IApprovalHistory
 {
     // --- starting ------------------------------------------------------------------------------------------
 
@@ -61,6 +61,16 @@ public sealed class ApprovalService(
         }
 
         return Started(run);
+    }
+
+    public async Task<IReadOnlyList<Guid>> GetApproversAsync(string subjectType, Guid subjectId, CancellationToken ct = default)
+    {
+        var runId = await db.Runs.AsNoTracking().Where(r => r.SubjectType == subjectType && r.SubjectId == subjectId && r.Status == RunStatus.Approved)
+            .OrderByDescending(r => r.CompletedAt).Select(r => (Guid?)r.Id).FirstOrDefaultAsync(ct);
+        if (runId is null) return [];
+        var rows = await (from d in db.Decisions.AsNoTracking() join t in db.Tasks.AsNoTracking() on d.TaskId equals t.Id
+                          where t.RunId == runId && d.Decision == DecisionKind.Approve select new { d.ActorId, d.ActingForId }).ToListAsync(ct);
+        return rows.SelectMany(r => new[] { r.ActorId, r.ActingForId ?? r.ActorId }).Distinct().ToList();
     }
 
     // --- lifecycle (called by subject modules) ----------------------------------------------------------

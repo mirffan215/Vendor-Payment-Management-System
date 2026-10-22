@@ -3,7 +3,7 @@
 Multi-tenant SaaS that approves vendor invoices and **prepares** payment instructions. It never transfers money and
 does not issue invoices. Design documents live in [`docs/`](docs/); delivery follows [`docs/roadmap.md`](docs/roadmap.md).
 
-Current status: **Phase 4 (workflow and approvals) complete** — see [`docs/phase-4-summary.md`](docs/phase-4-summary.md)
+Current status: **Phase 5 (payments and treasury) complete** — see [`docs/phase-5-summary.md`](docs/phase-5-summary.md)
 (earlier: [Phase 2](docs/phase-2-summary.md), [Phase 1](docs/phase-1-summary.md)).
 
 ## Repository layout

@@ -21,6 +21,8 @@ Phase 0 ADRs were approved by the owner and are **Accepted**.
 | [0014](0014-workflow-engine-and-definition-versioning.md) | Workflow engine and definition versioning | Accepted |
 | [0015](0015-approval-controls-sod-delegation-escalation.md) | Approval controls: segregation of duties, authority, delegation, escalation | Accepted |
 | [0016](0016-reapproval-on-material-change.md) | Re-approval on material change | Accepted |
+| [0017](0017-payment-preparation-and-treasury-controls.md) | Payment preparation and treasury controls | Accepted |
+| [0018](0018-payment-instruction-format-signing-and-reveal.md) | Payment instruction format, signing and bank-detail reveal | Accepted |
 
 ## Template
 

@@ -34,7 +34,8 @@ public static class SystemRoles
         ["Workflow Administrator"] = [Permissions.EntityView, Permissions.WorkflowView, Permissions.WorkflowConfigure],
         ["Workflow Change Approver"] = [Permissions.EntityView, Permissions.WorkflowView, Permissions.WorkflowApproveChange],
         ["Approval Coordinator"] = [Permissions.EntityView, Permissions.InvoiceView, Permissions.WorkflowView, Permissions.WorkflowAdminister],
-        ["Payment Preparer"] = [Permissions.PaymentPrepare],
-        ["Payment Releaser"] = [Permissions.PaymentRelease],
+        ["Payment Preparer"] = [Permissions.EntityView, Permissions.VendorView, Permissions.InvoiceView, Permissions.PaymentView, Permissions.PaymentPrepare],
+        ["Payment Approver"] = [Permissions.EntityView, Permissions.VendorView, Permissions.InvoiceView, Permissions.PaymentView, Permissions.PaymentApprove],
+        ["Payment Releaser"] = [Permissions.EntityView, Permissions.VendorView, Permissions.InvoiceView, Permissions.PaymentView, Permissions.PaymentRelease, Permissions.PaymentInstructionDownload],
     };
 }

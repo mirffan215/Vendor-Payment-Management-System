@@ -13,6 +13,8 @@ import { ApprovalTaskPage } from './pages/staff/ApprovalTaskPage'
 import { ApprovalsInboxPage } from './pages/staff/ApprovalsInboxPage'
 import { DelegationsPage } from './pages/staff/DelegationsPage'
 import { WorkflowAdminPage } from './pages/staff/WorkflowAdminPage'
+import { PaymentsPage } from './pages/staff/PaymentsPage'
+import { ProposalDetailPage } from './pages/staff/ProposalDetailPage'
 import { AdminPage } from './pages/staff/AdminPage'
 import { ExceptionsPage } from './pages/staff/ExceptionsPage'
 import { IntakePage } from './pages/staff/IntakePage'
@@ -50,6 +52,7 @@ function StaffShell({ calendar, onCalendarChange }: CalendarProps) {
             <Link to="/exceptions">{t('nav.exceptions')}</Link>
             <Link to="/intake">{t('nav.intake')}</Link>
             <Link to="/verification">{t('nav.verification')}</Link>
+            <Link to="/payments">{t('nav.payments')}</Link>
             <Link to="/delegations">{t('nav.delegations')}</Link>
             <Link to="/workflow">{t('nav.workflow')}</Link>
             <Link to="/bank-changes">{t('nav.bankChanges')}</Link>
@@ -76,6 +79,8 @@ function StaffShell({ calendar, onCalendarChange }: CalendarProps) {
               <Route path="/invoices/:id" element={<InvoiceDetailPage calendar={calendar} />} />
               <Route path="/approvals" element={<ApprovalsInboxPage calendar={calendar} />} />
               <Route path="/approvals/:taskId" element={<ApprovalTaskPage calendar={calendar} />} />
+              <Route path="/payments" element={<PaymentsPage calendar={calendar} />} />
+              <Route path="/payments/proposals/:id" element={<ProposalDetailPage calendar={calendar} />} />
               <Route path="/delegations" element={<DelegationsPage calendar={calendar} />} />
               <Route path="/workflow" element={<WorkflowAdminPage />} />
               <Route path="/exceptions" element={<ExceptionsPage calendar={calendar} />} />

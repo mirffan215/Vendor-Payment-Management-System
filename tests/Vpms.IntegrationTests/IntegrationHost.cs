@@ -11,6 +11,7 @@ using Vpms.Documents.Infrastructure;
 using Vpms.VendorPortal.Application;
 using Vpms.VendorPortal.Infrastructure;
 using Vpms.Invoices.Infrastructure;
+using Vpms.Payments.Infrastructure;
 using Vpms.Workflow.Infrastructure;
 using Vpms.Vendors.Infrastructure;
 using Vpms.Identity.Infrastructure;
@@ -45,6 +46,7 @@ public sealed class IntegrationHost : IAsyncDisposable
         services.AddVendorsModule(_ => database.AppConnectionString);
         services.AddInvoicesModule(_ => database.AppConnectionString);
         services.AddWorkflowModule(_ => database.AppConnectionString);
+        services.AddPaymentsModule(_ => database.AppConnectionString);
         services.Configure<PortalOptions>(o => o.PasswordHashIterations = 1000); // fast hashing for tests; production uses 600,000
         services.AddVendorPortalModule(_ => database.AppConnectionString);
         services.AddSingleton<Vpms.Identity.Application.ISecretResolver, NoSecrets>();

@@ -19,6 +19,7 @@ public static class WorkflowModule
         services.AddScoped<MaterialityPolicyService>();
         services.AddScoped<IMaterialityPolicyService>(sp => sp.GetRequiredService<MaterialityPolicyService>());
         services.AddScoped<IMaterialityEvaluator>(sp => sp.GetRequiredService<MaterialityPolicyService>());
+        services.AddScoped<IApprovalHistory>(sp => sp.GetRequiredService<ApprovalService>());
         services.AddScoped<IApprovalLifecycle>(sp => sp.GetRequiredService<ApprovalService>());
         services.AddScoped<IDelegationService, DelegationService>();
         services.AddScoped<WorkflowTimers>();
