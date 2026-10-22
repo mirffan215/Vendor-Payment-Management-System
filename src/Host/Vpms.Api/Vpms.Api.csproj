@@ -52,6 +52,8 @@
     <ProjectReference Include="..\..\Modules\Payments\Vpms.Payments.Application\Vpms.Payments.Application.csproj" />
     <ProjectReference Include="..\..\Modules\ErpIntegration\Vpms.ErpIntegration.Infrastructure\Vpms.ErpIntegration.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\ErpIntegration\Vpms.ErpIntegration.Application\Vpms.ErpIntegration.Application.csproj" />
+    <ProjectReference Include="..\..\Modules\Reporting\Vpms.Reporting.Infrastructure\Vpms.Reporting.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Reporting\Vpms.Reporting.Application\Vpms.Reporting.Application.csproj" />
   </ItemGroup>
 
 </Project>

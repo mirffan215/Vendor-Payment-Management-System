@@ -53,6 +53,10 @@ public static class Permissions
     public const string ErpApproveChange = "Erp.ApproveChange";
     public const string ErpOperate = "Erp.Operate";
 
+    public const string ReportView = "Report.View";
+    public const string ReportExport = "Report.Export";
+    public const string ReportTax = "Report.Tax";
+
     public static readonly IReadOnlyList<string> All =
     [
         TenantAdmin, UserManage, RoleManage, AuditRead,
@@ -64,5 +68,6 @@ public static class Permissions
         WorkflowView, WorkflowConfigure, WorkflowApproveChange, WorkflowAdminister,
         PaymentView, PaymentPrepare, PaymentApprove, PaymentRelease, PaymentInstructionDownload,
         ErpView, ErpConfigure, ErpApproveChange, ErpOperate,
+        ReportView, ReportExport, ReportTax,
     ];
 }

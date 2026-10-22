@@ -53,6 +53,10 @@
     <ProjectReference Include="..\..\src\Modules\ErpIntegration\Vpms.ErpIntegration.Application\Vpms.ErpIntegration.Application.csproj" />
     <ProjectReference Include="..\..\src\Modules\ErpIntegration\Vpms.ErpIntegration.Infrastructure\Vpms.ErpIntegration.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\Modules\ErpIntegration\Vpms.ErpIntegration.Contracts\Vpms.ErpIntegration.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Reporting\Vpms.Reporting.Domain\Vpms.Reporting.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Reporting\Vpms.Reporting.Application\Vpms.Reporting.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Reporting\Vpms.Reporting.Infrastructure\Vpms.Reporting.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Reporting\Vpms.Reporting.Contracts\Vpms.Reporting.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

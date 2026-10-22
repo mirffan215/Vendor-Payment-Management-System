@@ -13,7 +13,7 @@ public static class SystemRoles
             Permissions.EntityView, Permissions.EntityManage, Permissions.BrandingManage, Permissions.ProviderManage,
             Permissions.AuthorityManage, Permissions.VendorView,
         ],
-        ["Auditor"] = [Permissions.AuditRead, Permissions.EntityView, Permissions.VendorView],
+        ["Auditor"] = [Permissions.AuditRead, Permissions.EntityView, Permissions.VendorView, Permissions.ReportView],
         ["Vendor Manager"] =
         [
             Permissions.EntityView, Permissions.VendorView, Permissions.VendorEdit, Permissions.VendorPortalManage,
@@ -36,6 +36,8 @@ public static class SystemRoles
         ["Approval Coordinator"] = [Permissions.EntityView, Permissions.InvoiceView, Permissions.WorkflowView, Permissions.WorkflowAdminister],
         ["Payment Preparer"] = [Permissions.EntityView, Permissions.VendorView, Permissions.InvoiceView, Permissions.PaymentView, Permissions.PaymentPrepare],
         ["Payment Approver"] = [Permissions.EntityView, Permissions.VendorView, Permissions.InvoiceView, Permissions.PaymentView, Permissions.PaymentApprove],
+        ["Report Viewer"] = [Permissions.EntityView, Permissions.ReportView, Permissions.ReportExport],
+        ["Tax Reviewer"] = [Permissions.EntityView, Permissions.ReportView, Permissions.ReportExport, Permissions.ReportTax],
         ["ERP Administrator"] = [Permissions.EntityView, Permissions.ErpView, Permissions.ErpConfigure],
         ["ERP Change Approver"] = [Permissions.EntityView, Permissions.ErpView, Permissions.ErpApproveChange],
         ["ERP Operator"] = [Permissions.EntityView, Permissions.VendorView, Permissions.InvoiceView, Permissions.ErpView, Permissions.ErpOperate],

@@ -13,6 +13,7 @@ using Vpms.VendorPortal.Infrastructure;
 using Vpms.Invoices.Infrastructure;
 using Vpms.Payments.Infrastructure;
 using Vpms.ErpIntegration.Infrastructure;
+using Vpms.Reporting.Infrastructure;
 using Vpms.Workflow.Infrastructure;
 using Vpms.Vendors.Infrastructure;
 using Vpms.Identity.Infrastructure;
@@ -51,6 +52,7 @@ public sealed class IntegrationHost : IAsyncDisposable
         services.AddPaymentsModule(_ => database.AppConnectionString);
         services.AddSingleton<Vpms.BuildingBlocks.Security.ISecretReader>(new TestSecrets());
         services.AddErpIntegrationModule(_ => database.AppConnectionString);
+        services.AddReportingModule();
         services.AddSingleton(Erp);
         services.AddSingleton<Vpms.ErpIntegration.Contracts.IErpAdapter>(Erp);
         services.Configure<PortalOptions>(o => o.PasswordHashIterations = 1000); // fast hashing for tests; production uses 600,000

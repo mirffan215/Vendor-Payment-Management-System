@@ -18,6 +18,7 @@ public static class PaymentsModule
         services.AddSingleton<Vpms.Payments.Application.IInstructionExporter, CsvJsonInstructionExporter>();
         services.AddScoped<Vpms.Payments.Application.ITreasuryService, TreasuryService>();
         services.AddScoped<IPaymentLifecycle, PaymentLifecycleService>();
+        services.AddScoped<IPaymentReportSource, PaymentReportSource>();
         return services;
     }
 }

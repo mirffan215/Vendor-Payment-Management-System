@@ -5,7 +5,7 @@ namespace Vpms.ArchitectureTests;
 
 public class LayerDependencyTests
 {
-    private static readonly string[] Modules = ["Identity", "CustomerAdmin", "Audit", "Documents", "Vendors", "VendorPortal", "Invoices", "Workflow", "Payments", "ErpIntegration"];
+    private static readonly string[] Modules = ["Identity", "CustomerAdmin", "Audit", "Documents", "Vendors", "VendorPortal", "Invoices", "Workflow", "Payments", "ErpIntegration", "Reporting"];
 
     private static Assembly Asm(string module, string layer) =>
         Assembly.Load($"Vpms.{module}.{layer}");

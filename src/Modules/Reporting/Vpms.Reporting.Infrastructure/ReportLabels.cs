@@ -1,0 +1,111 @@
+namespace Vpms.Reporting.Infrastructure;
+
+/// <summary>The words in reports and exports, in English and Arabic. Exports are documents, so they carry their own wording rather than relying on the browser.</summary>
+public static class ReportLabels
+{
+    private static readonly Dictionary<string, (string En, string Ar)> Words = new()
+    {
+        ["payables-aging"] = ("Payables aging", "أعمار الذمم الدائنة"),
+        ["payables-aging.desc"] = ("Approved invoices not yet paid, by how long past their due date, per currency.", "الفواتير المعتمدة غير المدفوعة بحسب مدة التأخر عن تاريخ الاستحقاق، لكل عملة."),
+        ["payment-forecast"] = ("Payment forecast", "توقعات المدفوعات"),
+        ["payment-forecast.desc"] = ("Approved invoices by the week they fall due and how far payment preparation has got, per currency.", "الفواتير المعتمدة بحسب أسبوع الاستحقاق ومرحلة تجهيز الدفع، لكل عملة."),
+        ["exceptions"] = ("Invoice exceptions", "استثناءات الفواتير"),
+        ["exceptions.desc"] = ("Verification exceptions raised in the period, their age and how they were closed.", "استثناءات التحقق المسجلة في الفترة وعمرها وكيفية إغلاقها."),
+        ["approval-delays"] = ("Approval delays", "تأخر الموافقات"),
+        ["approval-delays.desc"] = ("How long approval tasks waited, which were overdue or escalated, per step.", "مدة انتظار مهام الموافقة، والمتأخر منها أو المصعّد، لكل خطوة."),
+        ["input-vat-register"] = ("Input VAT register", "سجل ضريبة المدخلات"),
+        ["input-vat-register.desc"] = ("Supplier invoices received in the period with supplier VAT number, amounts and tax categories, for the customer's own VAT return.", "فواتير الموردين المستلمة في الفترة مع الرقم الضريبي للمورد والمبالغ وفئات الضريبة، لإقرار ضريبة القيمة المضافة الخاص بالعميل."),
+
+        ["table.detail"] = ("Detail", "التفاصيل"),
+        ["table.summary"] = ("Summary", "الملخص"),
+        ["hijri"] = ("(Hijri)", "(هجري)"),
+        ["yes"] = ("Yes", "نعم"),
+        ["no"] = ("No", "لا"),
+        ["generated"] = ("Generated", "أُنشئ في"),
+        ["truncated"] = ("Only the first rows are shown; narrow the filters.", "عُرضت الصفوف الأولى فقط؛ ضيّق عوامل التصفية."),
+
+        ["col.entity"] = ("Legal entity", "الكيان القانوني"),
+        ["col.vendor"] = ("Vendor", "المورد"),
+        ["col.invoiceNumber"] = ("Invoice number", "رقم الفاتورة"),
+        ["col.invoiceDate"] = ("Invoice date", "تاريخ الفاتورة"),
+        ["col.dueDate"] = ("Due date", "تاريخ الاستحقاق"),
+        ["col.noDueDate"] = ("No due date (invoice date used)", "بلا تاريخ استحقاق (استُخدم تاريخ الفاتورة)"),
+        ["col.daysPastDue"] = ("Days past due", "أيام التأخر"),
+        ["col.bucket"] = ("Age", "الفئة العمرية"),
+        ["col.currency"] = ("Currency", "العملة"),
+        ["col.amount"] = ("Amount", "المبلغ"),
+        ["col.count"] = ("Invoices", "عدد الفواتير"),
+        ["col.total"] = ("Total", "الإجمالي"),
+        ["col.stage"] = ("Payment stage", "مرحلة الدفع"),
+        ["col.week"] = ("Week starting", "الأسبوع الذي يبدأ في"),
+        ["col.includesOverdue"] = ("Includes overdue", "يشمل المتأخر"),
+        ["col.rule"] = ("Rule", "القاعدة"),
+        ["col.severity"] = ("Severity", "الخطورة"),
+        ["col.status"] = ("Status", "الحالة"),
+        ["col.createdAt"] = ("Raised", "تاريخ الإنشاء"),
+        ["col.resolvedAt"] = ("Closed", "تاريخ الإغلاق"),
+        ["col.ageDays"] = ("Age (days)", "العمر (أيام)"),
+        ["col.resolution"] = ("Resolution", "المعالجة"),
+        ["col.assignedTo"] = ("Assigned to", "مُسند إلى"),
+        ["col.open"] = ("Open", "مفتوح"),
+        ["col.closed"] = ("Closed", "مغلق"),
+        ["col.subject"] = ("Subject", "الموضوع"),
+        ["col.step"] = ("Step", "الخطوة"),
+        ["col.assignees"] = ("Approvers", "المعتمدون"),
+        ["col.created"] = ("Created", "تاريخ الإنشاء"),
+        ["col.due"] = ("Due", "الاستحقاق"),
+        ["col.completed"] = ("Completed", "تاريخ الإنجاز"),
+        ["col.waitHours"] = ("Waiting (hours)", "مدة الانتظار (ساعات)"),
+        ["col.overdue"] = ("Overdue", "متأخر"),
+        ["col.escalated"] = ("Escalated", "مصعّد"),
+        ["col.decidedBy"] = ("Decided by", "قرار بواسطة"),
+        ["col.tasks"] = ("Tasks", "المهام"),
+        ["col.done"] = ("Completed", "المنجزة"),
+        ["col.avgHours"] = ("Average wait (hours)", "متوسط الانتظار (ساعات)"),
+        ["col.maxHours"] = ("Longest wait (hours)", "أطول انتظار (ساعات)"),
+        ["col.overdueCount"] = ("Overdue", "المتأخرة"),
+        ["col.escalatedCount"] = ("Escalated", "المصعّدة"),
+        ["col.supplierTaxNumber"] = ("Supplier VAT number", "الرقم الضريبي للمورد"),
+        ["col.einvoiceRef"] = ("E-invoice reference", "مرجع الفاتورة الإلكترونية"),
+        ["col.net"] = ("Net amount", "المبلغ قبل الضريبة"),
+        ["col.vat"] = ("VAT", "ضريبة القيمة المضافة"),
+        ["col.gross"] = ("Total", "الإجمالي"),
+        ["col.taxCategories"] = ("Tax categories", "فئات الضريبة"),
+        ["col.waived"] = ("A tax check was overridden", "جرى تجاوز فحص ضريبي"),
+
+        ["bucket.NotDue"] = ("Not yet due", "غير مستحق بعد"),
+        ["bucket.D1To30"] = ("1-30 days", "1-30 يومًا"),
+        ["bucket.D31To60"] = ("31-60 days", "31-60 يومًا"),
+        ["bucket.D61To90"] = ("61-90 days", "61-90 يومًا"),
+        ["bucket.Over90"] = ("Over 90 days", "أكثر من 90 يومًا"),
+        ["stage.NoRequest"] = ("No payment request yet", "لا يوجد طلب دفع بعد"),
+        ["stage.Created"] = ("Payment request created", "طلب دفع منشأ"),
+        ["stage.InProposal"] = ("In a payment proposal", "ضمن مقترح دفع"),
+        ["status.Open"] = ("Open", "مفتوح"),
+        ["status.Resolved"] = ("Resolved", "تمت المعالجة"),
+        ["status.Waived"] = ("Accepted", "مقبول"),
+        ["status.Pending"] = ("Waiting", "بالانتظار"),
+        ["status.Completed"] = ("Completed", "منجز"),
+        ["status.Cancelled"] = ("Cancelled", "ملغى"),
+        ["status.Approved"] = ("Approved", "معتمد"),
+        ["status.InApproval"] = ("In approval", "قيد الاعتماد"),
+        ["status.Received"] = ("Received", "مستلم"),
+        ["status.InVerification"] = ("In verification", "قيد التحقق"),
+        ["status.Exception"] = ("Exception", "استثناء"),
+        ["status.Verified"] = ("Verified", "تم التحقق"),
+        ["status.ReadyForApproval"] = ("Ready for approval", "جاهز للاعتماد"),
+        ["status.Returned"] = ("Returned", "مُعاد"),
+        ["severity.Error"] = ("Error", "خطأ"),
+        ["severity.Warning"] = ("Warning", "تحذير"),
+        ["severity.Info"] = ("Information", "معلومة"),
+    };
+
+    public static string Get(string locale, string key)
+    {
+        if (!Words.TryGetValue(key, out var pair)) return key;
+        return locale == "ar" ? pair.Ar : pair.En;
+    }
+
+    /// <summary>Like <see cref="Get"/> but returns the raw value when there is no wording for it (rule codes, unknown statuses).</summary>
+    public static string GetOrSelf(string locale, string key, string raw) => Words.ContainsKey(key) ? Get(locale, key) : raw;
+}

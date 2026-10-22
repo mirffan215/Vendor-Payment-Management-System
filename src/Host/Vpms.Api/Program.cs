@@ -1,4 +1,5 @@
 using Vpms.ErpIntegration.Infrastructure;
+using Vpms.Reporting.Infrastructure;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
@@ -51,6 +52,7 @@ builder.Services.AddInvoicesModule(ConnectionString);
 builder.Services.AddWorkflowModule(ConnectionString);
 builder.Services.AddPaymentsModule(ConnectionString);
 builder.Services.AddErpIntegrationModule(ConnectionString);
+builder.Services.AddReportingModule();
 builder.Services.AddD365FinanceAdapter(builder.Configuration);
 // The mock ERP is for local development only; production tenants cannot select a provider that is not registered.
 if (builder.Environment.IsDevelopment()) builder.Services.AddSingleton<Vpms.ErpIntegration.Contracts.IErpAdapter, Vpms.ErpIntegration.Infrastructure.MockErpAdapter>();

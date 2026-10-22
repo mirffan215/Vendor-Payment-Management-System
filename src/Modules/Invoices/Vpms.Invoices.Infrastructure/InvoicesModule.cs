@@ -31,6 +31,7 @@ public static class InvoicesModule
         services.AddScoped<Vpms.Invoices.Contracts.IPayableInvoiceLookup, PayableInvoiceLookup>();
         services.AddScoped<Vpms.Invoices.Contracts.IInvoicePostingSource, InvoicePostingSource>();
         services.AddScoped<Vpms.Invoices.Contracts.IPurchaseOrderSink, PurchaseOrderSink>();
+        services.AddScoped<Vpms.Invoices.Contracts.IInvoiceReportSource, InvoiceReportSource>();
         services.AddScoped<IInvoiceExceptionService, InvoiceExceptionService>();
         services.AddScoped<IPurchaseOrderService, PurchaseOrderService>();
         // Microsoft Graph by default (does nothing until it is configured); tests and local development replace IMailboxReader.
