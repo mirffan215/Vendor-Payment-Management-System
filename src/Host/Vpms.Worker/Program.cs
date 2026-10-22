@@ -35,6 +35,7 @@ builder.Services.AddInvoicesModule(ConnectionString);
 builder.Services.AddWorkflowModule(ConnectionString);
 builder.Services.AddPaymentsModule(ConnectionString);
 builder.Services.AddErpIntegrationModule(ConnectionString);
+builder.Services.AddD365FinanceAdapter(builder.Configuration);
 // Country tax rule plug-ins for received invoices. Removing a line switches that country back to the standard checks.
 builder.Services.AddSingleton<Vpms.Invoices.Domain.Tax.ITaxRuleProvider, Vpms.Tax.Sa.SaudiVatProvider>();
 builder.Services.Configure<GraphOptions>(builder.Configuration.GetSection(GraphOptions.Section));
@@ -50,5 +51,6 @@ builder.Services.AddHostedService<InvoiceVerificationJob>();
 builder.Services.AddHostedService<ApprovalOutcomeJob>();
 builder.Services.AddHostedService<WorkflowTimerJob>();
 builder.Services.AddHostedService<PaymentIntegrityJob>();
+builder.Services.AddHostedService<ErpOutboundJob>();
 
 await builder.Build().RunAsync();

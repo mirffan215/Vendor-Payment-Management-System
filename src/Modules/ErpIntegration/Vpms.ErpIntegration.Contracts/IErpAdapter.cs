@@ -93,6 +93,12 @@ public interface IErpAdapter
     /// <summary>The provider name this adapter serves, as stored in the connection settings (for example "D365Finance").</summary>
     string Provider { get; }
 
+    /// <summary>
+    /// What this ERP shows for a document created with the idempotency key (the key itself, or a short reference derived from it when the
+    /// ERP's fields are too small). Reconciliation matches listed documents to VPMS messages by this value.
+    /// </summary>
+    string DocumentReference(string idempotencyKey);
+
     Task<ErpResult> ValidateConnectionAsync(ErpContext context, CancellationToken ct = default);
 
     /// <summary>Creates or updates the vendor in the ERP and returns its account number.</summary>

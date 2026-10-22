@@ -26,6 +26,8 @@ public sealed class MockErpAdapter : IErpAdapter
 
     public string Provider => ProviderName;
 
+    public string DocumentReference(string idempotencyKey) => idempotencyKey;
+
     // --- scripting -----------------------------------------------------------------------------------------
 
     /// <summary>The next calls to the operation return these results instead of working (then it behaves normally again).</summary>
@@ -51,7 +53,11 @@ public sealed class MockErpAdapter : IErpAdapter
 
     public void AddPurchaseOrder(ErpPurchaseOrder order)
     {
-        lock (_gate) _orders.Add(order);
+        lock (_gate)
+        {
+            _orders.RemoveAll(o => o.PoNumber == order.PoNumber);
+            _orders.Add(order);
+        }
     }
 
     /// <summary>A document the ERP has that VPMS never posted (entered directly in the ERP).</summary>
@@ -125,7 +131,7 @@ public sealed class MockErpAdapter : IErpAdapter
             if (!_vendors.ContainsKey(invoice.VendorAccount)) return Task.FromResult(ErpResult.Rejected("vendor_unknown", $"Vendor {invoice.VendorAccount} does not exist."));
             var reference = $"VI-{++_sequence:D6}";
             _invoices[invoice.DocumentKey] = new ErpInvoiceStatus(reference, invoice.DocumentKey, invoice.VendorAccount, invoice.InvoiceNumber, invoice.Total, invoice.CurrencyCode,
-                invoice.InvoiceDate, ErpDocumentState.Open, null);
+                invoice.InvoiceDate, ErpDocumentState.Posted, null);
             return Task.FromResult(ErpResult.Ok(reference));
         }
     }

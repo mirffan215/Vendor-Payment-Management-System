@@ -9,6 +9,7 @@
     <ProjectReference Include="..\..\Invoices\Vpms.Invoices.Contracts\Vpms.Invoices.Contracts.csproj" />
     <ProjectReference Include="..\..\Payments\Vpms.Payments.Contracts\Vpms.Payments.Contracts.csproj" />
     <ProjectReference Include="..\..\Identity\Vpms.Identity.Contracts\Vpms.Identity.Contracts.csproj" />
+    <ProjectReference Include="..\..\Documents\Vpms.Documents.Contracts\Vpms.Documents.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>

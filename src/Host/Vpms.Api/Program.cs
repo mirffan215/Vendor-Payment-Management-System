@@ -51,6 +51,7 @@ builder.Services.AddInvoicesModule(ConnectionString);
 builder.Services.AddWorkflowModule(ConnectionString);
 builder.Services.AddPaymentsModule(ConnectionString);
 builder.Services.AddErpIntegrationModule(ConnectionString);
+builder.Services.AddD365FinanceAdapter(builder.Configuration);
 // The mock ERP is for local development only; production tenants cannot select a provider that is not registered.
 if (builder.Environment.IsDevelopment()) builder.Services.AddSingleton<Vpms.ErpIntegration.Contracts.IErpAdapter, Vpms.ErpIntegration.Infrastructure.MockErpAdapter>();
 // Country tax rule plug-ins for received invoices. Removing a line switches that country back to the standard checks.

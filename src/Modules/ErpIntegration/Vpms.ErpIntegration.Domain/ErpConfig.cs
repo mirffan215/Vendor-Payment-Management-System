@@ -105,7 +105,7 @@ public sealed record ConnectionConfig(
     string Provider, string BaseUrl, string AuthorityTenantId, string ClientId, string SecretRef, IReadOnlyDictionary<string, string> EntitySets, int PageSize = 200, int TimeoutSeconds = 60)
 {
     public static readonly IReadOnlyList<string> EntitySetRoles =
-        ["vendors", "invoiceJournalHeaders", "invoiceJournalLines", "invoiceAttachments", "vendorInvoices", "vendorPayments", "purchaseOrders", "dimensionValues"];
+        ["vendors", "invoiceJournalHeaders", "invoiceJournalLines", "invoiceAttachments", "vendorInvoices", "vendorPayments", "purchaseOrders", "purchaseOrderLines", "dimensionValues"];
 
     private static readonly Regex SecretRefPattern = new("^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$", RegexOptions.Compiled);
     private static readonly Regex EntitySetPattern = new("^[A-Za-z][A-Za-z0-9_]{0,99}$", RegexOptions.Compiled);

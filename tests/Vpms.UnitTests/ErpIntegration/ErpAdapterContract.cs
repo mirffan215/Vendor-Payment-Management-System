@@ -32,7 +32,7 @@ public abstract class ErpAdapterContract
         Assert.Equal(ErpOutcome.AlreadyExists, second.Outcome);
         Assert.Equal(first.Reference, second.Reference);
         var listed = await Adapter.ListInvoicesAsync(Context, null);
-        Assert.Single(listed.Items, i => i.DocumentKey == "t:e:inv:1:1");
+        Assert.Single(listed.Items, i => i.DocumentKey == Adapter.DocumentReference("t:e:inv:1:1"));
     }
 
     [Fact]

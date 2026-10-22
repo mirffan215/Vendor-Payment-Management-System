@@ -4,6 +4,8 @@
     <ProjectReference Include="..\Vpms.ErpIntegration.Domain\Vpms.ErpIntegration.Domain.csproj" />
     <ProjectReference Include="..\Vpms.ErpIntegration.Contracts\Vpms.ErpIntegration.Contracts.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Vpms.BuildingBlocks\Vpms.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\..\Invoices\Vpms.Invoices.Contracts\Vpms.Invoices.Contracts.csproj" />
+    <ProjectReference Include="..\..\Vendors\Vpms.Vendors.Contracts\Vpms.Vendors.Contracts.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

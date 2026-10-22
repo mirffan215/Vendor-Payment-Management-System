@@ -13,6 +13,7 @@ public static class VendorsModule
         services.AddScoped<VendorService>();
         services.AddScoped<IVendorService>(sp => sp.GetRequiredService<VendorService>());
         services.AddScoped<IVendorLookup>(sp => sp.GetRequiredService<VendorService>());
+        services.AddScoped<IVendorErpSource, VendorErpSource>();
         services.AddScoped<VendorDocumentService>();
         services.AddScoped<IVendorDocumentService>(sp => sp.GetRequiredService<VendorDocumentService>());
         services.AddScoped<IVendorPortalService, VendorPortalService>();
