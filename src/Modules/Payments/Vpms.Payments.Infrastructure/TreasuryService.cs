@@ -104,7 +104,7 @@ public sealed class TreasuryService(
     }
 
     public async Task<IReadOnlyList<AuthorizationDto>> AuthorizationsAsync(Guid proposalId, CancellationToken ct = default) =>
-        (await db.Authorizations.AsNoTracking().Where(a => a.ProposalId == proposalId).OrderBy(a => a.AuthorizedAt).ToListAsync(ct)).Select(a => new AuthorizationDto(
+        (await db.Authorizations.AsNoTracking().Where(a => a.ProposalId == proposalId).OrderBy(a => a.AuthorizedAt).ThenBy(a => a.Decision == ReleaseDecision.Released).ToListAsync(ct)).Select(a => new AuthorizationDto(
             a.Id, a.ProposalId, a.AuthorizedBy, a.AuthorizedAt, a.Decision, a.DenialReason, JsonSerializer.Deserialize<List<RecheckFinding>>(a.RecheckJson, Json)!,
             JsonSerializer.Deserialize<List<SeparationFinding>>(a.SodJson, Json)!, a.InstructionId)).ToList();
 
