@@ -44,5 +44,6 @@ builder.Services.AddHostedService<EmailIntakeJob>();
 builder.Services.AddHostedService<InvoiceExtractionJob>();
 builder.Services.AddHostedService<InvoiceVerificationJob>();
 builder.Services.AddHostedService<ApprovalOutcomeJob>();
+builder.Services.AddHostedService<WorkflowTimerJob>();
 
 await builder.Build().RunAsync();

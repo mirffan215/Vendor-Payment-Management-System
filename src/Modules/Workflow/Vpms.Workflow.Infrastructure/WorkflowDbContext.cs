@@ -17,6 +17,8 @@ public class WorkflowDbContext(DbContextOptions<WorkflowDbContext> options, ITen
     public DbSet<ApprovalTask> Tasks => Set<ApprovalTask>();
     public DbSet<TaskDecision> Decisions => Set<TaskDecision>();
     public DbSet<JoinArrival> Joins => Set<JoinArrival>();
+    public DbSet<Delegation> Delegations => Set<Delegation>();
+    public DbSet<WorkflowNotice> Notices => Set<WorkflowNotice>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -77,6 +79,8 @@ public class WorkflowDbContext(DbContextOptions<WorkflowDbContext> options, ITen
             b.Property(x => x.AssigneeList).IsRequired();
             b.Ignore(x => x.Assignees);
             b.Ignore(x => x.Approvals);
+            b.Ignore(x => x.EscalatedTo);
+            b.Property(x => x.EscalatedToList).IsRequired();
             b.Ignore(x => x.IsSatisfied);
             b.HasMany(x => x.Decisions).WithOne().HasForeignKey(x => x.TaskId).OnDelete(DeleteBehavior.Restrict);
             b.HasIndex(x => new { x.TenantId, x.RunId, x.Status });
@@ -101,6 +105,31 @@ public class WorkflowDbContext(DbContextOptions<WorkflowDbContext> options, ITen
             b.Property(x => x.Id).ValueGeneratedNever();
             b.Property(x => x.Key).HasMaxLength(400).IsRequired();
             b.HasIndex(x => new { x.RunId, x.Key }).IsUnique();
+        });
+
+        modelBuilder.Entity<Delegation>(b =>
+        {
+            b.ToTable("Delegation");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Id).ValueGeneratedNever();
+            b.Property(x => x.MaxAmount).HasPrecision(19, 4);
+            b.Property(x => x.Status).HasMaxLength(10).IsRequired();
+            b.Property(x => x.Reason).HasMaxLength(300).IsRequired();
+            b.Property(x => x.RowVersion).IsRowVersion();
+            b.HasIndex(x => new { x.TenantId, x.DelegateId, x.Status });
+            b.HasIndex(x => new { x.TenantId, x.DelegatorId, x.Status });
+            b.HasIndex(x => new { x.TenantId, x.LegalEntityId });
+        });
+
+        modelBuilder.Entity<WorkflowNotice>(b =>
+        {
+            b.ToTable("WorkflowNotice");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Id).ValueGeneratedNever();
+            b.Property(x => x.Kind).HasMaxLength(20).IsRequired();
+            b.Property(x => x.SubjectLabel).HasMaxLength(200).IsRequired();
+            b.HasIndex(x => new { x.TenantId, x.UserId, x.ReadAt });
+            b.HasIndex(x => new { x.TaskId, x.UserId, x.Kind }).IsUnique();
         });
 
         base.OnModelCreating(modelBuilder);

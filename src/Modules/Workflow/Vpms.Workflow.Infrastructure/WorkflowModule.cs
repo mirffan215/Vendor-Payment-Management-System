@@ -16,6 +16,9 @@ public static class WorkflowModule
         services.AddScoped<ApprovalService>();
         services.AddScoped<IApprovalService>(sp => sp.GetRequiredService<ApprovalService>());
         services.AddScoped<IApprovalStarter>(sp => sp.GetRequiredService<ApprovalService>());
+        services.AddScoped<IDelegationService, DelegationService>();
+        services.AddScoped<WorkflowTimers>();
+        services.AddScoped<IWorkflowTimers>(sp => sp.GetRequiredService<WorkflowTimers>());
         services.AddScoped<IApprovalScan>(sp => sp.GetRequiredService<ApprovalService>());
         return services;
     }

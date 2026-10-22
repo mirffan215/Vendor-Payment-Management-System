@@ -66,22 +66,44 @@ public sealed class ApprovalService(
     public async Task<IReadOnlyList<InboxItemDto>> InboxAsync(IReadOnlySet<Guid>? entityScope, CancellationToken ct = default)
     {
         var me = current.UserId;
-        var needle = me.ToString();
-        var query =
-            from t in db.Tasks.AsNoTracking()
-            join r in db.Runs.AsNoTracking() on t.RunId equals r.Id
-            where t.Status == Domain.TaskStatus.Pending && r.Status == RunStatus.Active && t.AssigneeList.Contains(needle)
-                  && !db.Decisions.Any(d => d.TaskId == t.Id && (d.ActorId == me || d.ActingForId == me))
-            select new { t, r };
-        if (entityScope is not null) query = query.Where(x => entityScope.Contains(x.r.LegalEntityId));
+        var now = clock.GetUtcNow();
 
-        var rows = await query.OrderBy(x => x.t.DueAt == null).ThenBy(x => x.t.DueAt).ThenBy(x => x.t.CreatedAt).Take(200).ToListAsync(ct);
-        var taskIds = rows.Select(x => x.t.Id).ToList();
+        // Tasks assigned to me, and tasks assigned to someone who has delegated to me for that legal entity (within any amount cap).
+        var received = await db.Delegations.AsNoTracking()
+            .Where(d => d.DelegateId == me && d.Status == DelegationStatus.Active && d.ValidFrom <= now && now < d.ValidTo).ToListAsync(ct);
+        var sources = new List<(Guid Owner, Guid? ActingFor, Delegation? By)> { (me, null, null) };
+        sources.AddRange(received.Select(d => (d.DelegatorId, (Guid?)d.DelegatorId, (Delegation?)d)));
+
+        var items = new Dictionary<Guid, (ApprovalTask T, WorkflowRun R, Guid? ActingFor)>();
+        foreach (var (owner, actingFor, by) in sources)
+        {
+            var needle = owner.ToString();
+            var query =
+                from t in db.Tasks.AsNoTracking()
+                join r in db.Runs.AsNoTracking() on t.RunId equals r.Id
+                where t.Status == Domain.TaskStatus.Pending && r.Status == RunStatus.Active && t.AssigneeList.Contains(needle)
+                      && !db.Decisions.Any(d => d.TaskId == t.Id && (d.ActorId == owner || d.ActingForId == owner || d.ActorId == me || d.ActingForId == me))
+                select new { t, r };
+            if (entityScope is not null) query = query.Where(x => entityScope.Contains(x.r.LegalEntityId));
+            if (by is not null) query = query.Where(x => x.r.LegalEntityId == by.LegalEntityId);
+            foreach (var x in await query.Take(200).ToListAsync(ct))
+            {
+                if (by?.MaxAmount is { } cap && x.r.Facts.Amount > cap) continue;
+                if (x.r.Makers.Contains(me)) continue; // a delegate who prepared the invoice can never decide it
+                items.TryAdd(x.t.Id, (x.t, x.r, actingFor));
+            }
+        }
+
+        var rows = items.Values.OrderBy(x => x.T.DueAt ?? DateTimeOffset.MaxValue).ThenBy(x => x.T.CreatedAt).Take(200).ToList();
+        var taskIds = rows.Select(x => x.T.Id).ToList();
         var approvals = await db.Decisions.AsNoTracking().Where(d => taskIds.Contains(d.TaskId) && d.Decision == DecisionKind.Approve)
             .GroupBy(d => d.TaskId).Select(g => new { g.Key, N = g.Count() }).ToDictionaryAsync(x => x.Key, x => x.N, ct);
+        var names = await users.GetAsync(rows.Where(x => x.ActingFor is not null).Select(x => x.ActingFor!.Value).Distinct(), ct);
 
-        return rows.Select(x => new InboxItemDto(x.t.Id, x.r.Id, x.t.StepId, x.r.SubjectType, x.r.SubjectId, x.r.SubjectLabel, x.r.LegalEntityId,
-            x.r.Facts.Amount, x.r.Facts.Currency, x.t.Mode, approvals.GetValueOrDefault(x.t.Id), x.t.Assignees.Count, x.t.CreatedAt, x.t.DueAt)).ToList();
+        return rows.Select(x => new InboxItemDto(x.T.Id, x.R.Id, x.T.StepId, x.R.SubjectType, x.R.SubjectId, x.R.SubjectLabel, x.R.LegalEntityId,
+            x.R.Facts.Amount, x.R.Facts.Currency, x.T.Mode, approvals.GetValueOrDefault(x.T.Id), x.T.Assignees.Count, x.T.CreatedAt, x.T.DueAt,
+            x.T.DueAt is { } due && due <= now, x.T.EscalatedAt is not null, x.ActingFor,
+            x.ActingFor is { } a && names.TryGetValue(a, out var u) ? u.DisplayName : null)).ToList();
     }
 
     public async Task<Guid> EntityOfTaskAsync(Guid taskId, CancellationToken ct = default) =>
@@ -113,6 +135,7 @@ public sealed class ApprovalService(
         {
             // Maker-checker and different-person run before anything else, so a refused attempt reveals nothing and is audited.
             run.EnsureIndependent(actor, effective);
+            if (effective != actor) await EnsureDelegationAsync(run, actor, effective, now, ct);
             await EnsureMayApproveAsync(run.LegalEntityId, actor, effective, ct);
 
             var authority = request.Decision != DecisionKind.Approve
@@ -138,6 +161,14 @@ public sealed class ApprovalService(
         await db.SaveChangesAsync(ct);
         if (run.Status != RunStatus.Active) await ApplyOutcomeAsync(run, ct);
         return (await MapRunsAsync(db.Runs.AsNoTracking().Where(r => r.Id == run.Id), ct)).Single();
+    }
+
+    private async Task EnsureDelegationAsync(WorkflowRun run, Guid delegateId, Guid delegatorId, DateTimeOffset now, CancellationToken ct)
+    {
+        var amount = run.Facts.Amount;
+        var ok = await db.Delegations.AsNoTracking().AnyAsync(d => d.DelegatorId == delegatorId && d.DelegateId == delegateId && d.LegalEntityId == run.LegalEntityId
+            && d.Status == DelegationStatus.Active && d.ValidFrom <= now && now < d.ValidTo && (d.MaxAmount == null || d.MaxAmount >= amount), ct);
+        if (!ok) throw new ValidationFailedException("no_delegation", "You have no delegation from that approver that covers this approval.", 403);
     }
 
     private async Task EnsureMayApproveAsync(Guid legalEntityId, Guid actor, Guid effective, CancellationToken ct)
@@ -207,7 +238,8 @@ public sealed class ApprovalService(
             r.DefinitionVersion, r.StartedAt, r.CompletedAt, r.Facts.Amount, r.Facts.Currency, r.NeedsAttention,
             r.Tasks.OrderBy(t => t.CreatedAt).ThenBy(t => t.StepId).Select(t => new TaskDto(t.Id, t.StepId, t.BranchPath, t.Status, t.Mode, t.Quorum, t.Assignees, t.Assignees.Select(a => Name(a)).ToList(),
                 t.CreatedAt, t.DueAt, t.CompletedAt,
-                t.Decisions.OrderBy(d => d.DecidedAt).Select(d => new DecisionDto(d.Id, d.ActorId, Name(d.ActorId), d.ActingForId, Name(d.ActingForId), d.Decision, d.Comment, d.DecidedAt)).ToList())).ToList())).ToList();
+                t.Decisions.OrderBy(d => d.DecidedAt).Select(d => new DecisionDto(d.Id, d.ActorId, Name(d.ActorId), d.ActingForId, Name(d.ActingForId), d.Decision, d.Comment, d.DecidedAt)).ToList(),
+                t.EscalatedAt, t.EscalatedTo)).ToList())).ToList();
     }
 
     private static ApprovalStarted Started(WorkflowRun run) => new(run.Id, run.DefinitionId, run.DefinitionVersion, run.Status);

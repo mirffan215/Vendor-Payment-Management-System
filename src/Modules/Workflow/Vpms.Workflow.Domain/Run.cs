@@ -75,12 +75,24 @@ public class ApprovalTask : ITenantOwned
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset? DueAt { get; set; }
     public DateTimeOffset? ReminderAt { get; set; }
+    public DateTimeOffset? ReminderSentAt { get; set; }
+    public DateTimeOffset? EscalatedAt { get; set; }
+
+    /// <summary>People added by escalation. One approval from any of them completes the step, whatever its mode.</summary>
+    public string EscalatedToList { get; set; } = "";
+
     public DateTimeOffset? CompletedAt { get; set; }
     public List<TaskDecision> Decisions { get; set; } = [];
 
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+    public IReadOnlyList<Guid> EscalatedTo => EscalatedToList.Length == 0 ? [] : EscalatedToList.Split(',').Select(Guid.Parse).ToList();
+
     public int Approvals => Decisions.Count(d => d.Decision == DecisionKind.Approve);
 
-    public bool IsSatisfied => Mode switch
+    private bool EscalationApproved => EscalatedToList.Length > 0 &&
+        Decisions.Any(d => d.Decision == DecisionKind.Approve && EscalatedTo.Contains(d.ActingForId ?? d.ActorId));
+
+    public bool IsSatisfied => EscalationApproved || Mode switch
     {
         ApprovalMode.All => Assignees.Count > 0 && Approvals >= Assignees.Count,
         ApprovalMode.Quorum => Approvals >= Math.Min(Quorum, Math.Max(Assignees.Count, 1)) && Assignees.Count > 0,
@@ -213,6 +225,29 @@ public class WorkflowRun : ILegalEntityScoped
         task.Status = TaskStatus.Completed;
         task.CompletedAt = request.Now;
         Walk(spec, spec.Find(task.StepId)!.Next, task.BranchPath, resolver, request.Now);
+    }
+
+    /// <summary>
+    /// Adds the step's escalation approvers to an overdue task. They may decide it, and one approval from them completes the step.
+    /// Makers and people who already decided are never added. Returns who was added (possibly nobody).
+    /// </summary>
+    public IReadOnlyList<Guid> Escalate(WorkflowDefinitionSpec spec, Guid taskId, ApproverResolver resolver, DateTimeOffset now)
+    {
+        var task = Tasks.FirstOrDefault(t => t.Id == taskId) ?? throw new NotFoundException("Approval task");
+        if (Status != RunStatus.Active || task.Status != TaskStatus.Pending) throw new ConflictException("task_not_pending", "This approval step is not waiting for a decision.");
+        if (task.EscalatedAt is not null) return [];
+
+        var step = spec.Find(task.StepId)!;
+        task.EscalatedAt = now;
+        if (step.EscalateTo is null) return [];
+
+        var excluded = Makers.Concat(Tasks.SelectMany(t => t.Decisions).SelectMany(d => new[] { d.ActorId, d.ActingForId ?? d.ActorId })).ToHashSet();
+        var added = resolver(step.EscalateTo).Where(u => !excluded.Contains(u) && !task.Assignees.Contains(u)).Distinct().ToList();
+        if (added.Count == 0) return [];
+
+        task.Assignees = task.Assignees.Concat(added).ToList();
+        task.EscalatedToList = string.Join(',', added);
+        return added;
     }
 
     /// <summary>Ends the run without a decision, for example when the subject changed materially and approval restarts.</summary>

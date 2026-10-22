@@ -46,6 +46,13 @@ namespace Vpms.Workflow.Infrastructure.Migrations
                     b.Property<DateTimeOffset?>("DueAt")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<DateTimeOffset?>("EscalatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("EscalatedToList")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Mode")
                         .IsRequired()
                         .HasMaxLength(10)
@@ -55,6 +62,9 @@ namespace Vpms.Workflow.Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTimeOffset?>("ReminderAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset?>("ReminderSentAt")
                         .HasColumnType("datetimeoffset");
 
                     b.Property<Guid>("RunId")
@@ -84,6 +94,74 @@ namespace Vpms.Workflow.Infrastructure.Migrations
                     b.HasIndex("TenantId", "Status", "DueAt");
 
                     b.ToTable("ApprovalTask", "wf");
+                });
+
+            modelBuilder.Entity("Vpms.Workflow.Domain.Delegation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("DelegateId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("DelegatorId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("LegalEntityId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal?>("MaxAmount")
+                        .HasPrecision(19, 4)
+                        .HasColumnType("decimal(19,4)");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<DateTimeOffset?>("RevokedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("RevokedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("ValidFrom")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset>("ValidTo")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "LegalEntityId");
+
+                    b.HasIndex("TenantId", "DelegateId", "Status");
+
+                    b.HasIndex("TenantId", "DelegatorId", "Status");
+
+                    b.ToTable("Delegation", "wf");
                 });
 
             modelBuilder.Entity("Vpms.Workflow.Domain.JoinArrival", b =>
@@ -237,6 +315,51 @@ namespace Vpms.Workflow.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("WorkflowDefinition", "wf");
+                });
+
+            modelBuilder.Entity("Vpms.Workflow.Domain.WorkflowNotice", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTimeOffset?>("ReadAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("RunId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("SubjectLabel")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid>("TaskId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TaskId", "UserId", "Kind")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "UserId", "ReadAt");
+
+                    b.ToTable("WorkflowNotice", "wf");
                 });
 
             modelBuilder.Entity("Vpms.Workflow.Domain.WorkflowRun", b =>
