@@ -49,6 +49,10 @@
     <ProjectReference Include="..\..\src\Modules\Payments\Vpms.Payments.Application\Vpms.Payments.Application.csproj" />
     <ProjectReference Include="..\..\src\Modules\Payments\Vpms.Payments.Infrastructure\Vpms.Payments.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\Modules\Payments\Vpms.Payments.Contracts\Vpms.Payments.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Modules\ErpIntegration\Vpms.ErpIntegration.Domain\Vpms.ErpIntegration.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\ErpIntegration\Vpms.ErpIntegration.Application\Vpms.ErpIntegration.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\ErpIntegration\Vpms.ErpIntegration.Infrastructure\Vpms.ErpIntegration.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Modules\ErpIntegration\Vpms.ErpIntegration.Contracts\Vpms.ErpIntegration.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

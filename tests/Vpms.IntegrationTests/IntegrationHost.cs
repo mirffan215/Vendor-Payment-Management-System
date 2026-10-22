@@ -12,6 +12,7 @@ using Vpms.VendorPortal.Application;
 using Vpms.VendorPortal.Infrastructure;
 using Vpms.Invoices.Infrastructure;
 using Vpms.Payments.Infrastructure;
+using Vpms.ErpIntegration.Infrastructure;
 using Vpms.Workflow.Infrastructure;
 using Vpms.Vendors.Infrastructure;
 using Vpms.Identity.Infrastructure;
@@ -25,6 +26,7 @@ public sealed class IntegrationHost : IAsyncDisposable
     private readonly ServiceProvider _root;
 
     public TestDatabase Database { get; }
+    public MockErpAdapter Erp { get; } = new();
     public string AnchorDirectory { get; } = Path.Combine(Path.GetTempPath(), "vpms-anchors-" + Guid.NewGuid().ToString("N"));
 
     public IntegrationHost(TestDatabase database, TimeProvider? clock = null, Action<IServiceCollection>? configure = null)
@@ -47,6 +49,10 @@ public sealed class IntegrationHost : IAsyncDisposable
         services.AddInvoicesModule(_ => database.AppConnectionString);
         services.AddWorkflowModule(_ => database.AppConnectionString);
         services.AddPaymentsModule(_ => database.AppConnectionString);
+        services.AddSingleton<Vpms.BuildingBlocks.Security.ISecretReader>(new TestSecrets());
+        services.AddErpIntegrationModule(_ => database.AppConnectionString);
+        services.AddSingleton(Erp);
+        services.AddSingleton<Vpms.ErpIntegration.Contracts.IErpAdapter>(Erp);
         services.Configure<PortalOptions>(o => o.PasswordHashIterations = 1000); // fast hashing for tests; production uses 600,000
         services.AddVendorPortalModule(_ => database.AppConnectionString);
         services.AddSingleton<Vpms.Identity.Application.ISecretResolver, NoSecrets>();
@@ -87,4 +93,12 @@ public sealed class IntegrationHost : IAsyncDisposable
 internal sealed class NoSecrets : Vpms.Identity.Application.ISecretResolver
 {
     public Task<string?> ResolveAsync(string secretRef, CancellationToken ct = default) => Task.FromResult<string?>(null);
+}
+
+/// <summary>Stands in for the vault in tests: every secret reference resolves to a fixed value.</summary>
+public sealed class TestSecrets : Vpms.BuildingBlocks.Security.ISecretReader
+{
+    public const string Value = "test-secret-value";
+
+    public Task<string?> ReadAsync(string secretRef, CancellationToken ct = default) => Task.FromResult<string?>(secretRef.StartsWith("missing", StringComparison.Ordinal) ? null : Value);
 }

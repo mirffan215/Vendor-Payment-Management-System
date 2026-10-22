@@ -1,3 +1,4 @@
+using Vpms.ErpIntegration.Infrastructure;
 using Vpms.Audit.Application;
 using Vpms.Audit.Infrastructure;
 using Vpms.BuildingBlocks.Cloud;
@@ -33,6 +34,7 @@ builder.Services.AddVendorsModule(ConnectionString);
 builder.Services.AddInvoicesModule(ConnectionString);
 builder.Services.AddWorkflowModule(ConnectionString);
 builder.Services.AddPaymentsModule(ConnectionString);
+builder.Services.AddErpIntegrationModule(ConnectionString);
 // Country tax rule plug-ins for received invoices. Removing a line switches that country back to the standard checks.
 builder.Services.AddSingleton<Vpms.Invoices.Domain.Tax.ITaxRuleProvider, Vpms.Tax.Sa.SaudiVatProvider>();
 builder.Services.Configure<GraphOptions>(builder.Configuration.GetSection(GraphOptions.Section));

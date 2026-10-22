@@ -1,3 +1,4 @@
+using Vpms.ErpIntegration.Infrastructure;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
@@ -49,6 +50,9 @@ builder.Services.AddVendorsModule(ConnectionString);
 builder.Services.AddInvoicesModule(ConnectionString);
 builder.Services.AddWorkflowModule(ConnectionString);
 builder.Services.AddPaymentsModule(ConnectionString);
+builder.Services.AddErpIntegrationModule(ConnectionString);
+// The mock ERP is for local development only; production tenants cannot select a provider that is not registered.
+if (builder.Environment.IsDevelopment()) builder.Services.AddSingleton<Vpms.ErpIntegration.Contracts.IErpAdapter, Vpms.ErpIntegration.Infrastructure.MockErpAdapter>();
 // Country tax rule plug-ins for received invoices. Removing a line switches that country back to the standard checks.
 builder.Services.AddSingleton<Vpms.Invoices.Domain.Tax.ITaxRuleProvider, Vpms.Tax.Sa.SaudiVatProvider>();
 builder.Services.Configure<PortalOptions>(builder.Configuration.GetSection(PortalOptions.Section));

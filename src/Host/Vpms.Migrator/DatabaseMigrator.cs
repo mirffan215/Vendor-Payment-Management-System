@@ -57,6 +57,11 @@ public static class DatabaseMigrator
             await ctx.Database.MigrateAsync(ct);
         }
 
+        await using (var ctx = new Vpms.ErpIntegration.Infrastructure.ErpDbContext(Options<Vpms.ErpIntegration.Infrastructure.ErpDbContext>(connectionString), tenant))
+        {
+            await ctx.Database.MigrateAsync(ct);
+        }
+
         await using (var ctx = new PortalDbContext(Options<PortalDbContext>(connectionString), tenant))
         {
             await ctx.Database.MigrateAsync(ct);

@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Vpms.ErpIntegration.Application\Vpms.ErpIntegration.Application.csproj" />
+    <ProjectReference Include="..\Vpms.ErpIntegration.Domain\Vpms.ErpIntegration.Domain.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\Vpms.BuildingBlocks\Vpms.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\..\CustomerAdmin\Vpms.CustomerAdmin.Contracts\Vpms.CustomerAdmin.Contracts.csproj" />
+    <ProjectReference Include="..\..\Vendors\Vpms.Vendors.Contracts\Vpms.Vendors.Contracts.csproj" />
+    <ProjectReference Include="..\..\Invoices\Vpms.Invoices.Contracts\Vpms.Invoices.Contracts.csproj" />
+    <ProjectReference Include="..\..\Payments\Vpms.Payments.Contracts\Vpms.Payments.Contracts.csproj" />
+    <ProjectReference Include="..\..\Identity\Vpms.Identity.Contracts\Vpms.Identity.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

@@ -36,6 +36,9 @@ public static class SystemRoles
         ["Approval Coordinator"] = [Permissions.EntityView, Permissions.InvoiceView, Permissions.WorkflowView, Permissions.WorkflowAdminister],
         ["Payment Preparer"] = [Permissions.EntityView, Permissions.VendorView, Permissions.InvoiceView, Permissions.PaymentView, Permissions.PaymentPrepare],
         ["Payment Approver"] = [Permissions.EntityView, Permissions.VendorView, Permissions.InvoiceView, Permissions.PaymentView, Permissions.PaymentApprove],
+        ["ERP Administrator"] = [Permissions.EntityView, Permissions.ErpView, Permissions.ErpConfigure],
+        ["ERP Change Approver"] = [Permissions.EntityView, Permissions.ErpView, Permissions.ErpApproveChange],
+        ["ERP Operator"] = [Permissions.EntityView, Permissions.VendorView, Permissions.InvoiceView, Permissions.ErpView, Permissions.ErpOperate],
         ["Payment Releaser"] = [Permissions.EntityView, Permissions.VendorView, Permissions.InvoiceView, Permissions.PaymentView, Permissions.PaymentRelease, Permissions.PaymentInstructionDownload],
     };
 }
