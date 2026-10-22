@@ -50,9 +50,9 @@ public sealed class ReportService(
 
         if (calendar == "hijri") tables = tables.Select(t => ReportHijri.WithHijri(t, ReportLabels.Get(locale, "hijri"))).ToList();
         var filters = new Dictionary<string, string>();
-        if (request.LegalEntityId is { } id) filters["entity"] = (await entities.GetNamesAsync([id], ct)).GetValueOrDefault(id, id.ToString());
-        if (request.Report is ReportKeys.PayablesAging or ReportKeys.PaymentForecast) filters["asOf"] = asOf.ToString("yyyy-MM-dd");
-        if (request.Report is not ReportKeys.PayablesAging) { filters["from"] = from.ToString("yyyy-MM-dd"); filters["to"] = to.ToString("yyyy-MM-dd"); }
+        if (request.LegalEntityId is { } id) filters[ReportLabels.Get(locale, "filter.entity")] = (await entities.GetNamesAsync([id], ct)).GetValueOrDefault(id, id.ToString());
+        if (request.Report is ReportKeys.PayablesAging or ReportKeys.PaymentForecast) filters[ReportLabels.Get(locale, "filter.asOf")] = asOf.ToString("yyyy-MM-dd");
+        if (request.Report is not ReportKeys.PayablesAging) { filters[ReportLabels.Get(locale, "filter.from")] = from.ToString("yyyy-MM-dd"); filters[ReportLabels.Get(locale, "filter.to")] = to.ToString("yyyy-MM-dd"); }
         return new ReportResult(request.Report, ReportLabels.Get(locale, request.Report), locale, calendar, now, filters, truncated, tables);
     }
 

@@ -16,6 +16,10 @@ public static class ReportLabels
         ["input-vat-register"] = ("Input VAT register", "سجل ضريبة المدخلات"),
         ["input-vat-register.desc"] = ("Supplier invoices received in the period with supplier VAT number, amounts and tax categories, for the customer's own VAT return.", "فواتير الموردين المستلمة في الفترة مع الرقم الضريبي للمورد والمبالغ وفئات الضريبة، لإقرار ضريبة القيمة المضافة الخاص بالعميل."),
 
+        ["filter.entity"] = ("Legal entity", "الكيان القانوني"),
+        ["filter.asOf"] = ("As of", "حتى تاريخ"),
+        ["filter.from"] = ("From", "من"),
+        ["filter.to"] = ("To", "إلى"),
         ["table.detail"] = ("Detail", "التفاصيل"),
         ["table.summary"] = ("Summary", "الملخص"),
         ["hijri"] = ("(Hijri)", "(هجري)"),

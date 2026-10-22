@@ -45,6 +45,12 @@ public sealed class ReportsApiTests : IClassFixture<ApiFixtureHolder>
         Assert.Equal(HttpStatusCode.OK, export.StatusCode);
         Assert.Equal("text/csv", export.Content.Headers.ContentType!.MediaType);
         Assert.Equal(64, export.Headers.GetValues("X-Content-SHA256").Single().Length);
+        var xlsx = await viewer.Client.GetAsync("/api/v1/reports/payables-aging/export?format=xlsx&locale=ar");
+        Assert.Contains("spreadsheetml", xlsx.Content.Headers.ContentType!.MediaType);
+        Assert.Equal((byte)'P', (await xlsx.Content.ReadAsByteArrayAsync())[0]); // a zip container ("PK")
+        var pdf = await viewer.Client.GetAsync("/api/v1/reports/payables-aging/export?format=pdf&locale=ar&calendar=hijri");
+        Assert.Equal("application/pdf", pdf.Content.Headers.ContentType!.MediaType);
+        Assert.StartsWith("%PDF", System.Text.Encoding.ASCII.GetString((await pdf.Content.ReadAsByteArrayAsync()).Take(4).ToArray()));
         Assert.Equal("format_invalid", await ErrorCode(await viewer.Client.GetAsync("/api/v1/reports/payables-aging/export?format=docx")));
         Assert.Equal("invalid_period", await ErrorCode(await viewer.Client.GetAsync("/api/v1/reports/exceptions?from=2026-10-10&to=2026-10-01")));
         Assert.Equal(HttpStatusCode.Forbidden, (await viewer.Client.GetAsync("/api/v1/reports/not-a-report")).StatusCode);
