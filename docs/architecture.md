@@ -195,7 +195,8 @@ future integration; v1 never moves money.**
 | Control | Enforced in |
 |---|---|
 | Maker-checker, self-approval blocked | Workflow engine guards; shared `MakerCheckerGuard` |
-| Two-person bank-detail change | Vendor module: `BankDetailChange` state machine requires checker != maker |
+| Weakening an invoice check | `VerificationRuleSet` versions: a loosening stays Pending until a different person approves (ADR-0012) |
+| Two-person bank-detail change | Vendor module: `BankDetailChange` state machine requires checker != maker, plus CHECK constraint and triggers (ADR-0008) |
 | Invoice approval vs release separation | Treasury `ReleaseAuthorization` + SoD matrix |
 | Re-approval on material change | Invoice `MaterialityPolicy` -> `InvoiceChangedMaterially` -> new workflow instance |
 | Duplicate detection / ERP reconciliation | Verification engine; ERP reconciliation job |
@@ -216,3 +217,64 @@ future integration; v1 never moves money.**
   Docker images for Api and Worker.
 - Localization/tax: Saudi VAT and ZATCA-related logic lives in an isolated, configurable module. VPMS does not
   issue invoices; see `risks-and-open-questions.md` for the obligation analysis.
+
+## 13. Phase 2 additions
+
+- **New modules:** `Documents` (attachments, quarantine, scanning), `Vendors` (vendor lifecycle, documents, per-entity
+  links, requests, bank details), `VendorPortal` (vendor users, invites, MFA). Each has its own schema, DbContext and
+  migrations; cross-module access is through `Contracts` only (architecture tests).
+- **Vendor isolation:** `IVendorOwned` + `VendorContext` add a named query filter and a write guard on top of tenancy
+  (ADR-0009). Cross-vendor existence checks use the allow-listed `BeginCrossVendorCheck` scope.
+- **Two session types:** staff (`__Host-vpms`, `ctx=internal`) and vendors (`__Host-vpms-vendor`, `ctx=vendor`) never
+  satisfy each other's policies.
+- **Storage and encryption:** `IBlobBackend` (Azure/S3) behind `TenantScopedFileStore` (ADR-0010); `IFieldProtector`
+  encrypts tax numbers, registration numbers, IBANs, account numbers and TOTP secrets with per-tenant keys and
+  blind indexes (ADR-0004).
+- **Worker jobs:** attachment scanning and bank-change expiry join audit chain verification.
+- **Frontend:** staff screens (vendors, bank-change approvals, administration) and a separate `/portal` area.
+
+## 14. Phase 3 additions
+
+- **New module:** `Invoices` (schema `invoice`): invoices and lines, attachments, intake (documents, email, portal), OCR
+  suggestions, versioned verification settings, verification results, exceptions, purchase orders. Country tax providers are
+  separate plug-in assemblies (`Vpms.Tax.Sa`), isolated by an architecture test (ADR-0013).
+- **Flow:** channel -> Draft -> (person completes) -> Submit -> Received -> verification engine (pure rules over facts, entity
+  settings version pinned in the record) -> Verified or Exception -> exceptions queue (accept a flag with a reason; a block needs
+  the override permission and a different person). Approval workflow starts at Verified in Phase 4.
+- **Worker jobs:** email intake per enabled mailbox, extraction of scanned files, verification sweep.
+- **Controls added:** loosening a check needs a second person; blocks cannot be waived by the invoice's maker; vendor status
+  is never waivable; invoices and verification records cannot be deleted by the application login.
+- **Cross-module reads** go through contracts only: vendor status, link currency, ERP account, contact email and tax number
+  (`IVendorLookup`), legal entity country (`ILegalEntityLookup`), file storage (`IAttachmentService`).
+
+## 15. Phase 4 additions
+
+- **Workflow module** (`src/Modules/Workflow`, schema `wf`): domain (definitions, validator, condition evaluator, run state machine,
+  simulator, delegation, materiality), application contracts, infrastructure (definition, approval, delegation, timer and
+  materiality services). It references no subject module; invoices call `IApprovalStarter` / `IApprovalLifecycle` /
+  `IMaterialityEvaluator` and implement `IApprovalOutcomeHandler` (all in `Vpms.Workflow.Contracts`). See ADR-0014.
+- **Flow:** Verified invoice -> *send for approval* -> run starts on the entity's Active definition version (pinned) -> tasks for
+  eligible approvers (permission, not maker) -> decisions (maker-checker, different person, authority, delegation checked in the
+  engine) -> run ends -> outcome applied to the invoice (Approved / Rejected / Returned), with a sweep if that fails.
+- **Worker jobs:** `WorkflowTimerJob` (reminders, escalation), `ApprovalOutcomeJob` (retry of outcomes).
+- **Approver identity port:** `IApproverDirectory` (Identity) resolves roles and permission holders; `IApprovalDataLookup`
+  (CustomerAdmin) provides matrix rules and approval authorities.
+- **Invoice lifecycle:** Draft -> Received -> InVerification -> Exception | Verified -> InApproval -> Approved | Rejected |
+  Returned (editable again) ; a material revision of an InApproval/Approved invoice goes back to Received. Payment (Phase 5) will
+  consume `Approved` with `ApprovedVersion == Version`.
+- **API:** `/workflow` definitions and changes, `/approvals` inbox/tasks/decisions/notices, `/delegations`,
+  `/approval-materiality`, `POST /invoices/{id}/send-for-approval` and `/revise`.
+
+## 16. Phase 5 additions
+
+- **Payments module** (`src/Modules/Payments`, schema `payment`): payment requests, proposals, release authorisations, instructions.
+  It reads invoices through `Invoices.Contracts.IPayableInvoiceLookup`, bank details through `Vendors.Contracts.IBankDetailsLookup`
+  (verified details, maker/checker, audited reveal), approvers through `Workflow.Contracts.IApprovalHistory`. Invoices call back
+  through `Payments.Contracts.IPaymentLifecycle`. See ADR-0017 and ADR-0018.
+- **Flow:** approved invoice -> payment request (frozen hash, bank fingerprint, involved people) -> proposal per entity/vendor/
+  currency/due date -> submit -> treasury approval -> release (separation, full re-check, reveal, sign) -> instruction Prepared ->
+  download = hand-off. Nothing is sent to a bank.
+- **Invalidation:** one place (`PaymentInvalidation`) voids a request and its proposal; triggered by invoice revision (eager), by the
+  re-checks at submit/approve/release, and by `PaymentIntegrityJob` (worker).
+- **API:** `/payments/payable`, `/requests`, `/proposals` (+ `submit`, `approve`, `send-back`, `cancel`, `recheck`, `release`,
+  `authorizations`, `instruction`), `/instructions/{id}/download|verify`.

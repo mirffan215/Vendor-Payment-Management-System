@@ -14,6 +14,7 @@ public class IdentityDbContext(DbContextOptions<IdentityDbContext> options, ITen
     public DbSet<Role> Roles => Set<Role>();
     public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
     public DbSet<RoleAssignment> RoleAssignments => Set<RoleAssignment>();
+    public DbSet<PendingRoleAssignment> PendingRoleAssignments => Set<PendingRoleAssignment>();
     public DbSet<IdentityProviderConfig> IdentityProviders => Set<IdentityProviderConfig>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -68,6 +69,14 @@ public class IdentityDbContext(DbContextOptions<IdentityDbContext> options, ITen
             b.HasKey(x => x.Id);
             b.HasIndex(x => new { x.TenantId, x.UserId });
             b.HasIndex(x => new { x.TenantId, x.UserId, x.RoleId, x.LegalEntityId }).IsUnique();
+        });
+
+        modelBuilder.Entity<PendingRoleAssignment>(b =>
+        {
+            b.ToTable("PendingRoleAssignment");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Email).HasMaxLength(320).IsRequired();
+            b.HasIndex(x => new { x.TenantId, x.Email, x.RoleId, x.LegalEntityId }).IsUnique();
         });
 
         base.OnModelCreating(modelBuilder);

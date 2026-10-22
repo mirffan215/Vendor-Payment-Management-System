@@ -10,7 +10,7 @@ public sealed class CsrfProtectionMiddleware(RequestDelegate next)
         var path = context.Request.Path;
         var unsafeMethod = !HttpMethods.IsGet(context.Request.Method) && !HttpMethods.IsHead(context.Request.Method)
                            && !HttpMethods.IsOptions(context.Request.Method) && !HttpMethods.IsTrace(context.Request.Method);
-        var protectedPath = path.StartsWithSegments("/api") || path.StartsWithSegments("/auth/logout");
+        var protectedPath = path.StartsWithSegments("/api") || path.StartsWithSegments("/auth/logout") || path.StartsWithSegments("/portal/auth/logout");
 
         if (unsafeMethod && protectedPath && context.User.Identity?.IsAuthenticated == true)
         {

@@ -27,7 +27,7 @@ public sealed record SignInResult(SignedInUser? User, SignInDenial? Denial)
 /// Maps a validated external identity to a VPMS user. The tenant comes from the provider configuration held by
 /// the server, never from claims inside the external token.
 /// </summary>
-public sealed class UserProvisioner(IIdentityStore store, TenantContext tenant, TimeProvider clock, IAuditPort audit)
+public sealed class UserProvisioner(IIdentityStore store, TenantContext tenant, TimeProvider clock, IAuditPort audit, IRoleAssignmentService roles)
 {
     public async Task<SignInResult> SignInAsync(IdentityProviderConfig provider, ExternalIdentity identity,
         CancellationToken ct = default)
@@ -70,6 +70,9 @@ public sealed class UserProvisioner(IIdentityStore store, TenantContext tenant, 
             await store.AddUserAsync(user, ct);
             audit.Record(new AuditEntry("user.provisioned", "User", user.Id.ToString(), ActorType: AuditActorType.System,
                 ChangeSummaryJson: JsonSerializer.Serialize(new { providerId = provider.Id })));
+            await store.SaveChangesAsync(ct);
+            // Roles prepared for this email (e.g. the first administrator) take effect now; the email is already verified.
+            await roles.ApplyPendingAsync(user.Id, user.Email, ct);
         }
 
         if (user.Status != UserStatus.Active)

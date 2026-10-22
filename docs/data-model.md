@@ -166,3 +166,57 @@ duplicate detection works without decrypting. See ADR-0004.
 - `ApprovalTask.DecidedBy <> WorkflowInstance.StartedBy`; `ReleaseAuthorization.AuthorizedBy` not among invoice approvers.
 - Published `WorkflowVersion` rows cannot be modified; instances keep their `VersionId`.
 - `AuditEvent` rows cannot be updated or deleted; chain verifies.
+
+## Phase 2 as built (differences from the logical model above)
+
+- Schemas: `customer`, `identity`, `audit`, `documents`, `vendor`, `portal`.
+- `BankDetails.Source` moved to the change record (`BankDetailChange.Source`: Staff, VendorPortal); `BankDetails` has
+  `MaskedAccount` and blind indexes (`IbanIndex`, `AccountNumberIndex`); proposed values live on the pending
+  `BankDetails` row (encrypted) rather than in a JSON blob. `BankDetailChange` adds `ReplacesBankDetailsId`,
+  `ProposedBankDetailsId`, `ExpiresAt` and `CallbackVerificationRef`. Database guards are listed in ADR-0008.
+- `VendorRequest` and `VendorMessage` implement the staff/vendor thread; `VendorDocument` links an `Attachment`
+  (statuses Uploaded, Verified, Rejected) and records who uploaded it.
+- `Attachment.ScanStatus` includes `Failed`; scanner signature and timestamps are stored.
+- Portal: `VendorUser` (password hash, encrypted TOTP secret, lockout counters, MFA-reset state), `VendorInvite`
+  (hashed token, purpose, expiry, single use), `VendorRecoveryCode` (hashed).
+- `PendingRoleAssignment` lets an administrator grant a role to someone who has not signed in yet.
+- Every vendor-owned table has `VendorId` and the vendor query filter; every tenant-owned table keeps `TenantId`, the
+  tenant filter and an RLS policy.
+
+## Phase 3 as built (differences from the logical model above)
+
+- Schema `invoice`. `Invoice` implements legal-entity and vendor scoping. Besides the fields above it has `Version`, a keyed hash
+  of vendor + number + total + date (`DuplicateKeyIndex`) and of vendor + number (`NumberKeyIndex`), `SupplierTaxNumber`,
+  creator kind (Staff, Vendor, System) and received time. Statuses implemented: Draft, Received, InVerification, Exception,
+  Verified, ReadyForApproval, Rejected, Cancelled (approval states join in Phase 4). Rows are never deleted by the application login.
+- `InvoiceAttachment` links documents (roles Original, Supporting). `InvoiceExtraction` holds OCR suggestions only.
+- `InvoiceMailbox` (one per legal entity) and `IntakeMessage` (unique per entity and message id) implement email intake.
+- `VerificationRuleSet` replaces the planned `VerificationRuleSet` per entity: versioned JSON settings, status Active, Pending,
+  Superseded, Rejected or Cancelled, with the rules each version loosens and the maker/checker. Unique: one Active and one
+  Pending per entity.
+- `VerificationResult` (one row per rule per run, with invoice and rule-set versions, never updated or deleted) and
+  `InvoiceException` (one open exception per invoice and rule, waiver reason and person recorded).
+- `PurchaseOrder` and `PurchaseOrderLine`: per legal entity, versioned by the importer, with value and quantity already
+  invoiced outside VPMS. The ERP adapter (Phase 6) replaces the staff import as the source.
+
+## Phase 4 as built (schema `wf`, plus invoice columns)
+
+- **WorkflowDefinition**: legal entity, subject type, version, spec JSON, spec hash, source (Authored | Matrix), status
+  (Pending | Active | Superseded | Rejected | Cancelled), maker and checker. Unique Active and Pending per entity and subject.
+- **WorkflowRun**: subject type/id/version, label, pinned definition id/version/hash, status (Active | Approved | Rejected |
+  Returned | Cancelled), makers, facts JSON (amount, currency, vendor, source, dimensions), `OutcomeAppliedAt`. One Active run per
+  subject (filtered unique index).
+- **ApprovalTask**: step, branch path, assignees, mode/quorum, due, reminder sent, escalated at/to. **TaskDecision**: actor, acting-for,
+  decision, comment; unique per task and actor; no update or delete for the application login. **JoinArrival**: parallel join state.
+- **Delegation**, **WorkflowNotice**, **MaterialityPolicy** (versioned like definitions). No deletes for the application login.
+- **Invoice** gained `ApprovalRunId`, `ApprovedVersion`, `ApprovedAt`, `ApprovalBaselineJson` and statuses InApproval, Approved, Returned.
+
+## Phase 5 as built (schema `payment`)
+
+- **PaymentRequest**: invoice, version, amount, currency, due date, invoice integrity hash, bank-details id and fingerprint, involved people,
+  status (Created | InProposal | Released | Invalidated | Cancelled). One open request per invoice (filtered unique index).
+- **PaymentProposal** (+ **PaymentProposalItem**): per entity, sequence number, vendor, due date, currency, total, status (Draft |
+  PendingApproval | Approved | Released | Invalidated | Cancelled), maker, submitter, approver, releaser.
+- **ReleaseAuthorization**: every release attempt, allowed or refused, with re-check and separation findings. No update, no delete.
+- **PaymentInstruction**: CSV and JSON ciphertext, SHA-256 hash, signature, status (Prepared | HandedOff). No execution status exists.
+- Nothing in this schema can be deleted by the application login, except the items of a draft proposal.

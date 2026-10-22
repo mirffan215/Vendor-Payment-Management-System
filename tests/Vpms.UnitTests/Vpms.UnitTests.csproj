@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit" />
@@ -24,6 +25,30 @@
     <ProjectReference Include="..\..\src\Modules\Identity\Vpms.Identity.Domain\Vpms.Identity.Domain.csproj" />
     <ProjectReference Include="..\..\src\Modules\Identity\Vpms.Identity.Application\Vpms.Identity.Application.csproj" />
     <ProjectReference Include="..\..\src\Modules\Audit\Vpms.Audit.Domain\Vpms.Audit.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Documents\Vpms.Documents.Domain\Vpms.Documents.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Documents\Vpms.Documents.Application\Vpms.Documents.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Documents\Vpms.Documents.Infrastructure\Vpms.Documents.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Documents\Vpms.Documents.Contracts\Vpms.Documents.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Invoices\Vpms.Invoices.Domain\Vpms.Invoices.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Invoices\Vpms.Invoices.Application\Vpms.Invoices.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Invoices\Vpms.Invoices.Infrastructure\Vpms.Invoices.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Vendors\Vpms.Vendors.Domain\Vpms.Vendors.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Vendors\Vpms.Vendors.Application\Vpms.Vendors.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Vendors\Vpms.Vendors.Infrastructure\Vpms.Vendors.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Vendors\Vpms.Vendors.Contracts\Vpms.Vendors.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Modules\VendorPortal\Vpms.VendorPortal.Domain\Vpms.VendorPortal.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\VendorPortal\Vpms.VendorPortal.Application\Vpms.VendorPortal.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\VendorPortal\Vpms.VendorPortal.Infrastructure\Vpms.VendorPortal.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Modules\VendorPortal\Vpms.VendorPortal.Contracts\Vpms.VendorPortal.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Tax\Vpms.Tax.Sa\Vpms.Tax.Sa.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Workflow\Vpms.Workflow.Domain\Vpms.Workflow.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Workflow\Vpms.Workflow.Application\Vpms.Workflow.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Workflow\Vpms.Workflow.Infrastructure\Vpms.Workflow.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Workflow\Vpms.Workflow.Contracts\Vpms.Workflow.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Payments\Vpms.Payments.Domain\Vpms.Payments.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Payments\Vpms.Payments.Application\Vpms.Payments.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Payments\Vpms.Payments.Infrastructure\Vpms.Payments.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Payments\Vpms.Payments.Contracts\Vpms.Payments.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

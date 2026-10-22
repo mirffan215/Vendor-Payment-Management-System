@@ -16,12 +16,16 @@ public sealed class RateLimitSettings
     /// <summary>Stricter budget per client address for sign-in endpoints.</summary>
     public int AuthPermitLimit { get; set; } = 30;
 
+    /// <summary>Budget per client address for vendor sign-in, invitation and authenticator endpoints.</summary>
+    public int PortalAuthPermitLimit { get; set; } = 20;
+
     public int WindowSeconds { get; set; } = 60;
 }
 
 public static class RateLimiting
 {
     public const string AuthPolicy = "auth";
+    public const string PortalAuthPolicy = "portal-auth";
 
     public static IServiceCollection AddVpmsRateLimiting(this IServiceCollection services)
     {
@@ -42,6 +46,10 @@ public static class RateLimiting
             options.AddPolicy(AuthPolicy, http => RateLimitPartition.GetFixedWindowLimiter(
                 "auth:" + http.Connection.RemoteIpAddress,
                 _ => new FixedWindowRateLimiterOptions { PermitLimit = s.AuthPermitLimit, Window = window, QueueLimit = 0 }));
+
+            options.AddPolicy(PortalAuthPolicy, http => RateLimitPartition.GetFixedWindowLimiter(
+                "portal:" + http.Connection.RemoteIpAddress,
+                _ => new FixedWindowRateLimiterOptions { PermitLimit = s.PortalAuthPermitLimit, Window = window, QueueLimit = 0 }));
 
             options.OnRejected = async (context, ct) =>
             {

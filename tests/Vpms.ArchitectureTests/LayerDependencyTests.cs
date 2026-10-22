@@ -5,7 +5,7 @@ namespace Vpms.ArchitectureTests;
 
 public class LayerDependencyTests
 {
-    private static readonly string[] Modules = ["Identity", "CustomerAdmin", "Audit"];
+    private static readonly string[] Modules = ["Identity", "CustomerAdmin", "Audit", "Documents", "Vendors", "VendorPortal", "Invoices", "Workflow", "Payments"];
 
     private static Assembly Asm(string module, string layer) =>
         Assembly.Load($"Vpms.{module}.{layer}");
@@ -71,6 +71,44 @@ public class LayerDependencyTests
             if (allowed.Contains(asm.GetName().Name)) continue;
             var offenders = asm.GetTypes().Where(t => ReferencesMethod(t, "IgnoreQueryFilters")).Select(t => t.FullName);
             Assert.Empty(offenders);
+        }
+    }
+
+    [Fact]
+    public void Cross_vendor_checks_are_only_used_by_the_bank_details_fraud_control()
+    {
+        var asms = Modules.SelectMany(m => new[] { "Application", "Infrastructure", "Domain" }.Select(l => Asm(m, l)))
+            .Append(typeof(Program).Assembly);
+        var offenders = asms.SelectMany(a => a.GetTypes()).Where(t => ReferencesMethod(t, "BeginCrossVendorCheck"))
+            .Select(t => (t.DeclaringType ?? t).FullName).Distinct().ToList(); // async methods compile to nested types
+        Assert.Equal(["Vpms.Vendors.Infrastructure.BankDetailsService"], offenders);
+    }
+
+    [Fact]
+    public void Country_tax_plugins_are_isolated_from_the_modules_that_host_them()
+    {
+        // Invoices knows only the plug-in interface (in its domain); no Invoices assembly may reference a concrete country module.
+        foreach (var layer in new[] { "Domain", "Application", "Infrastructure", "Contracts" })
+        {
+            var references = Asm("Invoices", layer).GetReferencedAssemblies().Select(a => a.Name);
+            Assert.DoesNotContain("Vpms.Tax.Sa", references);
+        }
+
+        // A country module may use the shared kernel and the invoice domain, and nothing else from the system.
+        var allowed = new[] { "Vpms.Invoices.Domain", "Vpms.BuildingBlocks" };
+        var taxReferences = typeof(Vpms.Tax.Sa.SaudiVatProvider).Assembly.GetReferencedAssemblies().Select(a => a.Name!).Where(n => n.StartsWith("Vpms.", StringComparison.Ordinal));
+        Assert.Empty(taxReferences.Except(allowed));
+    }
+
+    [Fact]
+    public void The_workflow_engine_knows_nothing_about_its_subjects()
+    {
+        // Invoices (and later payments) start approvals through a contract; the engine never references them back.
+        foreach (var layer in new[] { "Domain", "Application", "Infrastructure", "Contracts" })
+        {
+            var references = Asm("Workflow", layer).GetReferencedAssemblies().Select(a => a.Name!);
+            Assert.DoesNotContain(references, n => n.StartsWith("Vpms.Invoices", StringComparison.Ordinal) || n.StartsWith("Vpms.Vendors", StringComparison.Ordinal)
+                                                   || n.StartsWith("Vpms.Payments", StringComparison.Ordinal));
         }
     }
 

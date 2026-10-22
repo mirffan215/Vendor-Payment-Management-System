@@ -21,7 +21,7 @@ foundation; logging, OpenTelemetry, health checks, problem details, OpenAPI; i18
 Depends on: Phase 0 approval.
 Acceptance: cross-tenant isolation tests pass; audit events cannot be updated or deleted; CI is green.
 
-## Phase 2: Customer administration and vendors (`phase-2-customer-and-vendors.md`)
+## Phase 2: Customer administration and vendors (`phase-2-customer-and-vendors.md`) — complete, see [phase-2-summary.md](phase-2-summary.md)
 Scope: tenant setup, legal entities, branding, roles, approval-matrix data model; vendor registration and
 onboarding; bank details with two-person verification; vendor-entity relationships; vendor self-service portal;
 storage abstraction (Azure Blob + S3), virus-scan hook, encrypted fields.
@@ -29,7 +29,7 @@ Depends on: Phase 1.
 Acceptance: a bank-detail change cannot take effect without a second, different approver; vendor users only
 see their own data; tests cover all of it.
 
-## Phase 3: Invoices (`phase-3-invoices.md`)
+## Phase 3: Invoices (`phase-3-invoices.md`) — complete, see [phase-3-summary.md](phase-3-summary.md)
 Scope: intake (manual, portal, email via Graph, document upload, OCR-ready interface); header, lines,
 attachments, lifecycle; verification engine (duplicates, PO matching, tax/amount) configurable per entity;
 exceptions queue; VAT with Saudi rules as a pluggable module.
@@ -37,14 +37,14 @@ Depends on: Phases 1-2.
 Acceptance: duplicates are blocked or flagged; validation rules are configurable per entity; full test coverage
 of rules.
 
-## Phase 4: Workflow and approvals (`phase-4-workflow-approvals.md`)
+## Phase 4: Workflow and approvals (`phase-4-workflow-approvals.md`) — complete, see [phase-4-summary.md](phase-4-summary.md)
 Scope: versioned data-driven engine (sequential, parallel, conditional, multilevel); approval matrices per entity;
 version pinning; maker-checker and self-approval prevention; delegation, deadlines, reminders, escalation via
 durable jobs; re-approval on material change; approver UI.
 Depends on: Phases 1-3.
 Acceptance: simulation tests for each workflow pattern; self-approval impossible; delegation and escalation tested.
 
-## Phase 5: Payments and treasury (`phase-5-payments-treasury.md`)
+## Phase 5: Payments and treasury (`phase-5-payments-treasury.md`) — complete, see [phase-5-summary.md](phase-5-summary.md)
 Scope: payment requests from approved invoices; payment proposals grouped by vendor, due date, entity, currency;
 treasury controls with separate approval and release; prepared, signed-off payment instruction (no transfers);
 release-time re-check of bank details and invoice integrity.

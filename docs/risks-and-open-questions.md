@@ -7,15 +7,15 @@ Status: Accepted (Phase 0 approved).
 | # | Risk | Impact | Mitigation | Phase |
 |---|---|---|---|---|
 | R1 | Cross-tenant data leakage (missed filter, background job, cache, blob path) | Critical | Global filters + RLS backstop, banned `IgnoreQueryFilters`, tenant in every job/cache/path, mandatory isolation tests | 1+ |
-| R2 | Segregation-of-duties bypass (same person approves and releases; delegate abuse) | Critical | Guards in engine and treasury, not UI; release-time recheck; SoD tests incl. delegation | 4, 5 |
-| R3 | Fraudulent bank-detail change (vendor impersonation) | Critical | Two-person verification, callback verification field, block release while change open, alerts | 2, 5 |
+| R2 | Segregation-of-duties bypass (same person approves and releases; delegate abuse) | Critical | Guards in engine and treasury, not UI; release-time recheck; SoD tests incl. delegation | 4, 5 (built: ADR-0015, ADR-0017) |
+| R3 | Fraudulent bank-detail change (vendor impersonation) | Critical | Two-person verification, callback verification field, block release while change open, alerts | 2, 5 (built: ADR-0017) |
 | R4 | Audit tampering or gaps | High | Hash chain, DENY update/delete, same-transaction writes, external anchoring | 1 |
 | R5 | ERP drift or duplicate postings | High | Idempotency keys, replay tests, reconciliation job, documented interfaces only | 6 |
 | R6 | D365 interface limits (throttling, entity availability, versions) differ from assumptions | Medium | Early spike in Phase 6, adapter capability model, mock adapter | 6 |
 | R7 | Key management errors (loss, rotation failure) | High | Key Vault with soft-delete/purge protection, versioned ciphertext, rotation runbook, tested restore | 1, 8 |
 | R8 | OCR/extraction inaccuracy leads to wrong data | Medium | OCR output is only a suggestion; human verification; verification rules still apply | 3 |
 | R9 | Arabic/RTL and Hijri handled late and inconsistently | Medium | i18n and RTL from Phase 1; RTL checks in UI tests; localization in definition of done | 1, 7 |
-| R10 | Custom workflow engine complexity | Medium | Small step set, versioned schema, simulation harness, no arbitrary code in conditions | 4 |
+| R10 | Custom workflow engine complexity | Medium | Small step set, versioned schema, simulation harness, no arbitrary code in conditions | 4 (built, ADR-0014) |
 | R11 | Hot-tenant audit chain contention | Low | Per-tenant chains, batch within transaction, measure in load tests | 8 |
 | R12 | Scope creep toward executing payments | High | v1 prepares instructions only; no bank-execution component; ADR needed to change | 5 |
 | R13 | Vendor portal compromise exposes internal data | High | Separate auth context and audience, vendor-scoped queries, rate limiting | 2 |
@@ -54,7 +54,7 @@ Consequences for the design:
 | Q3 | IaC: Bicep or Terraform? | Not yet decided (Azure-first suggests Bicep; Terraform eases portability) | Phase 1 |
 | Q4 | Message broker: Azure Service Bus only, or also a portable alternative at launch? | Service Bus behind `IJobQueue` | Phase 1 |
 | Q5 | Audit: hand-rolled hash chain or SQL Ledger tables? | Hash chain behind `AuditPort` (ADR-0003) | Phase 1 |
-| Q6 | Which bank/payment file formats must the prepared instruction support (SAMA-compatible, ISO 20022 pain.001, CSV)? | Generic exporter interface; formats chosen in Phase 5 | Phase 5 |
+| Q6 | Which bank/payment file formats must the prepared instruction support (SAMA-compatible, ISO 20022 pain.001, CSV)? | Generic CSV+JSON built behind `IInstructionExporter` (ADR-0018); bank formats still to choose | Before bank integration |
 | Q7 | Withholding tax: required in v1? | Data field on vendor-entity link only | Phase 3 |
 | Q8 | Is a Saudi tax/legal adviser confirming the ZATCA reading above? | Pending | Before Phase 7 |
 | Q9 | Vendor callback verification: manual process, or tracked in the system? | Reference field on change record | Phase 2 |

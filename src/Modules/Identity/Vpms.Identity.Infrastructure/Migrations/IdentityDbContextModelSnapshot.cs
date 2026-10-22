@@ -78,6 +78,43 @@ namespace Vpms.Identity.Infrastructure.Migrations
                     b.ToTable("IdentityProvider", "identity");
                 });
 
+            modelBuilder.Entity("Vpms.Identity.Domain.PendingRoleAssignment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(320)
+                        .HasColumnType("nvarchar(320)");
+
+                    b.Property<Guid?>("LegalEntityId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("RoleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "Email", "RoleId", "LegalEntityId")
+                        .IsUnique()
+                        .HasFilter("[LegalEntityId] IS NOT NULL");
+
+                    b.ToTable("PendingRoleAssignment", "identity");
+                });
+
             modelBuilder.Entity("Vpms.Identity.Domain.Role", b =>
                 {
                     b.Property<Guid>("Id")

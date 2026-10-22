@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Vpms.Invoices.Domain\Vpms.Invoices.Domain.csproj" />
+    <ProjectReference Include="..\Vpms.Invoices.Contracts\Vpms.Invoices.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\Vpms.BuildingBlocks\Vpms.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\..\Documents\Vpms.Documents.Contracts\Vpms.Documents.Contracts.csproj" />
+    <ProjectReference Include="..\..\CustomerAdmin\Vpms.CustomerAdmin.Contracts\Vpms.CustomerAdmin.Contracts.csproj" />
+    <ProjectReference Include="..\..\Identity\Vpms.Identity.Contracts\Vpms.Identity.Contracts.csproj" />
+    <ProjectReference Include="..\..\Vendors\Vpms.Vendors.Contracts\Vpms.Vendors.Contracts.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

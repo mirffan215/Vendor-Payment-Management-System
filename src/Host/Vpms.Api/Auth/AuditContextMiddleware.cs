@@ -33,7 +33,7 @@ public sealed class AuditActorMiddleware(RequestDelegate next)
         if (Guid.TryParse(http.User.FindFirst(VpmsClaims.UserId)?.Value, out var userId))
         {
             audit.ActorId = userId;
-            audit.ActorType = AuditActorType.User;
+            audit.ActorType = http.User.FindFirst(VpmsClaims.Context)?.Value == VendorClaims.VendorContext ? "Vendor" : AuditActorType.User;
         }
 
         await next(http);

@@ -23,6 +23,114 @@ namespace Vpms.CustomerAdmin.Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("Vpms.CustomerAdmin.Domain.ApprovalAuthority", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CurrencyCode")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("nchar(3)")
+                        .IsFixedLength();
+
+                    b.Property<string>("DimensionScopeJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("LegalEntityId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("MaxAmount")
+                        .HasPrecision(19, 4)
+                        .HasColumnType("decimal(19,4)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("ValidFrom")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset?>("ValidTo")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "LegalEntityId", "UserId");
+
+                    b.ToTable("ApprovalAuthority", "customer", t =>
+                        {
+                            t.HasCheckConstraint("CK_ApprovalAuthority_Amount", "[MaxAmount] > 0");
+                        });
+                });
+
+            modelBuilder.Entity("Vpms.CustomerAdmin.Domain.ApprovalMatrixRule", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ApproverResolutionJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ConditionsJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("LegalEntityId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Levels")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "LegalEntityId", "Priority");
+
+                    b.ToTable("ApprovalMatrixRule", "customer");
+                });
+
             modelBuilder.Entity("Vpms.CustomerAdmin.Domain.LegalEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -52,10 +160,23 @@ namespace Vpms.CustomerAdmin.Infrastructure.Migrations
                         .HasMaxLength(300)
                         .HasColumnType("nvarchar(300)");
 
+                    b.Property<string>("LegalNameAr")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)");
+
+                    b.Property<string>("TaxRegistrationNoCipher")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("TaxRegistrationNoIndex")
+                        .HasMaxLength(64)
+                        .HasColumnType("nchar(64)")
+                        .IsFixedLength();
 
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uniqueidentifier");
@@ -66,6 +187,10 @@ namespace Vpms.CustomerAdmin.Infrastructure.Migrations
 
                     b.HasIndex("TenantId", "Code")
                         .IsUnique();
+
+                    b.HasIndex("TenantId", "TaxRegistrationNoIndex")
+                        .IsUnique()
+                        .HasFilter("[TaxRegistrationNoIndex] IS NOT NULL");
 
                     b.ToTable("LegalEntity", "customer");
                 });
@@ -79,15 +204,27 @@ namespace Vpms.CustomerAdmin.Infrastructure.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<string>("DefaultCalendar")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
                     b.Property<string>("DefaultLocale")
                         .IsRequired()
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar(10)");
 
+                    b.Property<Guid?>("LogoAttachmentId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("PrimaryColor")
+                        .HasMaxLength(7)
+                        .HasColumnType("nvarchar(7)");
 
                     b.Property<string>("Slug")
                         .IsRequired()

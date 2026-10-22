@@ -32,4 +32,8 @@
     <ProjectReference Include="..\..\src\BuildingBlocks\Vpms.BuildingBlocks\Vpms.BuildingBlocks.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\Shared\*.cs" Link="Shared\%(Filename)%(Extension)" />
+  </ItemGroup>
+
 </Project>
