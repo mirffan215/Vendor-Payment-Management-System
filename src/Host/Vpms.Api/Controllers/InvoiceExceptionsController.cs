@@ -14,7 +14,7 @@ public sealed record AssignExceptionRequest(Guid? UserId);
 public sealed class InvoiceExceptionsController(IInvoiceExceptionService exceptions, IPermissionEvaluator permissions) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> List([FromQuery] string? status, [FromQuery] Guid? assignedTo, [FromQuery] int skip = 0, [FromQuery] int take = 50, CancellationToken ct = default)
+    public async Task<IActionResult> List([FromQuery] string? status, [FromQuery] Guid? assignedTo, [FromQuery, System.ComponentModel.DataAnnotations.Range(0, 1_000_000)] int skip = 0, [FromQuery, System.ComponentModel.DataAnnotations.Range(1, 200)] int take = 50, CancellationToken ct = default)
     {
         var (allowed, scope) = await this.ScopeForAsync(permissions, Permissions.InvoiceExceptionResolve, ct);
         if (!allowed)

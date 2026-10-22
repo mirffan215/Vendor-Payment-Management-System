@@ -244,20 +244,9 @@ public static class ChannelRules
         return HostName.IsMatch(host) && !IsInternalHost(host);
     }
 
-    public static bool IsInternalHost(string host)
-    {
-        if (host.Equals("localhost", StringComparison.OrdinalIgnoreCase) || host.EndsWith(".local", StringComparison.OrdinalIgnoreCase) || host.EndsWith(".internal", StringComparison.OrdinalIgnoreCase)) return true;
-        return IPAddress.TryParse(host, out var ip) && IsInternal(ip);
-    }
+    public static bool IsInternalHost(string host) => Vpms.BuildingBlocks.Net.AddressRules.IsInternalHost(host);
 
-    public static bool IsInternal(IPAddress ip)
-    {
-        if (IPAddress.IsLoopback(ip)) return true;
-        if (ip.IsIPv6LinkLocal || ip.IsIPv6SiteLocal || ip.IsIPv6UniqueLocal) return true;
-        if (ip.AddressFamily != AddressFamily.InterNetwork) return false;
-        var b = ip.GetAddressBytes();
-        return b[0] == 10 || b[0] == 127 || b[0] == 0 || (b[0] == 172 && b[1] is >= 16 and <= 31) || (b[0] == 192 && b[1] == 168) || (b[0] == 169 && b[1] == 254) || (b[0] == 100 && b[1] is >= 64 and <= 127);
-    }
+    public static bool IsInternal(IPAddress ip) => Vpms.BuildingBlocks.Net.AddressRules.IsInternal(ip);
 
     public static string ToJson(object config) => JsonSerializer.Serialize(config, new JsonSerializerOptions(JsonSerializerDefaults.Web));
 

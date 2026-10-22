@@ -56,7 +56,7 @@ public sealed class NotificationDeliveryTests(SqlServerFixture sql) : PaymentSce
     {
         services.AddSingleton<IEmailSender>(_email);
         services.AddSingleton<IWebhookSender>(_hook);
-        services.Configure<NotificationOptions>(o => o.BaseUrl = "https://app.acme.com");
+        services.Configure<NotificationOptions>(o => { o.BaseUrl = "https://app.acme.com"; o.AllowInternalHosts = true; }); // the test mail server is on loopback
     }
 
     private Task<T> Svc<T>(Guid actor, Func<INotificationChannelService, Task<T>> action) => W.AsAsync(W.TenantA, actor, s => action(s.GetRequiredService<INotificationChannelService>()));

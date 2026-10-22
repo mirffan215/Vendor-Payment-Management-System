@@ -16,7 +16,7 @@ public sealed record SaveMailboxRequest(string Address, bool Enabled);
 public sealed class InvoiceIntakeController(IInvoiceIntakeService intake, IPermissionEvaluator permissions) : ControllerBase
 {
     [HttpGet("invoice-intake/messages")]
-    public async Task<IActionResult> Messages([FromQuery] string? status, [FromQuery] int skip = 0, [FromQuery] int take = 50, CancellationToken ct = default)
+    public async Task<IActionResult> Messages([FromQuery] string? status, [FromQuery, System.ComponentModel.DataAnnotations.Range(0, 1_000_000)] int skip = 0, [FromQuery, System.ComponentModel.DataAnnotations.Range(1, 200)] int take = 50, CancellationToken ct = default)
     {
         var (allowed, scope) = await this.ScopeForAsync(permissions, Permissions.InvoiceIntakeManage, ct);
         return allowed ? Ok(await intake.ListMessagesAsync(status, scope, skip, take, ct)) : Forbid();

@@ -20,7 +20,7 @@ public sealed class InvoicesController(
 
     [HttpGet]
     public async Task<IActionResult> List([FromQuery] string? status, [FromQuery] Guid? vendorId, [FromQuery] Guid? legalEntityId, [FromQuery] string? search,
-        [FromQuery] string? source, [FromQuery] int skip = 0, [FromQuery] int take = 50, CancellationToken ct = default)
+        [FromQuery] string? source, [FromQuery, System.ComponentModel.DataAnnotations.Range(0, 1_000_000)] int skip = 0, [FromQuery, System.ComponentModel.DataAnnotations.Range(1, 200)] int take = 50, CancellationToken ct = default)
     {
         var (allowed, scope) = await this.ScopeForAsync(permissions, Permissions.InvoiceView, ct);
         return allowed

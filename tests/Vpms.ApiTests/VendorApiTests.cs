@@ -121,6 +121,49 @@ public sealed class VendorApiTests : IClassFixture<ApiFixtureHolder>
     }
 
     [Fact]
+    public async Task A_document_or_request_is_only_reachable_through_its_own_vendor()
+    {
+        var manager = await SignIn("vm7@acme.com", "Vendor Manager");
+        var approver = await SignIn("va7@acme.com", "Vendor Approver");
+        var first = (await (await manager.Post("/api/v1/vendors", new { legalName = "Owner Co", countryCode = "SA" })).Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetGuid();
+        var second = (await (await manager.Post("/api/v1/vendors", new { legalName = "Other Co", countryCode = "SA" })).Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetGuid();
+
+        var doc = (await (await manager.Upload($"/api/v1/vendors/{first}/documents", "TaxCertificate", "c.pdf", Pdf)).Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetGuid();
+        var request = (await (await manager.Post($"/api/v1/vendors/{first}/requests", new { subject = "Need a certificate", body = "Please upload." })).Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetGuid();
+
+        // the right vendor in the route works; any other vendor answers as if the record does not exist
+        Assert.Equal(HttpStatusCode.NotFound, (await approver.Post($"/api/v1/vendors/{second}/documents/{doc}/verify", new { })).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await approver.Post($"/api/v1/vendors/{second}/documents/{doc}/reject", new { reason = "no" })).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await manager.Post($"/api/v1/vendors/{second}/requests/{request}/reply", new { body = "hi" })).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await manager.Post($"/api/v1/vendors/{second}/requests/{request}/close", new { })).StatusCode);
+        await _api.ScanAllAsync();
+        Assert.Equal(HttpStatusCode.OK, (await approver.Post($"/api/v1/vendors/{first}/documents/{doc}/verify", new { })).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await manager.Post($"/api/v1/vendors/{first}/requests/{request}/close", new { })).StatusCode);
+    }
+
+    [Theory]
+    [InlineData("skip=-1")]
+    [InlineData("take=0")]
+    [InlineData("take=5000")]
+    [InlineData("skip=2000000000")]
+    public async Task Paging_parameters_outside_their_bounds_are_refused(string query)
+    {
+        var manager = await SignIn("vm8@acme.com", "Vendor Manager");
+        var response = await manager.Client.GetAsync($"/api/v1/vendors?{query}");
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+    }
+
+    [Fact]
+    public async Task Overlong_text_is_a_client_error_not_a_server_error()
+    {
+        var manager = await SignIn("vm9@acme.com", "Vendor Manager");
+        var response = await manager.Post("/api/v1/vendors", new { legalName = new string('x', 5000), countryCode = "SA", contactEmail = new string('a', 5000) + "@x.com" });
+        Assert.InRange((int)response.StatusCode, 400, 499);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+    }
+
+    [Fact]
     public async Task Another_tenants_staff_cannot_see_the_vendor()
     {
         var manager = await SignIn("vm6@acme.com", "Vendor Manager");

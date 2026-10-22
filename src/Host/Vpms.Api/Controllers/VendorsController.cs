@@ -23,7 +23,7 @@ public sealed class VendorsController(
     private const long MaxUpload = 25 * 1024 * 1024;
 
     [HttpGet]
-    public async Task<IActionResult> List([FromQuery] string? status, [FromQuery] string? search, [FromQuery] int skip = 0, [FromQuery] int take = 50, CancellationToken ct = default)
+    public async Task<IActionResult> List([FromQuery] string? status, [FromQuery] string? search, [FromQuery, System.ComponentModel.DataAnnotations.Range(0, 1_000_000)] int skip = 0, [FromQuery, System.ComponentModel.DataAnnotations.Range(1, 200)] int take = 50, CancellationToken ct = default)
     {
         var (allowed, scope) = await this.ScopeForAsync(permissions, Permissions.VendorView, ct);
         return allowed ? Ok(await vendors.ListAsync(status, search, scope, skip, take, ct)) : Forbid();
@@ -87,11 +87,12 @@ public sealed class VendorsController(
     }
 
     [HttpPost("{id:guid}/documents/{documentId:guid}/verify"), Authorize(Policy = Permissions.VendorApprove)]
-    public async Task<VendorDocumentDto> Verify(Guid id, Guid documentId, CancellationToken ct) => await documents.VerifyAsync(documentId, ct);
+    public async Task<IActionResult> Verify(Guid id, Guid documentId, CancellationToken ct) =>
+        await DocumentBelongsAsync(id, documentId, ct) ? Ok(await documents.VerifyAsync(documentId, ct)) : NotFound();
 
     [HttpPost("{id:guid}/documents/{documentId:guid}/reject"), Authorize(Policy = Permissions.VendorApprove)]
-    public async Task<VendorDocumentDto> RejectDocument(Guid id, Guid documentId, ReasonRequest body, CancellationToken ct) =>
-        await documents.RejectAsync(documentId, body.Reason, ct);
+    public async Task<IActionResult> RejectDocument(Guid id, Guid documentId, ReasonRequest body, CancellationToken ct) =>
+        await DocumentBelongsAsync(id, documentId, ct) ? Ok(await documents.RejectAsync(documentId, body.Reason, ct)) : NotFound();
 
     // --- legal-entity relationships (entity-scoped permission through the route) ---------------------------
 
@@ -121,8 +122,17 @@ public sealed class VendorsController(
     public async Task<RequestDto> CreateRequest(Guid id, MessageRequest body, CancellationToken ct) => await requests.CreateAsync(id, body.Subject, body.Body, ct);
 
     [HttpPost("{id:guid}/requests/{requestId:guid}/reply"), Authorize(Policy = Permissions.VendorEdit)]
-    public async Task<RequestDto> Reply(Guid id, Guid requestId, BodyRequest body, CancellationToken ct) => await requests.ReplyAsync(requestId, body.Body, ct);
+    public async Task<IActionResult> Reply(Guid id, Guid requestId, BodyRequest body, CancellationToken ct) =>
+        await RequestBelongsAsync(id, requestId, ct) ? Ok(await requests.ReplyAsync(requestId, body.Body, ct)) : NotFound();
 
     [HttpPost("{id:guid}/requests/{requestId:guid}/close"), Authorize(Policy = Permissions.VendorEdit)]
-    public async Task<RequestDto> CloseRequest(Guid id, Guid requestId, CancellationToken ct) => await requests.CloseAsync(requestId, ct);
+    public async Task<IActionResult> CloseRequest(Guid id, Guid requestId, CancellationToken ct) =>
+        await RequestBelongsAsync(id, requestId, ct) ? Ok(await requests.CloseAsync(requestId, ct)) : NotFound();
+
+    // A child record is only reachable through its own vendor: the route's vendor id must match, or the answer is the same as for a record that does not exist.
+    private async Task<bool> DocumentBelongsAsync(Guid vendorId, Guid documentId, CancellationToken ct) =>
+        (await documents.ListAsync(vendorId, ct)).Any(d => d.Id == documentId);
+
+    private async Task<bool> RequestBelongsAsync(Guid vendorId, Guid requestId, CancellationToken ct) =>
+        (await requests.ListAsync(vendorId, ct)).Any(r => r.Id == requestId);
 }

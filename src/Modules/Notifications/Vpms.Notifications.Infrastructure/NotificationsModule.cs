@@ -20,10 +20,10 @@ public static class NotificationsModule
         services.AddSingleton<IPushSender, LoggingPushSender>();
         // One shared HttpClient each (connections are pooled and recycled), like the other outbound clients.
         services.AddSingleton<IEmailSender>(sp => new GraphEmailSender(
-            new HttpClient(new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }) { Timeout = TimeSpan.FromSeconds(30) },
+            new HttpClient(Vpms.BuildingBlocks.Net.OutboundHttp.CreateHandler(sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<NotificationOptions>>().Value.AllowInternalHosts)) { Timeout = TimeSpan.FromSeconds(30) },
             sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<GraphMailOptions>>(), sp.GetRequiredService<TimeProvider>()));
         services.AddSingleton<IWebhookSender>(sp => new TeamsWebhookSender(
-            new HttpClient(new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5), AllowAutoRedirect = false }) { Timeout = TimeSpan.FromSeconds(30) },
+            new HttpClient(Vpms.BuildingBlocks.Net.OutboundHttp.CreateHandler(sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<NotificationOptions>>().Value.AllowInternalHosts)) { Timeout = TimeSpan.FromSeconds(30) },
             sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<NotificationOptions>>()));
         services.AddOptions<GraphMailOptions>();
         return services;

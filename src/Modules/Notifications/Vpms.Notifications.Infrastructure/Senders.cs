@@ -113,7 +113,7 @@ public sealed class GraphEmailSender(HttpClient http, IOptions<GraphMailOptions>
 }
 
 /// <summary>Sends mail through an SMTP server (STARTTLS when asked). The password, if any, is the secret passed in; it is never logged.</summary>
-public sealed class SmtpEmailSender(ILogger<SmtpEmailSender> logger) : IEmailSender
+public sealed class SmtpEmailSender(ILogger<SmtpEmailSender> logger, IOptions<NotificationOptions> options) : IEmailSender
 {
     public string Provider => EmailChannelConfig.Smtp;
 
@@ -129,7 +129,9 @@ public sealed class SmtpEmailSender(ILogger<SmtpEmailSender> logger) : IEmailSen
         try
         {
             using var client = new SmtpClient { Timeout = 30_000 };
-            await client.ConnectAsync(s.SmtpHost!, s.SmtpPort, s.SmtpStartTls ? SecureSocketOptions.StartTls : SecureSocketOptions.None, ct);
+            // The address is resolved and checked here and the connection goes to that address, so a name that points inside is refused.
+            var socket = await Vpms.BuildingBlocks.Net.OutboundHttp.ConnectSocketAsync(s.SmtpHost!, s.SmtpPort, options.Value.AllowInternalHosts, ct);
+            await client.ConnectAsync(socket, s.SmtpHost!, s.SmtpPort, s.SmtpStartTls ? SecureSocketOptions.StartTls : SecureSocketOptions.None, ct);
             if (!string.IsNullOrEmpty(s.SmtpUsername))
             {
                 if (string.IsNullOrEmpty(secret)) return SendResult.Retry("secret_unavailable");
@@ -144,11 +146,15 @@ public sealed class SmtpEmailSender(ILogger<SmtpEmailSender> logger) : IEmailSen
         {
             return SendResult.Retry("smtp_auth_failed");
         }
+        catch (Vpms.BuildingBlocks.Net.OutboundBlockedException)
+        {
+            return SendResult.Fail("smtp_host_not_allowed");
+        }
         catch (SmtpCommandException ex) when ((int)ex.StatusCode >= 500)
         {
             return SendResult.Fail($"smtp_{(int)ex.StatusCode}");
         }
-        catch (Exception ex) when (ex is SmtpCommandException or SmtpProtocolException or IOException or System.Net.Sockets.SocketException or TimeoutException or OperationCanceledException && !ct.IsCancellationRequested)
+        catch (Exception ex) when (ex is SmtpCommandException or SmtpProtocolException or IOException or System.Net.Sockets.SocketException or HttpRequestException or TimeoutException or OperationCanceledException && !ct.IsCancellationRequested)
         {
             logger.LogWarning("SMTP send failed: {Type}", ex.GetType().Name);
             return SendResult.Retry("smtp_unavailable");

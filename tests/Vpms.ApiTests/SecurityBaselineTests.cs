@@ -141,6 +141,18 @@ public sealed class SecurityBaselineTests : IClassFixture<ApiFixtureHolder>
         Assert.False(response.Headers.Contains("Access-Control-Allow-Credentials"));
     }
 
+    [Theory]
+    [InlineData("<script>alert(1)</script>", "failed")]
+    [InlineData("anything at all", "failed")]
+    [InlineData("UserDisabled", "UserDisabled")]
+    public async Task The_sign_in_denied_page_echoes_only_known_reasons(string reason, string expected)
+    {
+        var response = await _api.NewBrowser().GetAsync("/auth/denied?reason=" + Uri.EscapeDataString(reason));
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        var body = System.Text.Json.JsonDocument.Parse(await response.Content.ReadAsStringAsync()).RootElement;
+        Assert.Equal(expected, body.GetProperty("reason").GetString());
+    }
+
     [Fact]
     public async Task The_server_does_not_announce_what_it_runs()
     {

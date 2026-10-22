@@ -6,6 +6,9 @@ public sealed class D365Options
 
     /// <summary>The Entra authority that issues tokens. Sovereign clouds use a different host.</summary>
     public string Authority { get; set; } = "https://login.microsoftonline.com";
+
+    /// <summary>Lets the ERP address point at a private or loopback host. Development and tests only.</summary>
+    public bool AllowInternalHosts { get; set; }
 }
 
 /// <summary>

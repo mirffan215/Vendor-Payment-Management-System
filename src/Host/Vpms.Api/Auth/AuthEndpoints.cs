@@ -35,9 +35,11 @@ public static class AuthEndpoints
             return Results.Challenge(new AuthenticationProperties { RedirectUri = SafeReturnUrl(returnUrl) }, [scheme]);
         });
 
+        // Only the known denial codes are echoed back; anything else a caller puts in the address is replaced.
         auth.MapGet("/denied", (string? reason) =>
             Results.Problem(statusCode: StatusCodes.Status403Forbidden, title: "Sign-in was not permitted.",
-                type: "https://vpms.dev/problems/signin-denied", extensions: new Dictionary<string, object?> { ["reason"] = reason }));
+                type: "https://vpms.dev/problems/signin-denied",
+                extensions: new Dictionary<string, object?> { ["reason"] = reason is not null && Enum.GetNames<Vpms.Identity.Application.SignInDenial>().Contains(reason) ? reason : "failed" }));
 
         // Logout is POST-only and CSRF protected (see CsrfProtectionMiddleware).
         auth.MapPost("/logout", async (HttpContext http) =>

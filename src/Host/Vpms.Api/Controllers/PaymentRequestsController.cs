@@ -23,7 +23,7 @@ public sealed class PaymentRequestsController(IPaymentRequestService requests, I
     }
 
     [HttpGet("requests")]
-    public async Task<IActionResult> List([FromQuery] string? status, [FromQuery] Guid? legalEntityId, [FromQuery] Guid? vendorId, [FromQuery] int skip = 0, [FromQuery] int take = 50, CancellationToken ct = default)
+    public async Task<IActionResult> List([FromQuery] string? status, [FromQuery] Guid? legalEntityId, [FromQuery] Guid? vendorId, [FromQuery, System.ComponentModel.DataAnnotations.Range(0, 1_000_000)] int skip = 0, [FromQuery, System.ComponentModel.DataAnnotations.Range(1, 200)] int take = 50, CancellationToken ct = default)
     {
         var (allowed, scope) = await this.ScopeForAsync(permissions, Permissions.PaymentView, ct);
         return allowed ? Ok(await requests.ListAsync(new PaymentRequestFilter(status, legalEntityId, vendorId), scope, skip, take, ct)) : Forbid();

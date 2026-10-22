@@ -21,7 +21,7 @@ public sealed record TemplateRequest(string Kind, string Channel, string Locale,
 public sealed class NotificationsController(INotificationService notifications, INotificationAdmin admin, INotificationChannelService channels, IPermissionEvaluator permissions) : ControllerBase
 {
     [HttpGet("notifications")]
-    public async Task<IActionResult> List([FromQuery] bool unread = false, [FromQuery] int skip = 0, [FromQuery] int take = 30, [FromQuery] string locale = "en", CancellationToken ct = default) =>
+    public async Task<IActionResult> List([FromQuery] bool unread = false, [FromQuery, System.ComponentModel.DataAnnotations.Range(0, 1_000_000)] int skip = 0, [FromQuery, System.ComponentModel.DataAnnotations.Range(1, 200)] int take = 30, [FromQuery] string locale = "en", CancellationToken ct = default) =>
         Ok(await notifications.ListAsync(unread, skip, take, locale, ct));
 
     [HttpGet("notifications/unread-count")]
@@ -84,7 +84,7 @@ public sealed class NotificationsController(INotificationService notifications, 
     public async Task<IActionResult> DeliverySummary(CancellationToken ct) => await CanConfigureOrApprove(ct) ? Ok(await channels.SummaryAsync(ct)) : Forbid();
 
     [HttpGet("admin/notification-deliveries/dead-letters")]
-    public async Task<IActionResult> DeadLetters([FromQuery] int take = 50, CancellationToken ct = default) => await CanConfigureOrApprove(ct) ? Ok(await channels.DeadLettersAsync(take, ct)) : Forbid();
+    public async Task<IActionResult> DeadLetters([FromQuery, System.ComponentModel.DataAnnotations.Range(1, 200)] int take = 50, CancellationToken ct = default) => await CanConfigureOrApprove(ct) ? Ok(await channels.DeadLettersAsync(take, ct)) : Forbid();
 
     private async Task<bool> CanApprove(CancellationToken ct) =>
         await permissions.HasAsync(Guid.Parse(User.FindFirstValue(VpmsClaims.UserId)!), Permissions.NotificationApproveChange, null, ct);

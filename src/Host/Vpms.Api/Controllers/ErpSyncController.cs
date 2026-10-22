@@ -23,7 +23,7 @@ public sealed class ErpSyncController(IErpSyncService sync, IPermissionEvaluator
     }
 
     [HttpGet]
-    public async Task<IActionResult> List([FromQuery] string? status, [FromQuery] string? type, [FromQuery] int skip = 0, [FromQuery] int take = 50, CancellationToken ct = default)
+    public async Task<IActionResult> List([FromQuery] string? status, [FromQuery] string? type, [FromQuery, System.ComponentModel.DataAnnotations.Range(0, 1_000_000)] int skip = 0, [FromQuery, System.ComponentModel.DataAnnotations.Range(1, 200)] int take = 50, CancellationToken ct = default)
     {
         var (allowed, scope) = await ScopeAsync(ct);
         return allowed ? Ok(await sync.ListAsync(status, type, scope, skip, take, ct)) : Forbid();

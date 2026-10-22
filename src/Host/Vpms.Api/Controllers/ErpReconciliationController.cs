@@ -26,7 +26,7 @@ public sealed class ErpReconciliationController(IReconciliationService reconcili
         await Has(Permissions.ErpOperate, body.LegalEntityId, ct) ? Ok(await reconciliation.RunAsync(body.LegalEntityId, ct)) : Forbid();
 
     [HttpGet("runs")]
-    public async Task<IActionResult> Runs([FromQuery] Guid? legalEntityId, [FromQuery] int take = 20, CancellationToken ct = default)
+    public async Task<IActionResult> Runs([FromQuery] Guid? legalEntityId, [FromQuery, System.ComponentModel.DataAnnotations.Range(1, 200)] int take = 20, CancellationToken ct = default)
     {
         var (allowed, scope) = await ScopeAsync(ct);
         return allowed ? Ok(await reconciliation.RunsAsync(legalEntityId, scope, take, ct)) : Forbid();
@@ -40,7 +40,7 @@ public sealed class ErpReconciliationController(IReconciliationService reconcili
     }
 
     [HttpGet("items")]
-    public async Task<IActionResult> Items([FromQuery] Guid? legalEntityId, [FromQuery] string? status, [FromQuery] string? type, [FromQuery] int skip = 0, [FromQuery] int take = 100, CancellationToken ct = default)
+    public async Task<IActionResult> Items([FromQuery] Guid? legalEntityId, [FromQuery] string? status, [FromQuery] string? type, [FromQuery, System.ComponentModel.DataAnnotations.Range(0, 1_000_000)] int skip = 0, [FromQuery, System.ComponentModel.DataAnnotations.Range(1, 200)] int take = 100, CancellationToken ct = default)
     {
         var (allowed, scope) = await ScopeAsync(ct);
         return allowed ? Ok(await reconciliation.ItemsAsync(legalEntityId, status, type, scope, skip, take, ct)) : Forbid();

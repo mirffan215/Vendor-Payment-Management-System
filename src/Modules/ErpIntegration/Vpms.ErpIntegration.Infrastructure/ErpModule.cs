@@ -12,9 +12,12 @@ public static class ErpModule
     /// <summary>Makes Dynamics 365 Finance selectable as a provider. The mock is never registered here.</summary>
     public static IServiceCollection AddD365FinanceAdapter(this IServiceCollection services, Microsoft.Extensions.Configuration.IConfiguration configuration)
     {
-        services.Configure<D365.D365Options>(o => o.Authority = configuration[$"{D365.D365Options.Section}:Authority"] ?? o.Authority);
+        services.Configure<D365.D365Options>(o => {
+            o.Authority = configuration[$"{D365.D365Options.Section}:Authority"] ?? o.Authority;
+            o.AllowInternalHosts = string.Equals(configuration[$"{D365.D365Options.Section}:AllowInternalHosts"], "true", StringComparison.OrdinalIgnoreCase);
+        });
         services.AddSingleton<IErpAdapter>(sp => new D365.D365FinanceAdapter(
-            new HttpClient(new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }), sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<D365.D365Options>>(),
+            new HttpClient(Vpms.BuildingBlocks.Net.OutboundHttp.CreateHandler(sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<D365.D365Options>>().Value.AllowInternalHosts)), sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<D365.D365Options>>(),
             sp.GetRequiredService<TimeProvider>()));
         return services;
     }

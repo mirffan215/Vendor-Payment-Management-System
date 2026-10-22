@@ -120,7 +120,7 @@ public sealed class RolesController(IRoleAdminService service) : ControllerBase
 public sealed class UsersController(IUserAdminService service) : ControllerBase
 {
     [HttpGet]
-    public async Task<IReadOnlyList<UserDto>> List([FromQuery] string? search, [FromQuery] int skip = 0, [FromQuery] int take = 50, CancellationToken ct = default) =>
+    public async Task<IReadOnlyList<UserDto>> List([FromQuery] string? search, [FromQuery, System.ComponentModel.DataAnnotations.Range(0, 1_000_000)] int skip = 0, [FromQuery, System.ComponentModel.DataAnnotations.Range(1, 200)] int take = 50, CancellationToken ct = default) =>
         await service.ListAsync(search, skip, take, ct);
 
     [HttpPost("{userId:guid}/enable")]

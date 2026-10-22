@@ -121,7 +121,7 @@ public sealed class NotificationSendersTests
     [InlineData("::1", false)]
     [InlineData("mail.internal", false)]
     [InlineData("smtp.office365.com", true)]
-    [InlineData("203.0.113.7", true)]
+    [InlineData("93.184.216.34", true)]
     [InlineData("not a host", false)]
     [InlineData("", false)]
     public void Mail_servers_must_not_point_inside_the_network(string host, bool allowed) => Assert.Equal(allowed, ChannelRules.IsAllowedHost(host, false));
@@ -195,7 +195,7 @@ public sealed class NotificationSendersTests
     {
         using var server = new FakeSmtp();
         var settings = new EmailChannelConfig("Smtp", "noreply@acme.com", "Acme AP", null, null, null, null, "127.0.0.1", server.Port, false, null);
-        var result = await new SmtpEmailSender(NullLogger<SmtpEmailSender>.Instance).SendAsync(ChannelRules.ToJson(settings), null, Mail);
+        var result = await new SmtpEmailSender(NullLogger<SmtpEmailSender>.Instance, Options.Create(new NotificationOptions { AllowInternalHosts = true })).SendAsync(ChannelRules.ToJson(settings), null, Mail);
         await server.Serving.WaitAsync(TimeSpan.FromSeconds(10));
 
         Assert.Equal(SendOutcome.Sent, result.Outcome);
@@ -211,14 +211,14 @@ public sealed class NotificationSendersTests
     {
         using var refusing = new FakeSmtp("550 no such user");
         var settings = new EmailChannelConfig("Smtp", "noreply@acme.com", null, null, null, null, null, "127.0.0.1", refusing.Port, false, null);
-        Assert.Equal(SendOutcome.Permanent, (await new SmtpEmailSender(NullLogger<SmtpEmailSender>.Instance).SendAsync(ChannelRules.ToJson(settings), null, Mail)).Outcome);
+        Assert.Equal(SendOutcome.Permanent, (await new SmtpEmailSender(NullLogger<SmtpEmailSender>.Instance, Options.Create(new NotificationOptions { AllowInternalHosts = true })).SendAsync(ChannelRules.ToJson(settings), null, Mail)).Outcome);
 
         var closed = new TcpListener(IPAddress.Loopback, 0);
         closed.Start();
         var port = ((IPEndPoint)closed.LocalEndpoint).Port;
         closed.Stop();
         var down = settings with { SmtpPort = port };
-        Assert.Equal(SendOutcome.Transient, (await new SmtpEmailSender(NullLogger<SmtpEmailSender>.Instance).SendAsync(ChannelRules.ToJson(down), null, Mail)).Outcome);
+        Assert.Equal(SendOutcome.Transient, (await new SmtpEmailSender(NullLogger<SmtpEmailSender>.Instance, Options.Create(new NotificationOptions { AllowInternalHosts = true })).SendAsync(ChannelRules.ToJson(down), null, Mail)).Outcome);
     }
 
     // --- delivery state --------------------------------------------------------------------------------------

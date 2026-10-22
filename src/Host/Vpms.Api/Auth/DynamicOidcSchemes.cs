@@ -18,6 +18,7 @@ public sealed class DynamicOidcSchemes(
     OidcBackchannelOptions backchannel) : IProviderChangeNotifier
 {
     private readonly SemaphoreSlim _gate = new(1, 1);
+    private readonly HttpMessageHandler _guardedHandler = Vpms.BuildingBlocks.Net.OutboundHttp.CreateHandler(authOptions.Value.AllowInsecureMetadata);
 
     /// <summary>Drops the runtime scheme so the next sign-in rebuilds it from the provider's current settings.</summary>
     public void ProviderChanged(Guid providerId)
@@ -77,7 +78,8 @@ public sealed class DynamicOidcSchemes(
                 GetClaimsFromUserInfoEndpoint = false,
                 MapInboundClaims = false,
                 RequireHttpsMetadata = !authOptions.Value.AllowInsecureMetadata,
-                BackchannelHttpHandler = backchannel.Handler,
+                // Tenant administrators type the authority in, so the back-channel only connects to public addresses (unless metadata over http is allowed for development).
+                BackchannelHttpHandler = backchannel.Handler ?? _guardedHandler,
                 Events = OidcEvents.Create(provider.Id),
             };
             options.Scope.Clear();

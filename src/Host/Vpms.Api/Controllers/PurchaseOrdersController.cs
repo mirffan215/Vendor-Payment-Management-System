@@ -20,7 +20,7 @@ public sealed class PurchaseOrdersController(IPurchaseOrderService orders, IPerm
             : Forbid();
 
     [HttpGet("purchase-orders")]
-    public async Task<IActionResult> List([FromQuery] Guid? legalEntityId, [FromQuery] string? search, [FromQuery] int skip = 0, [FromQuery] int take = 50, CancellationToken ct = default)
+    public async Task<IActionResult> List([FromQuery] Guid? legalEntityId, [FromQuery] string? search, [FromQuery, System.ComponentModel.DataAnnotations.Range(0, 1_000_000)] int skip = 0, [FromQuery, System.ComponentModel.DataAnnotations.Range(1, 200)] int take = 50, CancellationToken ct = default)
     {
         var (allowed, scope) = await this.ScopeForAsync(permissions, Permissions.InvoiceView, ct);
         return allowed ? Ok(await orders.ListAsync(legalEntityId, search, scope, skip, take, ct)) : Forbid();
