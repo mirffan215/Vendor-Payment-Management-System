@@ -14,6 +14,7 @@ public static class VendorsModule
         services.AddScoped<IVendorService>(sp => sp.GetRequiredService<VendorService>());
         services.AddScoped<IVendorLookup>(sp => sp.GetRequiredService<VendorService>());
         services.AddScoped<IVendorErpSource, VendorErpSource>();
+        services.AddScoped<Vpms.Notifications.Contracts.INotificationSource, VendorNotificationSource>();
         services.AddScoped<VendorDocumentService>();
         services.AddScoped<IVendorDocumentService>(sp => sp.GetRequiredService<VendorDocumentService>());
         services.AddScoped<IVendorPortalService, VendorPortalService>();

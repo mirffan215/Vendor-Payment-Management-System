@@ -7,6 +7,7 @@
     <ProjectReference Include="..\..\Identity\Vpms.Identity.Contracts\Vpms.Identity.Contracts.csproj" />
     <ProjectReference Include="..\..\CustomerAdmin\Vpms.CustomerAdmin.Contracts\Vpms.CustomerAdmin.Contracts.csproj" />
     <ProjectReference Include="..\Vpms.Workflow.Contracts\Vpms.Workflow.Contracts.csproj" />
+    <ProjectReference Include="..\..\Notifications\Vpms.Notifications.Contracts\Vpms.Notifications.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -62,6 +62,11 @@ public static class DatabaseMigrator
             await ctx.Database.MigrateAsync(ct);
         }
 
+        await using (var ctx = new Vpms.Notifications.Infrastructure.NotificationsDbContext(Options<Vpms.Notifications.Infrastructure.NotificationsDbContext>(connectionString), tenant))
+        {
+            await ctx.Database.MigrateAsync(ct);
+        }
+
         await using (var ctx = new PortalDbContext(Options<PortalDbContext>(connectionString), tenant))
         {
             await ctx.Database.MigrateAsync(ct);

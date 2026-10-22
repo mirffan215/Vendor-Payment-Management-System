@@ -31,6 +31,7 @@ public static class ErpModule
         services.AddScoped<IErpSyncService>(sp => sp.GetRequiredService<ErpSyncService>());
         services.AddScoped<IErpScan>(sp => sp.GetRequiredService<ErpSyncService>());
         services.AddScoped<IReconciliationService, ReconciliationService>();
+        services.AddScoped<Vpms.Notifications.Contracts.INotificationSource, ErpNotificationSource>();
         services.AddScoped<ErpInbound>();
         services.AddScoped<IErpInbound>(sp => sp.GetRequiredService<ErpInbound>());
         services.AddScoped<IErpInboundQuery>(sp => sp.GetRequiredService<ErpInbound>());

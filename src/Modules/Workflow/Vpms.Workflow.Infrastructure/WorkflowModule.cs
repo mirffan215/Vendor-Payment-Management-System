@@ -26,6 +26,7 @@ public static class WorkflowModule
         services.AddScoped<IWorkflowTimers>(sp => sp.GetRequiredService<WorkflowTimers>());
         services.AddScoped<IApprovalScan>(sp => sp.GetRequiredService<ApprovalService>());
         services.AddScoped<IApprovalReportSource, ApprovalReportSource>();
+        services.AddScoped<Vpms.Notifications.Contracts.INotificationSource, ApprovalNotificationSource>();
         return services;
     }
 }

@@ -16,6 +16,18 @@ public sealed class TenantLookup(CustomerAdminDbContext db, TenantContext tenant
             .FirstOrDefaultAsync(ct);
     }
 
+    public async Task<IReadOnlyList<TenantDefaults>> ListActiveAsync(CancellationToken ct = default)
+    {
+        using var _ = tenant.BeginPlatformScope();
+        return await db.Tenants.AsNoTracking().Where(t => t.Status == "Active").Select(t => new TenantDefaults(t.Id, t.DefaultLocale, t.DefaultCalendar)).ToListAsync(ct);
+    }
+
+    public async Task<TenantDefaults?> GetDefaultsAsync(Guid tenantId, CancellationToken ct = default)
+    {
+        using var _ = tenant.BeginPlatformScope();
+        return await db.Tenants.AsNoTracking().Where(t => t.Id == tenantId).Select(t => new TenantDefaults(t.Id, t.DefaultLocale, t.DefaultCalendar)).FirstOrDefaultAsync(ct);
+    }
+
     public async Task<string?> FindSlugAsync(Guid tenantId, CancellationToken ct = default)
     {
         using var _ = tenant.BeginPlatformScope();

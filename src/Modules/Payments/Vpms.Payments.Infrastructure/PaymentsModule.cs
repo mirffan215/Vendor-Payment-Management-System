@@ -19,6 +19,7 @@ public static class PaymentsModule
         services.AddScoped<Vpms.Payments.Application.ITreasuryService, TreasuryService>();
         services.AddScoped<IPaymentLifecycle, PaymentLifecycleService>();
         services.AddScoped<IPaymentReportSource, PaymentReportSource>();
+        services.AddScoped<Vpms.Notifications.Contracts.INotificationSource, PaymentNotificationSource>();
         return services;
     }
 }

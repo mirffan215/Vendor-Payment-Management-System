@@ -57,6 +57,10 @@
     <ProjectReference Include="..\..\src\Modules\Reporting\Vpms.Reporting.Application\Vpms.Reporting.Application.csproj" />
     <ProjectReference Include="..\..\src\Modules\Reporting\Vpms.Reporting.Infrastructure\Vpms.Reporting.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\Modules\Reporting\Vpms.Reporting.Contracts\Vpms.Reporting.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Notifications\Vpms.Notifications.Domain\Vpms.Notifications.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Notifications\Vpms.Notifications.Application\Vpms.Notifications.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Notifications\Vpms.Notifications.Infrastructure\Vpms.Notifications.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Notifications\Vpms.Notifications.Contracts\Vpms.Notifications.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

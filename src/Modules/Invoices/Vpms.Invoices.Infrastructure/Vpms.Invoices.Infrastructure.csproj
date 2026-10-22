@@ -11,6 +11,7 @@
     <ProjectReference Include="..\..\Workflow\Vpms.Workflow.Contracts\Vpms.Workflow.Contracts.csproj" />
     <ProjectReference Include="..\..\Payments\Vpms.Payments.Contracts\Vpms.Payments.Contracts.csproj" />
     <ProjectReference Include="..\Vpms.Invoices.Contracts\Vpms.Invoices.Contracts.csproj" />
+    <ProjectReference Include="..\..\Notifications\Vpms.Notifications.Contracts\Vpms.Notifications.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>
