@@ -14,6 +14,13 @@ public sealed class DelegationService(
     WorkflowDbContext db, ILegalEntityLookup entities, IApproverDirectory directory, IUserDirectory users, IAuditPort audit, ICurrentUser current, TimeProvider clock)
     : IDelegationService
 {
+    public async Task<IReadOnlyList<ApproverOption>> ApproversAsync(Guid legalEntityId, CancellationToken ct = default)
+    {
+        var ids = await directory.ListPermissionHoldersAsync(legalEntityId, Permissions.InvoiceApprove, ct);
+        var names = await users.GetAsync(ids, ct);
+        return ids.Select(i => new ApproverOption(i, names.TryGetValue(i, out var u) ? u.DisplayName : i.ToString())).OrderBy(o => o.Name).ToList();
+    }
+
     public async Task<IReadOnlyList<DelegationDto>> MineAsync(bool activeOnly, CancellationToken ct = default)
     {
         var me = current.UserId;

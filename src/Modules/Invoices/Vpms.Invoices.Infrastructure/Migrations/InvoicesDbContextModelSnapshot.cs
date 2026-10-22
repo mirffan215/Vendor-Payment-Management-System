@@ -104,6 +104,9 @@ namespace Vpms.Invoices.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("ApprovalBaselineJson")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<Guid?>("ApprovalRunId")
                         .HasColumnType("uniqueidentifier");
 

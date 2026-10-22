@@ -18,6 +18,7 @@ public class WorkflowDbContext(DbContextOptions<WorkflowDbContext> options, ITen
     public DbSet<TaskDecision> Decisions => Set<TaskDecision>();
     public DbSet<JoinArrival> Joins => Set<JoinArrival>();
     public DbSet<Delegation> Delegations => Set<Delegation>();
+    public DbSet<MaterialityPolicy> MaterialityPolicies => Set<MaterialityPolicy>();
     public DbSet<WorkflowNotice> Notices => Set<WorkflowNotice>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -119,6 +120,22 @@ public class WorkflowDbContext(DbContextOptions<WorkflowDbContext> options, ITen
             b.HasIndex(x => new { x.TenantId, x.DelegateId, x.Status });
             b.HasIndex(x => new { x.TenantId, x.DelegatorId, x.Status });
             b.HasIndex(x => new { x.TenantId, x.LegalEntityId });
+        });
+
+        modelBuilder.Entity<MaterialityPolicy>(b =>
+        {
+            b.ToTable("MaterialityPolicy");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Id).ValueGeneratedNever();
+            b.Property(x => x.SubjectType).HasMaxLength(30).IsRequired();
+            b.Property(x => x.ConfigJson).IsRequired();
+            b.Property(x => x.Status).HasMaxLength(20).IsRequired();
+            b.Property(x => x.Note).HasMaxLength(500).IsRequired();
+            b.Property(x => x.DecisionComment).HasMaxLength(500);
+            b.Property(x => x.RowVersion).IsRowVersion();
+            b.HasIndex(x => new { x.TenantId, x.LegalEntityId, x.SubjectType, x.VersionNo }).IsUnique();
+            b.HasIndex(x => new { x.LegalEntityId, x.SubjectType }).IsUnique().HasFilter("[Status] = 'Active'").HasDatabaseName("UX_MaterialityPolicy_Active");
+            b.HasIndex(x => new { x.LegalEntityId, x.SubjectType }).IsUnique().HasFilter("[Status] = 'Pending'").HasDatabaseName("UX_MaterialityPolicy_Pending");
         });
 
         modelBuilder.Entity<WorkflowNotice>(b =>

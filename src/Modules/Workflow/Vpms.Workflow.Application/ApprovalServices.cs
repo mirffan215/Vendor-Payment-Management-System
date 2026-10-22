@@ -55,8 +55,13 @@ public sealed record DelegationDto(
 /// <param name="DelegatorId">Leave empty to delegate your own approvals. Setting someone else's needs the workflow-administration permission.</param>
 public sealed record CreateDelegation(Guid LegalEntityId, Guid? DelegatorId, Guid DelegateId, DateTimeOffset ValidFrom, DateTimeOffset ValidTo, decimal? MaxAmount, string Reason);
 
+public sealed record ApproverOption(Guid Id, string Name);
+
 public interface IDelegationService
 {
+    /// <summary>People who can approve invoices of the legal entity: the choices for a delegate or a workflow approver.</summary>
+    Task<IReadOnlyList<ApproverOption>> ApproversAsync(Guid legalEntityId, CancellationToken ct = default);
+
     /// <summary>Delegations the current user gave or received (newest first), optionally only those still in force.</summary>
     Task<IReadOnlyList<DelegationDto>> MineAsync(bool activeOnly, CancellationToken ct = default);
 

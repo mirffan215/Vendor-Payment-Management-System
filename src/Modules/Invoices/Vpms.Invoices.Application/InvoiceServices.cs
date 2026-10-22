@@ -26,6 +26,8 @@ public sealed record InvoiceListItem(
     Guid Id, Guid LegalEntityId, Guid VendorId, string VendorName, string InvoiceNumber, DateOnly InvoiceDate, string CurrencyCode, decimal Total,
     string Source, string Status, DateTimeOffset CreatedAt);
 
+public sealed record ReviseResult(InvoiceDto Invoice, bool Material, IReadOnlyList<string> ChangedFields);
+
 public sealed record InvoiceFilter(string? Status, Guid? VendorId, Guid? LegalEntityId, string? Search, string? Source);
 
 public interface IInvoiceService
@@ -46,6 +48,12 @@ public interface IInvoiceService
 
     /// <summary>Starts the approval workflow of the legal entity for a verified invoice. The person doing this can never approve it.</summary>
     Task<InvoiceDto> SendForApprovalAsync(Guid id, CancellationToken ct = default);
+
+    /// <summary>
+    /// Changes an invoice that is in approval or approved. A material change (per the legal entity's settings) voids the approval and sends
+    /// the invoice back through verification; a small one keeps it. Either way the editor can no longer approve this invoice.
+    /// </summary>
+    Task<ReviseResult> ReviseAsync(Guid id, InvoiceData data, string reason, CancellationToken ct = default);
 
     Task<InvoiceDto> CancelAsync(Guid id, string reason, CancellationToken ct = default);
 

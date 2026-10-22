@@ -196,6 +196,76 @@ namespace Vpms.Workflow.Infrastructure.Migrations
                     b.ToTable("JoinArrival", "wf");
                 });
 
+            modelBuilder.Entity("Vpms.Workflow.Domain.MaterialityPolicy", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ConfigJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DecidedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DecidedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("DecisionComment")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid>("LegalEntityId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Note")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("SubjectType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("VersionNo")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("LegalEntityId", "SubjectType")
+                        .IsUnique()
+                        .HasDatabaseName("UX_MaterialityPolicy_Pending")
+                        .HasFilter("[Status] = 'Pending'");
+
+                    b.HasIndex("TenantId", "LegalEntityId", "SubjectType", "VersionNo")
+                        .IsUnique();
+
+                    b.ToTable("MaterialityPolicy", "wf");
+                });
+
             modelBuilder.Entity("Vpms.Workflow.Domain.TaskDecision", b =>
                 {
                     b.Property<Guid>("Id")

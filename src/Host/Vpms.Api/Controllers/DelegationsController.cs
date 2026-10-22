@@ -18,6 +18,13 @@ public sealed class DelegationsController(IDelegationService delegations, IWorkf
         return allowed ? Ok(await delegations.MineAsync(activeOnly, ct)) : Forbid();
     }
 
+    /// <summary>People who can approve for a legal entity, for choosing a delegate or a workflow approver.</summary>
+    [HttpGet("approvals/approvers")]
+    public async Task<IActionResult> Approvers([FromQuery] Guid legalEntityId, CancellationToken ct) =>
+        await Has(Permissions.InvoiceApprove, legalEntityId, ct) || await Has(Permissions.WorkflowConfigure, legalEntityId, ct) || await Has(Permissions.WorkflowAdminister, legalEntityId, ct)
+            ? Ok(await delegations.ApproversAsync(legalEntityId, ct))
+            : Forbid();
+
     [HttpPost("delegations")]
     public async Task<IActionResult> Create(CreateDelegation body, CancellationToken ct)
     {

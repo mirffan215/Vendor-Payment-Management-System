@@ -132,6 +132,68 @@ public sealed class ApprovalsApiTests : IClassFixture<ApiFixtureHolder>
     }
 
     [Fact]
+    public async Task Editing_an_invoice_in_approval_restarts_approval_by_default_and_reports_what_changed()
+    {
+        var (entity, vendor) = await Master("AP6");
+        var w = await Workflow(entity, "ap6");
+        var clerk = await SignIn("ap6-clerk@acme.com", "Invoice Clerk");
+        var invoiceId = await VerifiedInvoice(clerk, entity, vendor, "AP-6");
+        await clerk.Post($"/api/v1/invoices/{invoiceId}/send-for-approval");
+
+        var current = await clerk.Client.GetFromJsonAsync<JsonElement>($"/api/v1/invoices/{invoiceId}");
+        Assert.Equal(HttpStatusCode.BadRequest, (await clerk.Post($"/api/v1/invoices/{invoiceId}/revise", new { data = Revised(current, 200m), reason = " " })).StatusCode);
+
+        var revised = await clerk.Post($"/api/v1/invoices/{invoiceId}/revise", new { data = Revised(current, 200m), reason = "Supplier corrected the amount" });
+        Assert.Equal(HttpStatusCode.OK, revised.StatusCode);
+        var body = await revised.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.True(body.GetProperty("material").GetBoolean());
+        Assert.Contains("total", body.GetProperty("changedFields").EnumerateArray().Select(e => e.GetString()));
+        Assert.Equal("Verified", body.GetProperty("invoice").GetProperty("status").GetString());
+        Assert.Equal(0, (await w.A1.Client.GetFromJsonAsync<JsonElement>("/api/v1/approvals/inbox")).EnumerateArray().Count(i => i.GetProperty("subjectId").GetGuid() == invoiceId));
+
+        // only people who can edit invoices may revise
+        Assert.Equal(HttpStatusCode.NotFound, (await w.A1.Post($"/api/v1/invoices/{invoiceId}/revise", new { data = Revised(current, 300m), reason = "x" })).StatusCode);
+    }
+
+    [Fact]
+    public async Task Materiality_settings_need_a_second_person_over_http()
+    {
+        var (entity, _) = await Master("AP7");
+        var admin = await SignIn("ap7-admin@acme.com", "Workflow Administrator");
+        var changer = await SignIn("ap7-changer@acme.com", "Workflow Change Approver");
+        var url = $"/api/v1/admin/legal-entities/{entity}/approval-materiality";
+
+        var initial = await admin.Client.GetFromJsonAsync<JsonElement>(url);
+        Assert.Equal("Default", initial.GetProperty("active").GetProperty("status").GetString());
+        Assert.Equal(0m, initial.GetProperty("active").GetProperty("config").GetProperty("amountPercent").GetDecimal());
+
+        var bad = await admin.Put(url, new { config = new { amountPercent = 500m, amountAbsolute = 0m, materialFields = new[] { "total" } }, note = "x" });
+        Assert.Equal("percent_invalid", await ErrorCode(bad));
+
+        var proposed = await admin.Put(url, new { config = new { amountPercent = 2m, amountAbsolute = 10m, materialFields = new[] { "total", "currency" } }, note = "Tolerate rounding" });
+        Assert.Equal(HttpStatusCode.OK, proposed.StatusCode);
+        var id = (await proposed.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetGuid();
+        Assert.Equal(HttpStatusCode.NotFound, (await admin.Post($"/api/v1/approval-materiality-changes/{id}/approve", new { })).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await changer.Post($"/api/v1/approval-materiality-changes/{id}/approve", new { comment = "ok" })).StatusCode);
+
+        var after = await admin.Client.GetFromJsonAsync<JsonElement>(url);
+        Assert.Equal(2m, after.GetProperty("active").GetProperty("config").GetProperty("amountPercent").GetDecimal());
+        var fields = await admin.Client.GetFromJsonAsync<JsonElement>("/api/v1/approval-materiality/fields");
+        Assert.Contains("total", fields.GetProperty("money").EnumerateArray().Select(e => e.GetString()));
+    }
+
+    private static object Revised(JsonElement invoice, decimal net)
+    {
+        var tax = Math.Round(net * 0.15m, 2);
+        return new
+        {
+            invoiceNumber = invoice.GetProperty("invoiceNumber").GetString(), invoiceDate = invoice.GetProperty("invoiceDate").GetString(), dueDate = (string?)null, currencyCode = "SAR",
+            subtotal = net, taxTotal = tax, total = net + tax, poReference = (string?)null, supplierTaxInvoiceRef = (string?)null,
+            lines = new[] { new { description = "Consulting", quantity = 1m, unitPrice = net, lineAmount = net, taxCode = "S", taxRate = 0.15m, taxAmount = tax, poLineRef = (string?)null, dimensionsJson = (string?)null } },
+        };
+    }
+
+    [Fact]
     public async Task One_person_cannot_hold_both_invoice_preparation_and_approval()
     {
         await SignIn("ap5-both@acme.com", "Invoice Clerk");

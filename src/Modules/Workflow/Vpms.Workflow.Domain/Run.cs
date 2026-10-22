@@ -250,6 +250,22 @@ public class WorkflowRun : ILegalEntityScoped
         return added;
     }
 
+    /// <summary>
+    /// The subject was edited by someone (a non-material change keeps the approval running). They become a maker: they can no longer
+    /// decide it and are taken off any task still waiting for a decision. The amount used for approval limits follows the edit.
+    /// </summary>
+    public void Rebind(int newVersion, decimal newAmount, Guid editor)
+    {
+        if (Status != RunStatus.Active) throw new ConflictException("run_not_active", "This approval has already finished.");
+        SubjectVersion = newVersion;
+        Facts = Facts with { Amount = newAmount };
+        if (editor != Guid.Empty && !Makers.Contains(editor)) Makers = [.. Makers, editor];
+        foreach (var task in PendingTasks.Where(t => t.Assignees.Contains(editor)).ToList())
+        {
+            task.Assignees = task.Assignees.Where(a => a != editor).ToList();
+        }
+    }
+
     /// <summary>Ends the run without a decision, for example when the subject changed materially and approval restarts.</summary>
     public void Cancel(string reason, DateTimeOffset now)
     {

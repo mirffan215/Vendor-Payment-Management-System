@@ -91,6 +91,9 @@ public class Invoice : ILegalEntityScoped, IVendorOwned
 
     public DateTimeOffset? ApprovedAt { get; set; }
 
+    /// <summary>The material fields as they were when approval started. Later edits are compared with this, so small edits cannot add up unnoticed.</summary>
+    public string? ApprovalBaselineJson { get; set; }
+
     public List<InvoiceLine> Lines { get; set; } = [];
 
     [Timestamp]
@@ -163,12 +166,41 @@ public class Invoice : ILegalEntityScoped, IVendorOwned
 
     public bool CanStartApproval => Status is InvoiceStatus.Verified or InvoiceStatus.ReadyForApproval;
 
-    public void StartApproval(Guid runId)
+    public void StartApproval(Guid runId, string baselineJson)
     {
         Require(CanStartApproval, "Only a verified invoice can be sent for approval.");
         Status = InvoiceStatus.InApproval;
         StatusReason = null;
         ApprovalRunId = runId;
+        ApprovalBaselineJson = baselineJson;
+    }
+
+    public bool CanRevise => Status is InvoiceStatus.InApproval or InvoiceStatus.Approved;
+
+    /// <summary>Starts an edit of an invoice that is in approval or approved. <see cref="ConcludeRevision"/> then says whether the approval survives.</summary>
+    public void BeginRevision(Guid editor, DateTimeOffset now)
+    {
+        Require(CanRevise, "Only an invoice in approval or already approved can be revised.");
+        Version++;
+        LastEditedBy = editor;
+        LastEditedAt = now;
+    }
+
+    /// <summary>A material change takes the invoice back to verification and voids the approval; a small one keeps it, now covering the new version.</summary>
+    public void ConcludeRevision(bool material)
+    {
+        if (material)
+        {
+            Status = InvoiceStatus.Received;
+            StatusReason = null;
+            ApprovedAt = null;
+            ApprovedVersion = null;
+            ApprovalBaselineJson = null;
+        }
+        else if (Status == InvoiceStatus.Approved)
+        {
+            ApprovedVersion = Version;
+        }
     }
 
     /// <summary>Applies the end of an approval run. Repeating it for the same version changes nothing.</summary>

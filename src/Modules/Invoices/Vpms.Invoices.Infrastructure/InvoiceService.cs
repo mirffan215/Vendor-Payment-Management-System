@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Vpms.BuildingBlocks.Audit;
 using Vpms.BuildingBlocks.Errors;
 using Vpms.BuildingBlocks.Security;
@@ -16,7 +17,8 @@ namespace Vpms.Invoices.Infrastructure;
 
 public sealed partial class InvoiceService(
     InvoicesDbContext db, IFieldProtector protector, IVendorLookup vendors, ILegalEntityLookup entities, IAttachmentService attachments,
-    IAuditPort audit, ICurrentUser current, TimeProvider clock, IInvoiceVerifier verifier, IApprovalStarter approvals) : IInvoiceService
+    IAuditPort audit, ICurrentUser current, TimeProvider clock, IInvoiceVerifier verifier, IApprovalStarter approvals,
+    IMaterialityEvaluator materiality, IApprovalLifecycle lifecycle, Microsoft.Extensions.Logging.ILogger<InvoiceService> logger) : IInvoiceService
 {
     public const string DuplicateKeyColumn = "invoice.Invoice.DuplicateKey";
     public const string NumberKeyColumn = "invoice.Invoice.NumberKey";
@@ -137,12 +139,76 @@ public sealed partial class InvoiceService(
         var started = await approvals.StartAsync(new ApprovalSubject("Invoice", invoice.Id, invoice.Version, invoice.LegalEntityId,
             $"{invoice.InvoiceNumber} - {vendorName}", invoice.Total, invoice.CurrencyCode, invoice.VendorId, invoice.Source, DimensionsOf(invoice), makers), ct);
 
-        invoice.StartApproval(started.RunId);
+        invoice.StartApproval(started.RunId, JsonSerializer.Serialize(Snapshot(invoice)));
         if (started.Status == "Approved") invoice.ApplyApproved(invoice.Version, clock.GetUtcNow()); // the workflow needed no decision for this invoice
         audit.Record(new AuditEntry("invoice.sent-for-approval", "Invoice", id.ToString(),
             ChangeSummaryJson: JsonSerializer.Serialize(new { invoice.Version, started.RunId, started.DefinitionVersion, to = invoice.Status })));
         await db.SaveChangesAsync(ct);
         return await GetAsync(id, ct);
+    }
+
+    public async Task<ReviseResult> ReviseAsync(Guid id, InvoiceData data, string reason, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(reason) || reason.Length > 500) throw new ValidationFailedException("reason_required", "Say why the invoice changes (max 500 characters).");
+        Validate(data);
+        var invoice = await LoadAsync(id, track: true, ct);
+        if (!invoice.CanRevise) throw new ConflictException("invalid_transition", "Only an invoice in approval or already approved can be revised this way.");
+
+        var baseline = string.IsNullOrEmpty(invoice.ApprovalBaselineJson)
+            ? Snapshot(invoice)
+            : JsonSerializer.Deserialize<Dictionary<string, string>>(invoice.ApprovalBaselineJson)!;
+        var wasStatus = invoice.Status;
+
+        invoice.BeginRevision(current.UserId, clock.GetUtcNow());
+        db.Lines.RemoveRange(invoice.Lines);
+        await ApplyAsync(invoice, data, ct);
+        db.Lines.AddRange(invoice.Lines);
+
+        var result = await materiality.EvaluateAsync(invoice.LegalEntityId, "Invoice", baseline, Snapshot(invoice), ct);
+        invoice.ConcludeRevision(result.Material);
+        audit.Record(new AuditEntry("invoice.revised", "Invoice", id.ToString(),
+            ChangeSummaryJson: JsonSerializer.Serialize(new { invoice.Version, from = wasStatus, to = invoice.Status, material = result.Material, result.ChangedFields, reason, invoice.Total })));
+        await db.SaveChangesAsync(ct);
+
+        try
+        {
+            if (result.Material)
+            {
+                await lifecycle.CancelActiveAsync("Invoice", id, "The invoice changed materially: " + string.Join(", ", result.ChangedFields), ct);
+            }
+            else if (wasStatus == InvoiceStatus.InApproval)
+            {
+                await lifecycle.RebindAsync("Invoice", id, invoice.Version, invoice.Total, current.UserId, ct);
+            }
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            // The invoice change is saved. A stale run is cancelled when approval is next started, and its outcome is ignored meanwhile.
+            logger.LogError(ex, "Updating the approval run of invoice {InvoiceId} after a revision failed.", id);
+        }
+
+        if (result.Material) await VerifyNowAsync(id, ct);
+        return new ReviseResult(await GetAsync(id, ct), result.Material, result.ChangedFields);
+    }
+
+    /// <summary>The fields materiality is judged on, as text so the workflow module needs no knowledge of invoices.</summary>
+    internal static Dictionary<string, string> Snapshot(Invoice i)
+    {
+        var inv = System.Globalization.CultureInfo.InvariantCulture;
+        return new Dictionary<string, string>
+        {
+            ["total"] = i.Total.ToString(inv),
+            ["taxTotal"] = i.TaxTotal.ToString(inv),
+            ["currency"] = i.CurrencyCode,
+            ["vendor"] = i.VendorId.ToString(),
+            ["number"] = i.InvoiceNumber,
+            ["date"] = i.InvoiceDate.ToString("yyyy-MM-dd"),
+            ["dueDate"] = i.DueDate?.ToString("yyyy-MM-dd") ?? "",
+            ["poReference"] = i.PoReference ?? "",
+            ["supplierTaxNumber"] = i.SupplierTaxNumber ?? "",
+            ["lineCount"] = i.Lines.Count.ToString(inv),
+            ["dimensions"] = string.Join(';', DimensionsOf(i).OrderBy(d => d.Key, StringComparer.Ordinal).Select(d => $"{d.Key}={d.Value}")),
+        };
     }
 
     /// <summary>Header-level dimensions for routing: a dimension counts when every line that carries it has the same value.</summary>

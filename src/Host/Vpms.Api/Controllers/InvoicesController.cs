@@ -53,6 +53,11 @@ public sealed class InvoicesController(
     public async Task<IActionResult> SendForApproval(Guid id, CancellationToken ct) =>
         await Can(Permissions.InvoiceEdit, id, ct) ? Ok(await invoices.SendForApprovalAsync(id, ct)) : NotFound();
 
+    /// <summary>Edits an invoice in approval or already approved. A material change restarts verification and approval; a small one does not.</summary>
+    [HttpPost("{id:guid}/revise")]
+    public async Task<IActionResult> Revise(Guid id, ReviseRequest body, CancellationToken ct) =>
+        await Can(Permissions.InvoiceEdit, id, ct) ? Ok(await invoices.ReviseAsync(id, body.Data, body.Reason, ct)) : NotFound();
+
     [HttpPost("{id:guid}/cancel")]
     public async Task<IActionResult> Cancel(Guid id, ReasonRequest body, CancellationToken ct) =>
         await Can(Permissions.InvoiceEdit, id, ct) ? Ok(await invoices.CancelAsync(id, body.Reason, ct)) : NotFound();
@@ -119,3 +124,5 @@ public sealed class InvoicesController(
     private async Task<bool> Can(string permission, Guid invoiceId, CancellationToken ct) =>
         await permissions.HasAsync(Guid.Parse(User.FindFirstValue(VpmsClaims.UserId)!), permission, await invoices.EntityOfAsync(invoiceId, ct), ct);
 }
+
+public sealed record ReviseRequest(InvoiceData Data, string Reason);

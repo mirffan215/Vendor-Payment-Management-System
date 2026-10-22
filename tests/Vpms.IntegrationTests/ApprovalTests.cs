@@ -401,8 +401,11 @@ public sealed class ApprovalTests : IAsyncLifetime
         Assert.Equal(first.RunId, second.RunId);
         Assert.Single(await Runs(invoice.Id));
 
+        // a newer verified version replaces the old run, which stays in the history as cancelled
         var newer = subject with { SubjectVersion = invoice.Version + 1 };
-        Assert.Equal("approval_in_progress", (await Assert.ThrowsAsync<ConflictException>(() => _w.AsAsync(_w.TenantA, _clerk, s => s.GetRequiredService<IApprovalStarter>().StartAsync(newer)))).Code);
+        var restarted = await _w.AsAsync(_w.TenantA, _clerk, s => s.GetRequiredService<IApprovalStarter>().StartAsync(newer));
+        Assert.NotEqual(first.RunId, restarted.RunId);
+        Assert.Equal([RunStatus.Active, RunStatus.Cancelled], (await Runs(invoice.Id)).Select(r => r.Status));
     }
 
     [Fact]

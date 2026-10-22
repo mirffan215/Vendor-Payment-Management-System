@@ -61,3 +61,31 @@ public interface IWorkflowDefinitionService
 
     Task<ActiveDefinition?> GetVersionAsync(Guid definitionId, CancellationToken ct = default);
 }
+
+public sealed record MaterialityDto(
+    Guid? Id, Guid LegalEntityId, int VersionNo, string Status, MaterialityConfig Config, string Note, Guid? CreatedBy, DateTimeOffset? CreatedAt,
+    Guid? DecidedBy, DateTimeOffset? DecidedAt, string? DecisionComment);
+
+/// <param name="Active">The settings in force. Version 0 with status Default means the entity still uses the built-in defaults (every change is material).</param>
+public sealed record EntityMaterialityDto(MaterialityDto Active, MaterialityDto? Pending);
+
+public sealed record MaterialityChangeDto(MaterialityDto Change, MaterialityDto Base);
+
+public interface IMaterialityPolicyService
+{
+    Task<EntityMaterialityDto> GetAsync(Guid legalEntityId, CancellationToken ct = default);
+
+    Task<IReadOnlyList<MaterialityDto>> HistoryAsync(Guid legalEntityId, CancellationToken ct = default);
+
+    Task<MaterialityDto> ProposeAsync(Guid legalEntityId, MaterialityConfig config, string note, CancellationToken ct = default);
+
+    Task<IReadOnlyList<MaterialityChangeDto>> ListChangesAsync(string? status, IReadOnlySet<Guid>? entityScope, CancellationToken ct = default);
+
+    Task<Guid> EntityOfChangeAsync(Guid changeId, CancellationToken ct = default);
+
+    Task<MaterialityDto> ApproveAsync(Guid changeId, string? comment, CancellationToken ct = default);
+
+    Task<MaterialityDto> RejectAsync(Guid changeId, string comment, CancellationToken ct = default);
+
+    Task<MaterialityDto> CancelAsync(Guid changeId, CancellationToken ct = default);
+}

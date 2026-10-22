@@ -16,17 +16,19 @@ namespace Vpms.Workflow.Infrastructure;
 public sealed class ApprovalService(
     WorkflowDbContext db, WorkflowDefinitionService definitions, ApproverResolverFactory resolvers, IApprovalDataLookup approvalData,
     IApproverDirectory directory, IUserDirectory users, IEnumerable<IApprovalOutcomeHandler> handlers, TenantContext tenant,
-    IAuditPort audit, ICurrentUser current, TimeProvider clock, ILogger<ApprovalService> logger) : IApprovalService, IApprovalScan
+    IAuditPort audit, ICurrentUser current, TimeProvider clock, ILogger<ApprovalService> logger) : IApprovalService, IApprovalScan, IApprovalLifecycle
 {
     // --- starting ------------------------------------------------------------------------------------------
 
     public async Task<ApprovalStarted> StartAsync(ApprovalSubject subject, CancellationToken ct = default)
     {
-        var existing = await db.Runs.AsNoTracking().FirstOrDefaultAsync(r => r.SubjectType == subject.SubjectType && r.SubjectId == subject.SubjectId && r.Status == RunStatus.Active, ct);
+        var existing = await db.Runs.Include(r => r.Tasks).FirstOrDefaultAsync(r => r.SubjectType == subject.SubjectType && r.SubjectId == subject.SubjectId && r.Status == RunStatus.Active, ct);
         if (existing is not null)
         {
             if (existing.SubjectVersion == subject.SubjectVersion) return Started(existing);
-            throw new ConflictException("approval_in_progress", "An approval is already running for an earlier version of this item.");
+
+            // The subject module only starts an approval for a version it has verified, so a run for an older version is obsolete.
+            await CancelAsync(existing, "Superseded by a newer version.", ct);
         }
 
         var definition = await definitions.GetActiveAsync(subject.LegalEntityId, subject.SubjectType, ct)
@@ -59,6 +61,33 @@ public sealed class ApprovalService(
         }
 
         return Started(run);
+    }
+
+    // --- lifecycle (called by subject modules) ----------------------------------------------------------
+
+    public async Task CancelActiveAsync(string subjectType, Guid subjectId, string reason, CancellationToken ct = default)
+    {
+        var run = await db.Runs.Include(r => r.Tasks).FirstOrDefaultAsync(r => r.SubjectType == subjectType && r.SubjectId == subjectId && r.Status == RunStatus.Active, ct);
+        if (run is not null) await CancelAsync(run, reason, ct);
+    }
+
+    public async Task RebindAsync(string subjectType, Guid subjectId, int newVersion, decimal newAmount, Guid editor, CancellationToken ct = default)
+    {
+        var run = await db.Runs.Include(r => r.Tasks).FirstOrDefaultAsync(r => r.SubjectType == subjectType && r.SubjectId == subjectId && r.Status == RunStatus.Active, ct);
+        if (run is null) return;
+        run.Rebind(newVersion, newAmount, editor);
+        audit.Record(new AuditEntry("approval.rebound", "WorkflowRun", run.Id.ToString(), run.LegalEntityId,
+            System.Text.Json.JsonSerializer.Serialize(new { newVersion, newAmount, editor })));
+        await db.SaveChangesAsync(ct);
+    }
+
+    private async Task CancelAsync(WorkflowRun run, string reason, CancellationToken ct)
+    {
+        run.Cancel(reason, clock.GetUtcNow());
+        run.OutcomeAppliedAt = clock.GetUtcNow(); // nothing to tell the subject: it is the one that cancelled
+        audit.Record(new AuditEntry("approval.cancelled", "WorkflowRun", run.Id.ToString(), run.LegalEntityId,
+            System.Text.Json.JsonSerializer.Serialize(new { run.SubjectType, run.SubjectId, run.SubjectVersion, reason })));
+        await db.SaveChangesAsync(ct);
     }
 
     // --- reading -------------------------------------------------------------------------------------------
