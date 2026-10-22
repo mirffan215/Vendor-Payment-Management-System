@@ -31,6 +31,9 @@ public static class SystemRoles
         ["Verification Administrator"] = [Permissions.EntityView, Permissions.VerificationConfigure, Permissions.InvoicePoImport],
         ["Verification Approver"] = [Permissions.EntityView, Permissions.VerificationApproveChange],
         ["Invoice Approver"] = [Permissions.EntityView, Permissions.InvoiceView, Permissions.InvoiceApprove],
+        ["Workflow Administrator"] = [Permissions.EntityView, Permissions.WorkflowView, Permissions.WorkflowConfigure],
+        ["Workflow Change Approver"] = [Permissions.EntityView, Permissions.WorkflowView, Permissions.WorkflowApproveChange],
+        ["Approval Coordinator"] = [Permissions.EntityView, Permissions.InvoiceView, Permissions.WorkflowView, Permissions.WorkflowAdminister],
         ["Payment Preparer"] = [Permissions.PaymentPrepare],
         ["Payment Releaser"] = [Permissions.PaymentRelease],
     };

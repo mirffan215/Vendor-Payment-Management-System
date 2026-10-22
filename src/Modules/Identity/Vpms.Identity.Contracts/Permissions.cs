@@ -37,6 +37,11 @@ public static class Permissions
     public const string VerificationConfigure = "Verification.Configure";
     public const string VerificationApproveChange = "Verification.ApproveChange";
 
+    public const string WorkflowView = "Workflow.View";
+    public const string WorkflowConfigure = "Workflow.Configure";
+    public const string WorkflowApproveChange = "Workflow.ApproveChange";
+    public const string WorkflowAdminister = "Workflow.Administer";
+
     public const string PaymentPrepare = "Payment.Prepare";
     public const string PaymentRelease = "Payment.Release";
 
@@ -48,6 +53,7 @@ public static class Permissions
         VendorBankDetailsView, VendorBankDetailsReveal, VendorBankDetailsEdit, VendorBankDetailsApprove,
         InvoiceView, InvoiceCreate, InvoiceEdit, InvoiceApprove, InvoiceExceptionResolve, InvoiceExceptionOverride, InvoicePoImport, InvoiceIntakeManage,
         VerificationConfigure, VerificationApproveChange,
+        WorkflowView, WorkflowConfigure, WorkflowApproveChange, WorkflowAdminister,
         PaymentPrepare, PaymentRelease,
     ];
 }

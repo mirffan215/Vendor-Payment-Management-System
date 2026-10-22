@@ -1,5 +1,6 @@
 using Vpms.BuildingBlocks.Errors;
 using Vpms.BuildingBlocks.Security;
+using Vpms.BuildingBlocks.Tenancy;
 
 namespace Vpms.Workflow.Domain;
 
@@ -32,9 +33,10 @@ public static class DecisionKind
 public delegate IReadOnlyList<Guid> ApproverResolver(ApproverSpec approver);
 
 /// <summary>A person's recorded decision on a task. Append-only.</summary>
-public class TaskDecision
+public class TaskDecision : ITenantOwned
 {
     public Guid Id { get; set; }
+    public Guid TenantId { get; set; }
     public Guid TaskId { get; set; }
     public Guid ActorId { get; set; }
 
@@ -47,16 +49,26 @@ public class TaskDecision
 }
 
 /// <summary>One approval step waiting for (or having received) its decisions.</summary>
-public class ApprovalTask
+public class ApprovalTask : ITenantOwned
 {
     public Guid Id { get; set; }
+    public Guid TenantId { get; set; }
     public Guid RunId { get; set; }
     public string StepId { get; set; } = "";
 
     /// <summary>Which parallel branches this task sits in, outermost first, e.g. "p1:0/p2:1".</summary>
     public string BranchPath { get; set; } = "";
 
-    public List<Guid> Assignees { get; set; } = [];
+    /// <summary>Stored as text so an inbox can be queried by person; use <see cref="Assignees"/> in code.</summary>
+    public string AssigneeList { get; set; } = "";
+
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+    public IReadOnlyList<Guid> Assignees
+    {
+        get => AssigneeList.Length == 0 ? [] : AssigneeList.Split(',').Select(Guid.Parse).ToList();
+        set => AssigneeList = string.Join(',', value);
+    }
+
     public string Mode { get; set; } = ApprovalMode.AnyOne;
     public int Quorum { get; set; }
     public string Status { get; set; } = TaskStatus.Pending;
@@ -77,9 +89,10 @@ public class ApprovalTask
 }
 
 /// <summary>How many branches of a parallel step have finished.</summary>
-public class JoinArrival
+public class JoinArrival : ITenantOwned
 {
     public Guid Id { get; set; }
+    public Guid TenantId { get; set; }
     public Guid RunId { get; set; }
     public string Key { get; set; } = "";
     public int Arrived { get; set; }
@@ -100,7 +113,7 @@ public sealed record DecisionRequest(
 /// maker-checker and the different-person rule on every decision, and reports a final status. It is pinned to a
 /// definition version by the caller, which passes that version's spec to every call.
 /// </summary>
-public class WorkflowRun
+public class WorkflowRun : ILegalEntityScoped
 {
     public Guid Id { get; set; }
     public Guid TenantId { get; set; }
@@ -108,13 +121,22 @@ public class WorkflowRun
     public string SubjectType { get; set; } = "";
     public Guid SubjectId { get; set; }
     public int SubjectVersion { get; set; }
+
+    /// <summary>What a person sees in the inbox, for example the invoice number and vendor.</summary>
+    public string SubjectLabel { get; set; } = "";
     public Guid DefinitionId { get; set; }
     public int DefinitionVersion { get; set; }
+
+    /// <summary>Hash of the definition spec the run is pinned to.</summary>
+    public string DefinitionHash { get; set; } = "";
     public string Status { get; set; } = RunStatus.Active;
     public string? StatusReason { get; set; }
     public Guid StartedBy { get; set; }
     public DateTimeOffset StartedAt { get; set; }
     public DateTimeOffset? CompletedAt { get; set; }
+
+    /// <summary>When the subject's own module was told how the run ended; null until then (a sweep retries).</summary>
+    public DateTimeOffset? OutcomeAppliedAt { get; set; }
 
     /// <summary>The people who prepared the subject; none of them may decide it.</summary>
     public List<Guid> Makers { get; set; } = [];
@@ -200,8 +222,8 @@ public class WorkflowRun
         Finish(RunStatus.Cancelled, reason, now);
     }
 
-    /// <summary>Maker-checker and the different-person rule, for the actor and for whoever they stand in for.</summary>
-    private void EnsureIndependent(Guid actor, Guid effective)
+    /// <summary>Maker-checker and the different-person rule, for the actor and for whoever they stand in for. Throws before anything is recorded.</summary>
+    public void EnsureIndependent(Guid actor, Guid effective)
     {
         foreach (var maker in Makers)
         {
@@ -235,6 +257,7 @@ public class WorkflowRun
     {
         while (true)
         {
+            if (stepId == Targets.End) stepId = null;
             if (stepId is null)
             {
                 ArriveAtEnd(spec, path, resolver, now);
@@ -245,7 +268,14 @@ public class WorkflowRun
             switch (step.Type)
             {
                 case StepType.Condition:
-                    stepId = step.Cases.FirstOrDefault(c => Conditions.Matches(c.All, Facts))?.Next ?? step.Default;
+                    var matched = step.Cases.FirstOrDefault(c => Conditions.Matches(c.All, Facts));
+                    var target = matched is not null ? matched.Next : step.Default;
+                    if (matched is null && step.Default is null)
+                    {
+                        throw new ConflictException("no_route", $"No approval route applies to this invoice (step '{step.Id}').");
+                    }
+
+                    stepId = target == Targets.End ? null : target;
                     break;
 
                 case StepType.Parallel:

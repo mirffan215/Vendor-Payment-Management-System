@@ -5,7 +5,7 @@ namespace Vpms.ArchitectureTests;
 
 public class LayerDependencyTests
 {
-    private static readonly string[] Modules = ["Identity", "CustomerAdmin", "Audit", "Documents", "Vendors", "VendorPortal", "Invoices"];
+    private static readonly string[] Modules = ["Identity", "CustomerAdmin", "Audit", "Documents", "Vendors", "VendorPortal", "Invoices", "Workflow"];
 
     private static Assembly Asm(string module, string layer) =>
         Assembly.Load($"Vpms.{module}.{layer}");
@@ -98,6 +98,18 @@ public class LayerDependencyTests
         var allowed = new[] { "Vpms.Invoices.Domain", "Vpms.BuildingBlocks" };
         var taxReferences = typeof(Vpms.Tax.Sa.SaudiVatProvider).Assembly.GetReferencedAssemblies().Select(a => a.Name!).Where(n => n.StartsWith("Vpms.", StringComparison.Ordinal));
         Assert.Empty(taxReferences.Except(allowed));
+    }
+
+    [Fact]
+    public void The_workflow_engine_knows_nothing_about_its_subjects()
+    {
+        // Invoices (and later payments) start approvals through a contract; the engine never references them back.
+        foreach (var layer in new[] { "Domain", "Application", "Infrastructure", "Contracts" })
+        {
+            var references = Asm("Workflow", layer).GetReferencedAssemblies().Select(a => a.Name!);
+            Assert.DoesNotContain(references, n => n.StartsWith("Vpms.Invoices", StringComparison.Ordinal) || n.StartsWith("Vpms.Vendors", StringComparison.Ordinal)
+                                                   || n.StartsWith("Vpms.Payments", StringComparison.Ordinal));
+        }
     }
 
     [Fact]

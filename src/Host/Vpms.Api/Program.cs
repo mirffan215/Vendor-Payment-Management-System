@@ -20,6 +20,7 @@ using Vpms.Identity.Infrastructure;
 using Vpms.VendorPortal.Application;
 using Vpms.VendorPortal.Infrastructure;
 using Vpms.Invoices.Infrastructure;
+using Vpms.Workflow.Infrastructure;
 using Vpms.Vendors.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -45,6 +46,7 @@ builder.Services.AddAuditModule(ConnectionString);
 builder.Services.AddDocumentsModule(ConnectionString);
 builder.Services.AddVendorsModule(ConnectionString);
 builder.Services.AddInvoicesModule(ConnectionString);
+builder.Services.AddWorkflowModule(ConnectionString);
 // Country tax rule plug-ins for received invoices. Removing a line switches that country back to the standard checks.
 builder.Services.AddSingleton<Vpms.Invoices.Domain.Tax.ITaxRuleProvider, Vpms.Tax.Sa.SaudiVatProvider>();
 builder.Services.Configure<PortalOptions>(builder.Configuration.GetSection(PortalOptions.Section));

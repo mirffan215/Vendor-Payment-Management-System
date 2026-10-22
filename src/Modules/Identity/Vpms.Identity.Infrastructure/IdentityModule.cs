@@ -14,6 +14,7 @@ public static class IdentityModule
         services.AddScoped<IIdentityStore, IdentityStore>();
         services.AddScoped<UserProvisioner>();
         services.AddScoped<IPermissionEvaluator, PermissionEvaluator>();
+        services.AddScoped<IApproverDirectory, ApproverDirectory>();
         services.AddScoped<IRoleAssignmentService, RoleAssignmentService>();
         services.AddSingleton(SodConfiguration.Default());
         services.AddScoped<IRoleAdminService, RoleAdminService>();

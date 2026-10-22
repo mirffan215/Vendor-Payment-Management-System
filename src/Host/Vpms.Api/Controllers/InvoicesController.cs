@@ -48,6 +48,11 @@ public sealed class InvoicesController(
     public async Task<IActionResult> Submit(Guid id, CancellationToken ct) =>
         await Can(Permissions.InvoiceEdit, id, ct) ? Ok(await invoices.SubmitAsync(id, ct)) : NotFound();
 
+    /// <summary>Starts the legal entity's approval workflow. The sender is recorded as a maker and can never approve this invoice.</summary>
+    [HttpPost("{id:guid}/send-for-approval")]
+    public async Task<IActionResult> SendForApproval(Guid id, CancellationToken ct) =>
+        await Can(Permissions.InvoiceEdit, id, ct) ? Ok(await invoices.SendForApprovalAsync(id, ct)) : NotFound();
+
     [HttpPost("{id:guid}/cancel")]
     public async Task<IActionResult> Cancel(Guid id, ReasonRequest body, CancellationToken ct) =>
         await Can(Permissions.InvoiceEdit, id, ct) ? Ok(await invoices.CancelAsync(id, body.Reason, ct)) : NotFound();

@@ -19,7 +19,8 @@ public sealed record InvoiceAttachmentDto(Guid Id, Guid AttachmentId, string Rol
 public sealed record InvoiceDto(
     Guid Id, Guid LegalEntityId, Guid VendorId, string VendorName, string InvoiceNumber, DateOnly InvoiceDate, DateOnly? DueDate, string CurrencyCode,
     decimal Subtotal, decimal TaxTotal, decimal Total, string? PoReference, string? SupplierTaxInvoiceRef, string Source, string Status, string? StatusReason,
-    int Version, DateTimeOffset CreatedAt, DateTimeOffset? ReceivedAt, IReadOnlyList<InvoiceLineDto> Lines, IReadOnlyList<InvoiceAttachmentDto> Attachments, string? SupplierTaxNumber = null);
+    int Version, DateTimeOffset CreatedAt, DateTimeOffset? ReceivedAt, IReadOnlyList<InvoiceLineDto> Lines, IReadOnlyList<InvoiceAttachmentDto> Attachments, string? SupplierTaxNumber = null,
+    DateTimeOffset? ApprovedAt = null, int? ApprovedVersion = null);
 
 public sealed record InvoiceListItem(
     Guid Id, Guid LegalEntityId, Guid VendorId, string VendorName, string InvoiceNumber, DateOnly InvoiceDate, string CurrencyCode, decimal Total,
@@ -42,6 +43,9 @@ public interface IInvoiceService
     Task<InvoiceDto> UpdateAsync(Guid id, InvoiceData data, CancellationToken ct = default);
 
     Task<InvoiceDto> SubmitAsync(Guid id, CancellationToken ct = default);
+
+    /// <summary>Starts the approval workflow of the legal entity for a verified invoice. The person doing this can never approve it.</summary>
+    Task<InvoiceDto> SendForApprovalAsync(Guid id, CancellationToken ct = default);
 
     Task<InvoiceDto> CancelAsync(Guid id, string reason, CancellationToken ct = default);
 

@@ -12,6 +12,9 @@ public static class InvoiceStatus
     public const string Exception = "Exception";
     public const string Verified = "Verified";
     public const string ReadyForApproval = "ReadyForApproval";
+    public const string InApproval = "InApproval";
+    public const string Approved = "Approved";
+    public const string Returned = "Returned";
     public const string Rejected = "Rejected";
     public const string Cancelled = "Cancelled";
 }
@@ -80,12 +83,20 @@ public class Invoice : ILegalEntityScoped, IVendorOwned
     public DateTimeOffset? LastEditedAt { get; set; }
     public DateTimeOffset? ReceivedAt { get; set; }
 
+    /// <summary>The approval run in force or last run for this invoice (Workflow module).</summary>
+    public Guid? ApprovalRunId { get; set; }
+
+    /// <summary>The invoice version that was approved. Anything that follows (payment) must still see this version.</summary>
+    public int? ApprovedVersion { get; set; }
+
+    public DateTimeOffset? ApprovedAt { get; set; }
+
     public List<InvoiceLine> Lines { get; set; } = [];
 
     [Timestamp]
     public byte[] RowVersion { get; set; } = [];
 
-    public bool IsEditable => Status is InvoiceStatus.Draft or InvoiceStatus.Exception;
+    public bool IsEditable => Status is InvoiceStatus.Draft or InvoiceStatus.Exception or InvoiceStatus.Returned;
 
     /// <summary>Replaces the data of an editable invoice. An invoice in Exception goes back to Received for re-verification.</summary>
     public void BeginEdit(Guid editor, DateTimeOffset now)
@@ -94,7 +105,7 @@ public class Invoice : ILegalEntityScoped, IVendorOwned
         Version++;
         LastEditedBy = editor;
         LastEditedAt = now;
-        if (Status == InvoiceStatus.Exception)
+        if (Status is InvoiceStatus.Exception or InvoiceStatus.Returned)
         {
             Status = InvoiceStatus.Received;
             StatusReason = null;
@@ -150,9 +161,48 @@ public class Invoice : ILegalEntityScoped, IVendorOwned
         Status = InvoiceStatus.ReadyForApproval;
     }
 
+    public bool CanStartApproval => Status is InvoiceStatus.Verified or InvoiceStatus.ReadyForApproval;
+
+    public void StartApproval(Guid runId)
+    {
+        Require(CanStartApproval, "Only a verified invoice can be sent for approval.");
+        Status = InvoiceStatus.InApproval;
+        StatusReason = null;
+        ApprovalRunId = runId;
+    }
+
+    /// <summary>Applies the end of an approval run. Repeating it for the same version changes nothing.</summary>
+    public void ApplyApproved(int version, DateTimeOffset now)
+    {
+        if (Status == InvoiceStatus.Approved && ApprovedVersion == version) return;
+        Require(Status == InvoiceStatus.InApproval && Version == version, "Only the version that went through approval can be approved.");
+        Status = InvoiceStatus.Approved;
+        StatusReason = null;
+        ApprovedVersion = version;
+        ApprovedAt = now;
+    }
+
+    public void ApplyRejectedByApproval(string? reason)
+    {
+        if (Status == InvoiceStatus.Rejected) return;
+        Require(Status == InvoiceStatus.InApproval, "Only an invoice in approval can be rejected by its approvers.");
+        Status = InvoiceStatus.Rejected;
+        StatusReason = Clip(reason);
+    }
+
+    public void ApplyReturnedByApproval(string? reason)
+    {
+        if (Status == InvoiceStatus.Returned) return;
+        Require(Status == InvoiceStatus.InApproval, "Only an invoice in approval can be returned by its approvers.");
+        Status = InvoiceStatus.Returned;
+        StatusReason = Clip(reason);
+    }
+
+    private static string? Clip(string? reason) => string.IsNullOrWhiteSpace(reason) ? null : reason.Trim()[..Math.Min(reason.Trim().Length, 500)];
+
     public void Reject(string reason)
     {
-        Require(Status is InvoiceStatus.Exception or InvoiceStatus.Verified or InvoiceStatus.Received, "This invoice cannot be rejected in its current status.");
+        Require(Status is InvoiceStatus.Exception or InvoiceStatus.Verified or InvoiceStatus.Received or InvoiceStatus.Returned, "This invoice cannot be rejected in its current status.");
         RequireReason(reason);
         Status = InvoiceStatus.Rejected;
         StatusReason = reason.Trim();
@@ -160,7 +210,7 @@ public class Invoice : ILegalEntityScoped, IVendorOwned
 
     public void Cancel(string reason)
     {
-        Require(Status is InvoiceStatus.Draft or InvoiceStatus.Received or InvoiceStatus.Exception or InvoiceStatus.Verified,
+        Require(Status is InvoiceStatus.Draft or InvoiceStatus.Received or InvoiceStatus.Exception or InvoiceStatus.Verified or InvoiceStatus.Returned,
             "This invoice cannot be cancelled in its current status.");
         RequireReason(reason);
         Status = InvoiceStatus.Cancelled;

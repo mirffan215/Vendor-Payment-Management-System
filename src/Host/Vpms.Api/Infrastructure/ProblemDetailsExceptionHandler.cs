@@ -41,6 +41,7 @@ public sealed class ProblemDetailsExceptionHandler(ILogger<ProblemDetailsExcepti
             {
                 ValidationFailedException v => v.Code,
                 ConflictException c => c.Code,
+                Vpms.Workflow.Domain.Errors.WorkflowDefinitionException w => w.Code,
                 _ => code,
             };
         }
@@ -59,6 +60,7 @@ public sealed class ProblemDetailsExceptionHandler(ILogger<ProblemDetailsExcepti
         NotFoundException => (StatusCodes.Status404NotFound, "not_found", "The resource was not found.", null),
         ConflictException e => (StatusCodes.Status409Conflict, "conflict", "The request conflicts with the current state.", e.Message),
         ValidationFailedException e => (e.StatusCode, "validation_failed", "The request is not acceptable.", e.Message),
+        Vpms.Workflow.Domain.Errors.WorkflowDefinitionException e => (StatusCodes.Status400BadRequest, "validation_failed", "The workflow definition is not valid.", e.Message),
         BadHttpRequestException e => (e.StatusCode, "bad_request", "The request is malformed.", null),
         _ => (StatusCodes.Status500InternalServerError, "internal_error", "An unexpected error occurred.", null),
     };

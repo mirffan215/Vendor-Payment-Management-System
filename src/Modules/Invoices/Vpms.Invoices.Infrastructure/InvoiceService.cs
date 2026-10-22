@@ -10,12 +10,13 @@ using Vpms.Documents.Contracts;
 using Vpms.Invoices.Application;
 using Vpms.Invoices.Domain;
 using Vpms.Vendors.Contracts;
+using Vpms.Workflow.Contracts;
 
 namespace Vpms.Invoices.Infrastructure;
 
 public sealed partial class InvoiceService(
     InvoicesDbContext db, IFieldProtector protector, IVendorLookup vendors, ILegalEntityLookup entities, IAttachmentService attachments,
-    IAuditPort audit, ICurrentUser current, TimeProvider clock, IInvoiceVerifier verifier) : IInvoiceService
+    IAuditPort audit, ICurrentUser current, TimeProvider clock, IInvoiceVerifier verifier, IApprovalStarter approvals) : IInvoiceService
 {
     public const string DuplicateKeyColumn = "invoice.Invoice.DuplicateKey";
     public const string NumberKeyColumn = "invoice.Invoice.NumberKey";
@@ -122,6 +123,54 @@ public sealed partial class InvoiceService(
         await verifier.VerifyAsync(id, ct);
     }
 
+    public async Task<InvoiceDto> SendForApprovalAsync(Guid id, CancellationToken ct = default)
+    {
+        var invoice = await LoadAsync(id, track: true, ct);
+        if (!invoice.CanStartApproval) throw new ConflictException("invalid_transition", "Only a verified invoice can be sent for approval.");
+
+        // Everyone who prepared or let this invoice through verification is a maker; none of them may approve it.
+        var waivers = await db.Exceptions.AsNoTracking().Where(e => e.InvoiceId == id && e.ResolvedBy != null).Select(e => e.ResolvedBy!.Value).ToListAsync(ct);
+        var makers = new[] { invoice.LastEditedBy, invoice.CreatedByKind == ActorKind.Staff ? invoice.CreatedBy : null }.Where(g => g.HasValue).Select(g => g!.Value)
+            .Concat(waivers).Distinct().ToList();
+        var vendorName = (await VendorNames([invoice.VendorId], ct)).GetValueOrDefault(invoice.VendorId, "");
+
+        var started = await approvals.StartAsync(new ApprovalSubject("Invoice", invoice.Id, invoice.Version, invoice.LegalEntityId,
+            $"{invoice.InvoiceNumber} - {vendorName}", invoice.Total, invoice.CurrencyCode, invoice.VendorId, invoice.Source, DimensionsOf(invoice), makers), ct);
+
+        invoice.StartApproval(started.RunId);
+        if (started.Status == "Approved") invoice.ApplyApproved(invoice.Version, clock.GetUtcNow()); // the workflow needed no decision for this invoice
+        audit.Record(new AuditEntry("invoice.sent-for-approval", "Invoice", id.ToString(),
+            ChangeSummaryJson: JsonSerializer.Serialize(new { invoice.Version, started.RunId, started.DefinitionVersion, to = invoice.Status })));
+        await db.SaveChangesAsync(ct);
+        return await GetAsync(id, ct);
+    }
+
+    /// <summary>Header-level dimensions for routing: a dimension counts when every line that carries it has the same value.</summary>
+    private static IReadOnlyDictionary<string, string> DimensionsOf(Invoice invoice)
+    {
+        var perLine = new List<Dictionary<string, string>>();
+        foreach (var line in invoice.Lines.Where(l => !string.IsNullOrWhiteSpace(l.DimensionsJson)))
+        {
+            try
+            {
+                if (JsonSerializer.Deserialize<Dictionary<string, string>>(line.DimensionsJson!) is { } d) perLine.Add(d);
+            }
+            catch (JsonException)
+            {
+                // a malformed dimension blob never helps routing
+            }
+        }
+
+        var result = new Dictionary<string, string>();
+        foreach (var key in perLine.SelectMany(d => d.Keys).Distinct())
+        {
+            var values = perLine.Where(d => d.ContainsKey(key)).Select(d => d[key]).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+            result[key] = values.Count == 1 && perLine.All(d => d.ContainsKey(key)) ? values[0] : "*mixed*";
+        }
+
+        return result;
+    }
+
     public Task<InvoiceDto> CancelAsync(Guid id, string reason, CancellationToken ct = default) =>
         Transition(id, "invoice.cancelled", (i, _) => i.Cancel(reason), ct, reason);
 
@@ -188,7 +237,7 @@ public sealed partial class InvoiceService(
         return new InvoiceDto(i.Id, i.LegalEntityId, i.VendorId, names.GetValueOrDefault(i.VendorId, ""), i.InvoiceNumber, i.InvoiceDate, i.DueDate, i.CurrencyCode,
             i.Subtotal, i.TaxTotal, i.Total, i.PoReference, i.SupplierTaxInvoiceRef, i.Source, i.Status, i.StatusReason, i.Version, i.CreatedAt, i.ReceivedAt,
             i.Lines.OrderBy(l => l.LineNo).Select(l => new InvoiceLineDto(l.Id, l.LineNo, l.Description, l.Quantity, l.UnitPrice, l.LineAmount, l.TaxCode, l.TaxRate,
-                l.TaxAmount, l.PoLineRef, l.DimensionsJson)).ToList(), files, i.SupplierTaxNumber);
+                l.TaxAmount, l.PoLineRef, l.DimensionsJson)).ToList(), files, i.SupplierTaxNumber, i.ApprovedAt, i.ApprovedVersion);
     }
 
     private async Task<Dictionary<Guid, string>> VendorNames(IEnumerable<Guid> ids, CancellationToken ct)

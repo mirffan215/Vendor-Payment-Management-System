@@ -53,6 +53,13 @@ public static class ConditionOp
     public static readonly IReadOnlyList<string> Ordering = [Gt, Ge, Lt, Le];
 }
 
+/// <summary>Targets that are not step ids.</summary>
+public static class Targets
+{
+    /// <summary>Finishes the path explicitly. A condition with no matching case and no default is an error instead.</summary>
+    public const string End = "$end";
+}
+
 /// <summary>Who may decide a step: one named user, or everyone holding a role for the legal entity.</summary>
 public sealed record ApproverSpec(string Kind, string Value);
 
@@ -86,7 +93,10 @@ public sealed class StepSpec
     public IReadOnlyList<CaseSpec> Cases { get; init; } = [];
     public string? Default { get; init; }
 
-    public IEnumerable<string> Successors()
+    /// <summary>Ids of the steps this step can lead to (the explicit end target is not a step).</summary>
+    public IEnumerable<string> Successors() => RawSuccessors().Where(t => t != Targets.End);
+
+    private IEnumerable<string> RawSuccessors()
     {
         switch (Type)
         {

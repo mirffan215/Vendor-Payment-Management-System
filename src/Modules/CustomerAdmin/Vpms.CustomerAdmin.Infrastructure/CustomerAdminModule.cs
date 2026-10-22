@@ -18,6 +18,7 @@ public static class CustomerAdminModule
         services.AddScoped<ILegalEntityService>(sp => sp.GetRequiredService<LegalEntityService>());
         services.AddScoped<ILegalEntityLookup>(sp => sp.GetRequiredService<LegalEntityService>());
         services.AddScoped<IApprovalAdminService, ApprovalAdminService>();
+        services.AddScoped<IApprovalDataLookup, ApprovalDataLookup>();
         return services;
     }
 }

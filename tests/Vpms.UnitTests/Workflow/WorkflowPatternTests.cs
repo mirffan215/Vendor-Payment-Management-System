@@ -106,7 +106,7 @@ public class WorkflowPatternTests
     public void Condition_matches_first_case_and_can_end_the_path_by_default()
     {
         var vendor = Guid.NewGuid();
-        var def = Def("c", Condition("c", null,
+        var def = Def("c", Condition("c", Targets.End,
                 When("vip", Clause("vendor", ConditionOp.Eq, vendor.ToString())),
                 When("cost", Clause("dimension:CostCenter", ConditionOp.In, "CC1", "CC2"), Clause("currency", ConditionOp.Eq, "SAR"))),
             Single("vip", null, A), Single("cost", null, B));
@@ -115,6 +115,14 @@ public class WorkflowPatternTests
         Assert.Equal(["vip"], WorkflowSimulator.Run(def, SubjectFacts.Of(1, "SAR", vendor, "Manual", dims), [Maker], Resolver(), []).Run.PendingTasks.Select(t => t.StepId));
         Assert.Equal(["cost"], WorkflowSimulator.Run(def, SubjectFacts.Of(1, "SAR", null, "Manual", dims), [Maker], Resolver(), []).Run.PendingTasks.Select(t => t.StepId));
         Assert.Equal(RunStatus.Approved, WorkflowSimulator.Run(def, SubjectFacts.Of(1, "USD", null, "Manual", dims), [Maker], Resolver(), []).Run.Status);
+    }
+
+    [Fact]
+    public void A_condition_with_no_match_and_no_default_is_an_error_not_an_approval()
+    {
+        var def = Def("c", Condition("c", null, When("a", Clause("amount", ConditionOp.Gt, "1000"))), Single("a", null, A));
+        var ex = Assert.Throws<ConflictException>(() => Run(def, Facts(10)));
+        Assert.Equal("no_route", ex.Code);
     }
 
     [Fact]
@@ -133,9 +141,9 @@ public class WorkflowPatternTests
     public void Multilevel_by_amount_adds_levels_through_conditions()
     {
         var def = Def("l1", Single("l1", "gate", A),
-            Condition("gate", null, When("l2", Clause("amount", ConditionOp.Gt, "1000"))),
+            Condition("gate", Targets.End, When("l2", Clause("amount", ConditionOp.Gt, "1000"))),
             Single("l2", "gate2", B),
-            Condition("gate2", null, When("l3", Clause("amount", ConditionOp.Gt, "50000"))),
+            Condition("gate2", Targets.End, When("l3", Clause("amount", ConditionOp.Gt, "50000"))),
             Single("l3", null, C));
 
         Assert.Equal(RunStatus.Approved, Run(def, Facts(900), new SimAction(A)).Run.Status);

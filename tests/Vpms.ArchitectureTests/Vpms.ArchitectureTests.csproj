@@ -52,6 +52,10 @@
     <ProjectReference Include="..\..\src\Modules\Invoices\Vpms.Invoices.Infrastructure\Vpms.Invoices.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\Modules\Invoices\Vpms.Invoices.Contracts\Vpms.Invoices.Contracts.csproj" />
     <ProjectReference Include="..\..\src\Modules\Tax\Vpms.Tax.Sa\Vpms.Tax.Sa.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Workflow\Vpms.Workflow.Domain\Vpms.Workflow.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Workflow\Vpms.Workflow.Application\Vpms.Workflow.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Workflow\Vpms.Workflow.Infrastructure\Vpms.Workflow.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Workflow\Vpms.Workflow.Contracts\Vpms.Workflow.Contracts.csproj" />
   </ItemGroup>
 
 </Project>
