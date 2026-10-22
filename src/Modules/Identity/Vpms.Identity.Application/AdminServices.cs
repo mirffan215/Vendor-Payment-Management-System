@@ -40,6 +40,12 @@ public interface IUserAdminService
     /// <summary>Disabling takes effect on the user's next request. You cannot disable yourself or the last administrator.</summary>
     Task<UserDto> SetStatusAsync(Guid userId, bool active, CancellationToken ct = default);
 
+    /// <summary>
+    /// Removes a former user's name, e-mail address and sign-in link from the user record, keeping the id, so the audit trail (which holds only ids)
+    /// no longer identifies the person. Only for a disabled user, and never yourself. Cannot be undone.
+    /// </summary>
+    Task AnonymiseAsync(Guid userId, CancellationToken ct = default);
+
     /// <summary>Ends every session the person has now ("sign out everywhere"). A person may do it for themselves; an administrator may do it for anyone. Audited.</summary>
     Task RevokeSessionsAsync(Guid userId, CancellationToken ct = default);
 }

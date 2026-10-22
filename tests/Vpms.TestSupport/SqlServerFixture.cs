@@ -55,4 +55,29 @@ public sealed class SqlServerFixture : IAsyncLifetime
     }
 }
 
-public sealed record TestDatabase(string OwnerConnectionString, string AppConnectionString);
+public sealed record TestDatabase(string OwnerConnectionString, string AppConnectionString)
+{
+    /// <summary>
+    /// Removes the database when its test class is done. Without this a full run leaves several hundred databases in the container (each a few
+    /// megabytes of files) and can fill the disk of a small machine.
+    /// </summary>
+    public async Task DropAsync()
+    {
+        var owner = new SqlConnectionStringBuilder(OwnerConnectionString);
+        var name = owner.InitialCatalog;
+        owner.InitialCatalog = "master";
+        SqlConnection.ClearAllPools();
+        try
+        {
+            await using var conn = new SqlConnection(owner.ConnectionString);
+            await conn.OpenAsync();
+            await using var cmd = conn.CreateCommand();
+            cmd.CommandText = $"ALTER DATABASE [{name}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE [{name}];";
+            await cmd.ExecuteNonQueryAsync();
+        }
+        catch (SqlException)
+        {
+            // Best effort: the container is removed at the end of the run anyway.
+        }
+    }
+}

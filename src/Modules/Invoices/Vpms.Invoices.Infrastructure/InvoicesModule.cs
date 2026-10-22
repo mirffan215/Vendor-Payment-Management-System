@@ -12,6 +12,7 @@ public static class InvoicesModule
     {
         services.AddTenantDbContext<InvoicesDbContext>(connectionString);
         services.AddScoped<InvoiceService>();
+        services.AddScoped<Vpms.BuildingBlocks.Jobs.IRetentionTarget, InvoiceRetentionTarget>();
         services.AddScoped<IInvoiceService>(sp => sp.GetRequiredService<InvoiceService>());
         services.AddScoped<InvoiceAttachmentService>();
         services.AddScoped<IInvoiceAttachmentService>(sp => sp.GetRequiredService<InvoiceAttachmentService>());

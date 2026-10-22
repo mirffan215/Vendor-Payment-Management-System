@@ -20,6 +20,7 @@ import { ErpAdminPage } from './pages/staff/ErpAdminPage'
 import { ErpReconciliationPage } from './pages/staff/ErpReconciliationPage'
 import { ErpSyncPage } from './pages/staff/ErpSyncPage'
 import { NotificationAdminPage } from './pages/staff/NotificationAdminPage'
+import { RetentionPage } from './pages/staff/RetentionPage'
 import { NotificationsPage } from './pages/staff/NotificationsPage'
 import { PaymentsPage } from './pages/staff/PaymentsPage'
 import { ReportsPage } from './pages/staff/ReportsPage'
@@ -78,6 +79,7 @@ function StaffShell({ calendar, onCalendarChange }: CalendarProps) {
             <Link to="/bank-changes">{t('nav.bankChanges')}</Link>
             <Link to="/admin">{t('nav.admin')}</Link>
             <Link to="/admin/notifications">{t('nav.notificationAdmin')}</Link>
+            <Link to="/admin/retention">{t('nav.retention')}</Link>
             <Link to="/audit">{t('nav.audit')}</Link>
           </nav>
         )}
@@ -118,6 +120,7 @@ function StaffShell({ calendar, onCalendarChange }: CalendarProps) {
               <Route path="/reports" element={<ReportsPage calendar={calendar} />} />
               <Route path="/notifications" element={<NotificationsPage calendar={calendar} />} />
               <Route path="/admin/notifications" element={<NotificationAdminPage calendar={calendar} />} />
+              <Route path="/admin/retention" element={<RetentionPage calendar={calendar} />} />
               <Route path="/delegations" element={<DelegationsPage calendar={calendar} />} />
               <Route path="/workflow" element={<WorkflowAdminPage />} />
               <Route path="/exceptions" element={<ExceptionsPage calendar={calendar} />} />

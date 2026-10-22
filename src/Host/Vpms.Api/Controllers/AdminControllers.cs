@@ -135,6 +135,15 @@ public sealed class UsersController(IUserAdminService service) : ControllerBase
     [HttpPost("{userId:guid}/disable")]
     public async Task<UserDto> Disable(Guid userId, CancellationToken ct) => await service.SetStatusAsync(userId, false, ct);
 
+    /// <summary>Removes a disabled former user's name, e-mail address and sign-in link (ADR-0024). Cannot be undone.</summary>
+    [HttpPost("{userId:guid}/anonymise")]
+    [Vpms.Api.Auth.RequireStepUp]
+    public async Task<IActionResult> Anonymise(Guid userId, CancellationToken ct)
+    {
+        await service.AnonymiseAsync(userId, ct);
+        return NoContent();
+    }
+
     /// <summary>Ends all of a person's sessions (a lost laptop, a suspected account takeover). Takes effect within a minute on every instance.</summary>
     [HttpPost("{userId:guid}/revoke-sessions")]
     public async Task<IActionResult> RevokeSessions(Guid userId, [FromServices] Microsoft.Extensions.Caching.Memory.IMemoryCache cache, CancellationToken ct)

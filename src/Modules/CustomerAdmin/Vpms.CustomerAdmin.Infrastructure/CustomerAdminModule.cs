@@ -19,6 +19,11 @@ public static class CustomerAdminModule
         services.AddScoped<ILegalEntityLookup>(sp => sp.GetRequiredService<LegalEntityService>());
         services.AddScoped<IApprovalAdminService, ApprovalAdminService>();
         services.AddScoped<IApprovalDataLookup, ApprovalDataLookup>();
+        services.AddScoped<RetentionPolicyService>();
+        services.AddScoped<IRetentionPolicyService>(sp => sp.GetRequiredService<RetentionPolicyService>());
+        services.AddScoped<IRetentionPolicyReader>(sp => sp.GetRequiredService<RetentionPolicyService>());
+        services.AddScoped<ILegalHoldService, LegalHoldService>();
+        services.AddScoped<IRetentionReportService, RetentionReportService>();
         return services;
     }
 }

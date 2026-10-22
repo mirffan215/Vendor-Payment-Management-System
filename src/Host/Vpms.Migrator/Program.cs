@@ -1,3 +1,7 @@
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Vpms.BuildingBlocks.Cloud;
+using Vpms.BuildingBlocks.Storage;
 using Vpms.Identity.Domain;
 
 namespace Vpms.Migrator;
@@ -33,7 +37,40 @@ internal static class MigratorEntry
         {
             try
             {
-                await DatabaseMigrator.MigrateAsync(cs);
+                // Leaving the service (ADR-0024): suspend, resume, and the final shred.
+        if (args.Length > 0 && args[0] is "suspend-tenant" or "resume-tenant" or "shred-tenant")
+        {
+            var o = ParseOptions(args.Skip(1).ToArray());
+            string Get(string key) => o.TryGetValue(key, out var v) ? v : throw new ArgumentException($"--{key} is required.");
+            switch (args[0])
+            {
+                case "suspend-tenant":
+                    await TenantOffboarding.SuspendAsync(cs, Get("slug"), Get("reason"));
+                    Console.WriteLine("{\"level\":\"information\",\"message\":\"Tenant suspended.\"}");
+                    break;
+                case "resume-tenant":
+                    await TenantOffboarding.ResumeAsync(cs, Get("slug"), Get("reason"));
+                    Console.WriteLine("{\"level\":\"information\",\"message\":\"Tenant resumed.\"}");
+                    break;
+                default:
+                    var storage = new ConfigurationBuilder().AddEnvironmentVariables().Build();
+                    var services = new ServiceCollection();
+                    services.Configure<Vpms.BuildingBlocks.Cloud.StorageOptions>(storage.GetSection(Vpms.BuildingBlocks.Cloud.StorageOptions.Section));
+                    services.AddBlobStorage();
+                    await using (var provider = services.BuildServiceProvider())
+                    {
+                        var result = await TenantOffboarding.ShredAsync(cs, Get("slug"), Get("confirm"), int.Parse(o.GetValueOrDefault("min-days", "30"), System.Globalization.CultureInfo.InvariantCulture),
+                            provider.GetRequiredService<IBlobBackend>(), TimeProvider.System);
+                        Console.WriteLine($"{{\"level\":\"information\",\"message\":\"Tenant shredded: {result.FilesDeleted} files deleted, {result.KeysDestroyed} keys destroyed.\"}}");
+                    }
+
+                    break;
+            }
+
+            return 0;
+        }
+
+        await DatabaseMigrator.MigrateAsync(cs);
                 break;
             }
             catch (Microsoft.Data.SqlClient.SqlException ex) when (attempt < 6 && Transient(ex))

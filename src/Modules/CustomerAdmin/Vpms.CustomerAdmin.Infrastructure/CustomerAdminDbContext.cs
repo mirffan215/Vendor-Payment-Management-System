@@ -15,6 +15,8 @@ public class CustomerAdminDbContext(DbContextOptions<CustomerAdminDbContext> opt
     public DbSet<TenantKey> TenantKeys => Set<TenantKey>();
     public DbSet<ApprovalAuthority> ApprovalAuthorities => Set<ApprovalAuthority>();
     public DbSet<ApprovalMatrixRule> ApprovalMatrixRules => Set<ApprovalMatrixRule>();
+    public DbSet<RetentionPolicyVersion> RetentionPolicies => Set<RetentionPolicyVersion>();
+    public DbSet<LegalHold> LegalHolds => Set<LegalHold>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -82,6 +84,33 @@ public class CustomerAdminDbContext(DbContextOptions<CustomerAdminDbContext> opt
             // At most one active key per tenant and purpose.
             b.HasIndex(x => new { x.TenantId, x.Purpose }).IsUnique().HasFilter("[Status] = 'Active'")
                 .HasDatabaseName("UX_TenantKey_Active");
+        });
+
+        modelBuilder.Entity<RetentionPolicyVersion>(b =>
+        {
+            b.ToTable("RetentionPolicyVersion");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.SettingsJson).IsRequired();
+            b.Property(x => x.Status).HasMaxLength(20).IsRequired();
+            b.Property(x => x.Note).HasMaxLength(500).IsRequired();
+            b.Property(x => x.DecisionComment).HasMaxLength(500);
+            b.Property(x => x.RowVersion).IsRowVersion();
+            b.HasIndex(x => new { x.TenantId, x.VersionNo }).IsUnique();
+            // One active and one pending version at a time.
+            b.HasIndex(x => x.TenantId).IsUnique().HasFilter("[Status] = 'Active'").HasDatabaseName("UX_RetentionPolicy_Active");
+            b.HasIndex(x => x.TenantId).IsUnique().HasFilter("[Status] = 'Pending'").HasDatabaseName("UX_RetentionPolicy_Pending");
+        });
+
+        modelBuilder.Entity<LegalHold>(b =>
+        {
+            b.ToTable("LegalHold");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Scope).HasMaxLength(20).IsRequired();
+            b.Property(x => x.Reason).HasMaxLength(500).IsRequired();
+            b.Property(x => x.ReleaseComment).HasMaxLength(500);
+            b.Property(x => x.RowVersion).IsRowVersion();
+            b.Ignore(x => x.IsActive);
+            b.HasIndex(x => new { x.TenantId, x.ReleasedAt });
         });
 
         base.OnModelCreating(modelBuilder);

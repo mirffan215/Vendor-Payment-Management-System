@@ -31,6 +31,12 @@ internal static class OidcEvents
             return;
         }
 
+        if (!await sp.GetRequiredService<Vpms.CustomerAdmin.Contracts.ITenantLookup>().IsActiveAsync(provider.TenantId, ctx.HttpContext.RequestAborted))
+        {
+            ctx.Fail("denied:ProviderDisabled");
+            return;
+        }
+
         var external = ctx.Principal;
         if (ctx.Properties?.Items.ContainsKey(AuthEndpoints.StepUpItem) == true)
         {

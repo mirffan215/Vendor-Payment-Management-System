@@ -770,6 +770,7 @@
           "Vpms.Audit.Domain": "[1.0.0, )",
           "Vpms.Audit.Infrastructure": "[1.0.0, )",
           "Vpms.BuildingBlocks": "[1.0.0, )",
+          "Vpms.BuildingBlocks.Cloud": "[1.0.0, )",
           "Vpms.CustomerAdmin.Domain": "[1.0.0, )",
           "Vpms.CustomerAdmin.Infrastructure": "[1.0.0, )",
           "Vpms.Documents.Infrastructure": "[1.0.0, )",

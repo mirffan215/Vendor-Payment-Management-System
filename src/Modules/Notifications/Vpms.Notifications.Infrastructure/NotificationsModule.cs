@@ -12,6 +12,7 @@ public static class NotificationsModule
         services.Configure<NotificationOptions>(o => configure?.Invoke(o));
         services.AddScoped<TemplateResolver>();
         services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<Vpms.BuildingBlocks.Jobs.IRetentionTarget, NotificationRetentionTarget>();
         services.AddScoped<INotificationAdmin, NotificationAdminService>();
         services.AddScoped<INotificationSweep, NotificationSweep>();
         services.AddScoped<INotificationChannelService, ChannelConfigService>();

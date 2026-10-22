@@ -13,6 +13,9 @@ public static class KeyStatus
 {
     public const string Active = "Active";
     public const string Retired = "Retired";
+
+    /// <summary>The wrapped key was deleted when the tenant left (ADR-0024). The row stays as a tombstone so a key can never be silently created again.</summary>
+    public const string Destroyed = "Destroyed";
 }
 
 /// <summary>A tenant key as stored: only ever wrapped by the key-encryption key.</summary>
@@ -56,7 +59,10 @@ public sealed class EncryptionOptions
     public TimeSpan KeyCacheDuration { get; set; } = TimeSpan.FromMinutes(10);
 }
 
-public sealed class EncryptionException(string message, Exception? inner = null) : Exception(message, inner);
+public class EncryptionException(string message, Exception? inner = null) : Exception(message, inner);
+
+/// <summary>The tenant's keys were destroyed when it left, so its encrypted data can no longer be read (and no new key is created).</summary>
+public sealed class TenantKeyDestroyedException(Guid tenantId) : EncryptionException($"The keys of tenant {tenantId:N} have been destroyed.");
 
 /// <summary>Protects sensitive column values for the current tenant.</summary>
 public interface IFieldProtector

@@ -71,6 +71,7 @@ builder.Services.AddHostedService<WorkflowTimerJob>();
 builder.Services.AddHostedService<PaymentIntegrityJob>();
 builder.Services.AddHostedService<ErpOutboundJob>();
 builder.Services.AddHostedService<NotificationJob>();
+builder.Services.AddHostedService<RetentionJob>();
 
 builder.Services.AddHostedService<WorkerHeartbeat>();
 var host = builder.Build();

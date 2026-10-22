@@ -31,6 +31,15 @@ public static class TenantStoragePath
         return value;
     }
 
+    /// <summary>The prefix every object of the tenant starts with.</summary>
+    public static string PrefixFor(Guid tenantId) => tenantId == Guid.Empty ? throw new ArgumentException("Tenant id is required.", nameof(tenantId)) : tenantId.ToString("N") + "/";
+
+    /// <summary>Refuses anything that is not exactly one tenant's prefix.</summary>
+    public static string RequireTenantPrefix(string prefix) =>
+        prefix.Length == 33 && prefix[32] == '/' && Guid.TryParseExact(prefix[..32], "N", out var id) && id != Guid.Empty
+            ? prefix
+            : throw new ArgumentException("Only a whole tenant prefix may be deleted.", nameof(prefix));
+
     /// <summary>True when the key lies inside the tenant's prefix and contains no traversal.</summary>
     public static bool BelongsTo(string key, Guid tenantId) =>
         !string.IsNullOrEmpty(key)
@@ -44,6 +53,12 @@ public interface IBlobBackend
     Task PutAsync(string key, Stream content, CancellationToken ct = default);
     Task<Stream?> GetAsync(string key, CancellationToken ct = default);
     Task DeleteAsync(string key, CancellationToken ct = default);
+
+    /// <summary>
+    /// Deletes every object whose key starts with the prefix and returns how many were deleted. Only for tenant offboarding: the prefix must be
+    /// a whole tenant prefix ("{tenantN}/"), so a wrong argument cannot empty the store.
+    /// </summary>
+    Task<int> DeletePrefixAsync(string prefix, CancellationToken ct = default);
 }
 
 public interface IFileStore
@@ -97,5 +112,17 @@ public sealed class InMemoryBlobBackend : IBlobBackend
     {
         _blobs.TryRemove(key, out _);
         return Task.CompletedTask;
+    }
+
+    public Task<int> DeletePrefixAsync(string prefix, CancellationToken ct = default)
+    {
+        TenantStoragePath.RequireTenantPrefix(prefix);
+        var count = 0;
+        foreach (var key in _blobs.Keys.Where(k => k.StartsWith(prefix, StringComparison.Ordinal)).ToList())
+        {
+            if (_blobs.TryRemove(key, out _)) count++;
+        }
+
+        return Task.FromResult(count);
     }
 }

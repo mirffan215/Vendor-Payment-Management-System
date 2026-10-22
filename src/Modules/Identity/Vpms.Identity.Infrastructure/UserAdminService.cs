@@ -31,6 +31,22 @@ public sealed class UserAdminService(IdentityDbContext db, ICurrentUser current,
             roles.Where(r => r.UserId == u.Id).Select(r => r.Name).Distinct().Order().ToList())).ToList();
     }
 
+    public async Task AnonymiseAsync(Guid userId, CancellationToken ct = default)
+    {
+        MakerCheckerGuard.EnsureDifferent(current.UserId, userId, "anonymise a user");
+        var user = await db.Users.FirstOrDefaultAsync(u => u.Id == userId, ct) ?? throw new NotFoundException("User");
+        if (user.Status != UserStatus.Disabled) throw new ConflictException("user_not_disabled", "Disable the user before anonymising them.");
+        if (user.Email.EndsWith("@anonymised.invalid", StringComparison.Ordinal)) throw new ConflictException("already_anonymised", "This user has already been anonymised.");
+
+        user.Email = $"{userId:N}@anonymised.invalid";
+        user.DisplayName = "Former user";
+        user.ExternalSubject = "anonymised:" + userId.ToString("N");
+        user.SessionsValidFrom = clock.GetUtcNow();
+        // The record of who they were is not kept anywhere, including here: only that it happened.
+        audit.Record(new AuditEntry("user.anonymised", "User", userId.ToString()));
+        await db.SaveChangesAsync(ct);
+    }
+
     public async Task RevokeSessionsAsync(Guid userId, CancellationToken ct = default)
     {
         var user = await db.Users.FirstOrDefaultAsync(u => u.Id == userId, ct) ?? throw new NotFoundException("User");

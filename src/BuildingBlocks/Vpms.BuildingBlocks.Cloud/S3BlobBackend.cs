@@ -44,6 +44,26 @@ public sealed class S3BlobBackend(IAmazonS3 s3, string bucket, bool serverSideEn
     public async Task DeleteAsync(string key, CancellationToken ct = default) =>
         await s3.DeleteObjectAsync(bucket, key, ct);
 
+    public async Task<int> DeletePrefixAsync(string prefix, CancellationToken ct = default)
+    {
+        TenantStoragePath.RequireTenantPrefix(prefix);
+        var count = 0;
+        string? token = null;
+        do
+        {
+            var page = await s3.ListObjectsV2Async(new ListObjectsV2Request { BucketName = bucket, Prefix = prefix, ContinuationToken = token }, ct);
+            foreach (var obj in page.S3Objects ?? [])
+            {
+                await s3.DeleteObjectAsync(bucket, obj.Key, ct);
+                count++;
+            }
+
+            token = page.IsTruncated == true ? page.NextContinuationToken : null;
+        }
+        while (token is not null);
+        return count;
+    }
+
     private async Task<bool> ExistsAsync(string key, CancellationToken ct)
     {
         try

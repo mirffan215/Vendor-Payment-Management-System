@@ -61,7 +61,13 @@ public static class VendorCookieValidator
             return await sp.GetRequiredService<IPortalAuthService>().IsSessionValidAsync(userId, ctx.HttpContext.RequestAborted);
         });
 
-        if (active != true) await Reject(ctx);
+        var tenantActive = await sp.GetRequiredService<IMemoryCache>().GetOrCreateAsync($"tenant-active:{tenantId:N}", async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1);
+            return await sp.GetRequiredService<Vpms.CustomerAdmin.Contracts.ITenantLookup>().IsActiveAsync(tenantId, ctx.HttpContext.RequestAborted);
+        });
+
+        if (active != true || tenantActive != true) await Reject(ctx);
     }
 
     private static async Task Reject(CookieValidatePrincipalContext ctx)

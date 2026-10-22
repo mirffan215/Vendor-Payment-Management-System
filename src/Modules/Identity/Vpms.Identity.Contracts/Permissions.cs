@@ -60,6 +60,10 @@ public static class Permissions
     public const string ReportExport = "Report.Export";
     public const string ReportTax = "Report.Tax";
 
+    public const string RetentionConfigure = "Retention.Configure";
+    public const string RetentionApprovePolicy = "Retention.ApprovePolicy";
+    public const string RetentionHold = "Retention.Hold";
+
     public static readonly IReadOnlyList<string> All =
     [
         TenantAdmin, UserManage, RoleManage, AuditRead,
@@ -72,5 +76,6 @@ public static class Permissions
         PaymentView, PaymentPrepare, PaymentApprove, PaymentRelease, PaymentInstructionDownload,
         ErpView, ErpConfigure, ErpApproveChange, ErpOperate,
         AuditExport, NotificationConfigure, NotificationApproveChange, ReportView, ReportExport, ReportTax,
+        RetentionConfigure, RetentionApprovePolicy, RetentionHold,
     ];
 }

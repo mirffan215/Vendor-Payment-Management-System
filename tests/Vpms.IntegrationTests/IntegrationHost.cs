@@ -90,7 +90,11 @@ public sealed class IntegrationHost : IAsyncDisposable
 
     public IServiceScopeFactory ScopeFactory => _root.GetRequiredService<IServiceScopeFactory>();
 
-    public ValueTask DisposeAsync() => _root.DisposeAsync();
+    public async ValueTask DisposeAsync()
+    {
+        await _root.DisposeAsync();
+        await Database.DropAsync();
+    }
 }
 
 /// <summary>No secret store in tests: every reference is "not available".</summary>

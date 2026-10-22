@@ -53,6 +53,31 @@ public abstract class BlobBackendContract : IAsyncLifetime
     }
 
     [SkippableFact]
+    public async Task A_whole_tenant_prefix_can_be_deleted_and_nothing_else_is_touched()
+    {
+        var tenantA = Guid.NewGuid();
+        var tenantB = Guid.NewGuid();
+        string K(Guid t, string n) => TenantStoragePath.Build(t, null, "attachments", Guid.NewGuid(), n);
+        var a = new[] { K(tenantA, "1.bin"), K(tenantA, "2.bin"), K(tenantA, "3.bin") };
+        var b = K(tenantB, "keep.bin");
+        foreach (var key in a.Append(b)) await Backend.PutAsync(key, new MemoryStream([7]));
+
+        Assert.Equal(3, await Backend.DeletePrefixAsync(TenantStoragePath.PrefixFor(tenantA)));
+
+        foreach (var key in a) Assert.Null(await Backend.GetAsync(key));
+        Assert.NotNull(await Backend.GetAsync(b));
+        Assert.Equal(0, await Backend.DeletePrefixAsync(TenantStoragePath.PrefixFor(tenantA)));
+    }
+
+    [SkippableTheory]
+    [InlineData("")]
+    [InlineData("/")]
+    [InlineData("abc/")]
+    [InlineData("00000000000000000000000000000000/")]
+    public async Task Only_a_whole_tenant_prefix_is_accepted_for_deletion(string prefix) =>
+        await Assert.ThrowsAsync<ArgumentException>(() => Backend.DeletePrefixAsync(prefix));
+
+    [SkippableFact]
     public async Task Delete_removes_the_object_and_is_idempotent()
     {
         var key = Key();

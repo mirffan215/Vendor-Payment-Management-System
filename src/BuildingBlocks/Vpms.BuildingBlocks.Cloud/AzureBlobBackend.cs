@@ -25,4 +25,16 @@ public sealed class AzureBlobBackend(BlobContainerClient container) : IBlobBacke
 
     public async Task DeleteAsync(string key, CancellationToken ct = default) =>
         await container.GetBlobClient(key).DeleteIfExistsAsync(cancellationToken: ct);
+
+    public async Task<int> DeletePrefixAsync(string prefix, CancellationToken ct = default)
+    {
+        TenantStoragePath.RequireTenantPrefix(prefix);
+        var count = 0;
+        await foreach (var item in container.GetBlobsAsync(Azure.Storage.Blobs.Models.BlobTraits.None, Azure.Storage.Blobs.Models.BlobStates.None, prefix, ct))
+        {
+            if ((await container.GetBlobClient(item.Name).DeleteIfExistsAsync(cancellationToken: ct)).Value) count++;
+        }
+
+        return count;
+    }
 }

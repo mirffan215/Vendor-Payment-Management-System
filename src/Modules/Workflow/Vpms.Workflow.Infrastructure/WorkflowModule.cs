@@ -11,6 +11,7 @@ public static class WorkflowModule
     {
         services.AddTenantDbContext<WorkflowDbContext>(connectionString);
         services.AddScoped<ApproverResolverFactory>();
+        services.AddScoped<Vpms.BuildingBlocks.Jobs.IRetentionTarget, WorkflowNoticeRetentionTarget>();
         services.AddScoped<WorkflowDefinitionService>();
         services.AddScoped<IWorkflowDefinitionService>(sp => sp.GetRequiredService<WorkflowDefinitionService>());
         services.AddScoped<ApprovalService>();

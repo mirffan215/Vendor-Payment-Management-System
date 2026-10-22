@@ -42,6 +42,18 @@ public static class CookieSessionValidator
             return await sp.GetRequiredService<IIdentityStore>().GetSessionStateAsync(userId, ctx.HttpContext.RequestAborted);
         });
 
+        // A suspended or offboarded organisation has no sessions.
+        var tenantActive = await cache.GetOrCreateAsync($"tenant-active:{tenantId:N}", async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1);
+            return await sp.GetRequiredService<Vpms.CustomerAdmin.Contracts.ITenantLookup>().IsActiveAsync(tenantId, ctx.HttpContext.RequestAborted);
+        });
+        if (tenantActive != true)
+        {
+            await Reject(ctx);
+            return;
+        }
+
         // Disabled, or the person (or an administrator) ended all sessions at or after this one began.
         if (state is not { Active: true } || (state.ValidFrom is { } from && authTime <= from.ToUnixTimeSeconds()))
         {

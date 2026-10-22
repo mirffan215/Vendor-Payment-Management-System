@@ -5,7 +5,7 @@ const json = (body: unknown) => ({ status: 200, contentType: 'application/json',
 /** Every signed-in staff screen, with the ids dynamic routes need. */
 const ROUTES = [
   '/', '/vendors', '/vendors/v1', '/invoices', '/invoices/i1', '/approvals', '/approvals/t1', '/payments', '/payments/proposals/p1', '/erp', '/erp/sync', '/erp/reconciliation',
-  '/reports', '/notifications', '/admin/notifications', '/delegations', '/workflow', '/exceptions', '/intake', '/verification', '/bank-changes', '/admin', '/audit',
+  '/reports', '/notifications', '/admin/notifications', '/admin/retention', '/delegations', '/workflow', '/exceptions', '/intake', '/verification', '/bank-changes', '/admin', '/audit',
 ]
 
 async function staffInArabic(page: Page) {

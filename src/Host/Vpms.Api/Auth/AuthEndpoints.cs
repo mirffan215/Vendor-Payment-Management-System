@@ -25,11 +25,11 @@ public static class AuthEndpoints
                 : Results.Ok(await store.ListEnabledProvidersAsync(tenantId.Value, ct));
         });
 
-        auth.MapGet("/login", async (Guid provider, string? returnUrl, HttpContext http, IIdentityStore store,
+        auth.MapGet("/login", async (Guid provider, string? returnUrl, HttpContext http, IIdentityStore store, ITenantLookup tenants,
             ISecretResolver secrets, DynamicOidcSchemes schemes, CancellationToken ct) =>
         {
             var config = await store.FindProviderAsync(provider, ct);
-            if (config is not { Enabled: true })
+            if (config is not { Enabled: true } || !await tenants.IsActiveAsync(config.TenantId, ct))
             {
                 return Results.NotFound();
             }

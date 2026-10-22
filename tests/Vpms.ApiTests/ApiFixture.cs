@@ -180,6 +180,7 @@ public sealed class ApiFixture : WebApplicationFactory<Program>, IAsyncLifetime
         await IdpA.DisposeAsync();
         await IdpB.DisposeAsync();
         await base.DisposeAsync();
+        await _db.DropAsync();
     }
 
     Task IAsyncLifetime.DisposeAsync() => DisposeAsync();

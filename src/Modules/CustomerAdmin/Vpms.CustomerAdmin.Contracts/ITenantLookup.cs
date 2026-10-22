@@ -12,5 +12,8 @@ public interface ITenantLookup
     /// <summary>Active tenants with their language and calendar defaults, for background jobs that visit every tenant.</summary>
     Task<IReadOnlyList<TenantDefaults>> ListActiveAsync(CancellationToken ct = default);
 
+    /// <summary>False once the tenant is suspended or offboarded: its people cannot sign in and its sessions end.</summary>
+    Task<bool> IsActiveAsync(Guid tenantId, CancellationToken ct = default);
+
     Task<TenantDefaults?> GetDefaultsAsync(Guid tenantId, CancellationToken ct = default);
 }

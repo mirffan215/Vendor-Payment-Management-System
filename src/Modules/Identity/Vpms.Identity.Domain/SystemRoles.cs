@@ -40,6 +40,8 @@ public static class SystemRoles
         ["Tax Reviewer"] = [Permissions.EntityView, Permissions.ReportView, Permissions.ReportExport, Permissions.ReportTax],
         ["Notification Administrator"] = [Permissions.EntityView, Permissions.NotificationConfigure],
         ["Notification Change Approver"] = [Permissions.EntityView, Permissions.NotificationApproveChange],
+        ["Retention Administrator"] = [Permissions.EntityView, Permissions.VendorView, Permissions.RetentionConfigure, Permissions.RetentionHold],
+        ["Retention Policy Approver"] = [Permissions.EntityView, Permissions.RetentionApprovePolicy],
         ["ERP Administrator"] = [Permissions.EntityView, Permissions.ErpView, Permissions.ErpConfigure],
         ["ERP Change Approver"] = [Permissions.EntityView, Permissions.ErpView, Permissions.ErpApproveChange],
         ["ERP Operator"] = [Permissions.EntityView, Permissions.VendorView, Permissions.InvoiceView, Permissions.ErpView, Permissions.ErpOperate],

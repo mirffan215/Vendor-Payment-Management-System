@@ -22,7 +22,8 @@
     "reports": "Reports",
     "notifications": "Notifications",
     "notificationAdmin": "Notification settings",
-    "signOutEverywhere": "Sign out everywhere"
+    "signOutEverywhere": "Sign out everywhere",
+    "retention": "Data retention"
   },
   "language": {
     "label": "Language",
@@ -102,7 +103,7 @@
       "not_the_maker": "Only the person who made the request can withdraw it.",
       "change_not_pending": "This change has already been decided.",
       "change_expired": "This change request has expired. Start a new one.",
-      "change_pending": "There is already a pending change for this currency.",
+      "change_pending": "A change is already waiting for approval.",
       "stale_change": "The details this change replaces are no longer in effect. Start a new request.",
       "no_change": "These are the bank details already in effect.",
       "bank_account_shared": "Another vendor already uses this account. Confirm only if this is expected.",
@@ -288,7 +289,16 @@
       "user_disabled": "This user is disabled.",
       "webhook_host_not_allowed": "That webhook host is not on the list of allowed hosts.",
       "webhook_url_invalid": "The webhook address must be an https address.",
-      "step_up_required": "For your security, please confirm it is you before doing this."
+      "step_up_required": "For your security, please confirm it is you before doing this.",
+      "retention_class_unknown": "That kind of data is not known.",
+      "retention_months_invalid": "Retention must be between 1 and 1200 months.",
+      "retention_country_invalid": "Use a two-letter country code.",
+      "retention_audit_shorter": "The audit trail must be kept at least as long as the financial records.",
+      "hold_reason_required": "Give the reason for the hold.",
+      "hold_scope_invalid": "The scope does not match what it names.",
+      "hold_already_released": "This hold has already been released.",
+      "user_not_disabled": "Disable the user first.",
+      "already_anonymised": "This user has already been anonymised."
     }
   },
   "format": {
@@ -1329,5 +1339,47 @@
   },
   "stepUp": {
     "confirm": "Confirm it is me"
+  },
+  "retention": {
+    "title": "Data retention",
+    "intro": "Set how long each kind of data is kept, put records on legal hold, and see what has passed its retention period. Changes need a second person to approve them.",
+    "autoNote": "Only notifications and workflow notices are deleted automatically. Financial records, supplier data and the audit trail are never deleted by the system; they are only reported here.",
+    "policy": "Retention policy",
+    "inForce": "In force: version {{version}}",
+    "defaultsApply": "No policy has been set; the standard periods apply.",
+    "waiting": "Waiting for approval: version {{version}}",
+    "dataClass": "Kind of data",
+    "default": "Standard (months)",
+    "keepFor": "Keep for (months)",
+    "handling": "Handling",
+    "handlingAuto": "Deleted automatically",
+    "handlingReport": "Reported only, never deleted",
+    "class": {
+      "FinancialRecords": "Financial records",
+      "VendorData": "Supplier data",
+      "Audit": "Audit trail",
+      "Notifications": "Notifications",
+      "WorkflowNotices": "Workflow notices"
+    },
+    "report": "Past retention",
+    "reportNote": "Counts only; looking at this report deletes nothing.",
+    "olderThan": "Older than",
+    "pastRetention": "Past retention",
+    "notCounted": "Not counted",
+    "onHold": "On hold",
+    "holds": "Legal holds",
+    "holdsNote": "A hold stops disposal of what it covers. Releasing it needs a different person from the one who placed it.",
+    "noHolds": "No legal holds.",
+    "scopeLabel": "Covers",
+    "scope": {
+      "Tenant": "Everything",
+      "LegalEntity": "One legal entity",
+      "Vendor": "One supplier"
+    },
+    "vendorId": "Supplier id",
+    "reason": "Reason",
+    "place": "Place hold",
+    "release": "Release hold",
+    "months": "Months: {{count}}"
   }
 }

@@ -73,6 +73,12 @@ public sealed class TenantKeyRing(
         var store = scope.ServiceProvider.GetRequiredService<ITenantKeyStore>();
         var stored = (await store.ListAsync(tenantId, ct)).Where(k => k.Purpose == purpose).ToList();
 
+        if (stored.Any(k => k.Status == KeyStatus.Destroyed))
+        {
+            _cache.TryRemove((tenantId, purpose), out _);
+            throw new TenantKeyDestroyedException(tenantId);
+        }
+
         if (stored.Count == 0)
         {
             var created = new StoredTenantKey(tenantId, purpose, 1, KeyStatus.Active, kek.KeyId, await kek.WrapAsync(RandomNumberGenerator.GetBytes(32), ct));
