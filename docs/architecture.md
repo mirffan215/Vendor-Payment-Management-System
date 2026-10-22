@@ -301,3 +301,20 @@ future integration; v1 never moves money.**
   propose-acceptance, approve-acceptance, reject-acceptance).
 - **Web:** `/erp` (connection, mapping, change inbox), `/erp/sync`, `/erp/reconciliation`.
 - **Settings:** `Erp:OutboundSeconds` (30), `Erp:OutboundBatch` (50), `Erp:InboundSeconds` (300), `Erp:D365:Authority`.
+
+## 18. Phase 7 additions
+
+- **Reporting** (no tables): source contracts in Invoices, Workflow and Payments; `ReportService` composes them under the caller's entity scope;
+  exporters CSV, XLSX, PDF behind `IReportExporter`; exports are audited with a SHA-256 of the file (ADR-0021).
+  API: `/reports` (catalog), `/reports/{report}`, `/reports/{report}/export?format=csv|xlsx|pdf`. Permissions `Report.View`, `Report.Export`, `Report.Tax`.
+- **Audit evidence:** `/audit/evidence` builds a signed zip for a filtered range; `/audit/evidence/verify` checks an uploaded bundle. Permission `Audit.Export`.
+- **Notifications** (schema `notify`): sweep over `INotificationSource` events, outbox deliveries, channels in-app / email (Graph, SMTP) / Teams webhook /
+  push abstraction, versioned two-person channel configuration, templates in English and Arabic (ADR-0022). Worker job `NotificationJob`.
+  API: `/notifications`, `/notifications/unread-count`, `/notifications/preferences`, `/admin/notification-templates`, `/admin/notification-channels/{channel}`,
+  `/notification-channel-changes`, `/admin/notification-deliveries`.
+- **Localization:** language and calendar are stored per user (Identity), returned with the session, applied on sign-in and used for email language. Backend
+  error codes have English and Arabic wording in the web app (a test fails if a code has none). All money goes through `formatMoney`.
+- **Web:** `/reports`, `/notifications` (inbox and preferences), `/admin/notifications`, audit filters and evidence download/verify, notification bell.
+  A Playwright sweep opens every staff route in Arabic at phone width and checks direction, overflow and untranslated keys.
+- **Saudi VAT:** input-VAT register export only; no issuing or clearance code (architecture test, `docs/zatca-scope.md`).
+- **Settings:** `App:BaseUrl`, `Notifications:AllowInternalHosts` (development only), `Notifications:GraphBaseUrl`, `Notifications:GraphAuthorityUrl`.

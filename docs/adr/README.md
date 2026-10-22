@@ -25,6 +25,8 @@ Phase 0 ADRs were approved by the owner and are **Accepted**.
 | [0018](0018-payment-instruction-format-signing-and-reveal.md) | Payment instruction format, signing and bank-detail reveal | Accepted |
 | [0019](0019-erp-sync-queue-and-idempotency.md) | ERP sync queue, idempotency and reconciliation | Accepted |
 | [0020](0020-d365-adapter-mapping-and-limits.md) | Dynamics 365 Finance adapter, mapping, secrets, and what was not verified | Accepted |
+| [0021](0021-reporting-and-export.md) | Reporting, export formats and audit evidence bundles | Accepted |
+| [0022](0022-notifications.md) | Notifications: sweep, outbox, channels and mandatory kinds | Accepted |
 
 ## Template
 

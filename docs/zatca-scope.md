@@ -1,6 +1,6 @@
 # ZATCA and VAT: what VPMS does and does not do
 
-Status: Phase 3 position. Confirmed by the product owner (Phase 0): **VPMS does not issue invoices. It is used for the
+Status: Phase 3 position, updated in Phase 7. Confirmed by the product owner (Phase 0): **VPMS does not issue invoices. It is used for the
 payment process only.** A Saudi tax adviser should confirm this reading before go-live (open question Q8).
 
 ## Which obligations depend on VPMS's role
@@ -12,7 +12,7 @@ payment process only.** A Saudi tax adviser should confirm this reading before g
 | Receiving supplier invoices | No issuance duty. The customer needs valid supplier tax invoices to claim input VAT | **Built (Phase 3)** as validation and data capture, see below |
 | Archiving invoices and records | Retention for the legally required period in a retrievable form | Per-tenant retention policy in Phase 8; files are kept in write-once storage |
 | Paying invoices | VAT amounts and any withholding in the payment instruction must be correct | Amounts are verified before approval (Phases 3, 5) |
-| The customer's VAT return and ZATCA reporting | Done by the customer's ERP or tax tooling | **Not built.** VPMS can export data in Phase 7 |
+| The customer's VAT return and ZATCA reporting | Done by the customer's ERP or tax tooling | **Data export built (Phase 7)**: the *input VAT register* report (CSV, Excel, PDF) lists received invoices with supplier VAT number, net, VAT, category and e-invoice reference. Return filing is **not built** |
 
 Re-open the decision if VPMS ever issues credit notes, self-billed invoices or any customer-facing tax document.
 
@@ -43,6 +43,15 @@ registration switches that country back to the fallback (tested).
 - It does not decide whether an invoice is a valid tax invoice in law; it flags missing or inconsistent data for a person.
 - Defaults are conservative: required-ness is opt-in per entity because suppliers differ in what they print. Saudi entities
   should review `requireSupplierTaxNumber` and `requireSupplierTaxInvoiceRef` during onboarding.
+
+## Phase 7: what was added, and what still is not built
+
+- **Added:** the input-VAT register (needs the `Report.Tax` permission, exports are audited) and English/Arabic wording for the Saudi finding codes.
+  It is data for the customer's own VAT return; VPMS does not compute or file the return.
+- **Still not built, by decision:** issuing tax invoices, credit or debit notes, self-billing, XML generation, the cryptographic stamp, CSID onboarding,
+  QR codes, and clearance or reporting through Fatoora. An architecture test (`No_module_issues_tax_invoices_or_talks_to_ZATCA_clearance`) fails the
+  build if any module introduces those concepts, so the role cannot change by accident.
+- **Q8 stays open:** a Saudi tax adviser has not yet confirmed this reading. The register's columns and the "receive only" role should be part of that review.
 
 ## Dates
 

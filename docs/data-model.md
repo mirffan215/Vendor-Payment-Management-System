@@ -234,3 +234,16 @@ duplicate detection works without decrypting. See ADR-0004.
 - **ReconciliationRun** and **ReconciliationItem**: type, natural key (**unique per entity**), both values, status (Open |
   PendingAcceptance | Accepted | Resolved | Cleared), proposer, decider, reasons. Never deleted.
 - Vendor-entity links gained no column: `ErpVendorAccount` (already there) is where the ERP's account is stored.
+
+## Phase 7 as built (schema `notify`; Reporting has no tables)
+
+- **Notification**: per user, kind, title and body keys, link path, **unique dedupe key per user**, read time, mandatory flag. Never deleted by the app.
+- **NotificationDelivery**: outbox row per notification and channel: status (Pending | InFlight | Sent | Skipped | DeadLetter), attempts, next attempt,
+  lease, last error. Cannot be deleted.
+- **NotificationPreference**: per user, kind and channel. Mandatory combinations are enforced in the domain, not only the UI.
+- **NotificationTemplate**: tenant override per kind, channel and locale; built-in English and Arabic defaults live in code.
+- **ChannelConfig**: versioned per channel (Email, Webhook, Push), status Pending | Active | Superseded | Rejected | Cancelled, maker and checker; the secret is a
+  vault *name*. One Active and one Pending per channel.
+- **NotificationCursor**: per source, the time already swept (with an overlap window).
+- Identity: `User.Calendar` added beside `Locale` (migration `UserCalendar`).
+- All tables carry `TenantId`, the global filter and SQL Server row-level security like the other modules.

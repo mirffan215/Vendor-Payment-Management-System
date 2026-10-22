@@ -120,6 +120,38 @@ public class LayerDependencyTests
         Assert.False(ReferencesMethod(typeof(LayerDependencyTests), "ThisMethodDoesNotExist"));
     }
 
+    private static readonly string[] IssuingConcepts = ["Clearance", "Csid", "Fatoora", "ZatcaQr", "SignInvoice", "InvoiceSigning", "XadES", "SelfBill"];
+
+    [Fact]
+    public void No_module_issues_tax_invoices_or_talks_to_ZATCA_clearance()
+    {
+        // VPMS receives supplier invoices and prepares payments; it never issues e-invoices (ADR-0013, docs/zatca-scope.md).
+        // If this fails, the documented role has changed: re-open the decision before adding the code.
+        var asms = Modules.SelectMany(m => new[] { "Domain", "Application", "Infrastructure", "Contracts" }.Select(l => Asm(m, l)))
+            .Append(typeof(Vpms.Tax.Sa.SaudiVatProvider).Assembly).Append(typeof(Program).Assembly);
+        var offenders = asms.SelectMany(a => a.GetTypes()).Where(NamesIssuingConcept).Select(t => t.FullName).ToList();
+        Assert.Empty(offenders);
+        var references = asms.SelectMany(a => a.GetReferencedAssemblies()).Select(a => a.Name!).Distinct();
+        Assert.DoesNotContain("System.Security.Cryptography.Xml", references);
+    }
+
+    [Fact]
+    public void ZATCA_concept_detector_finds_what_it_bans()
+    {
+        Assert.True(NamesIssuingConcept(typeof(DeliberateClearanceClient)));
+        Assert.False(NamesIssuingConcept(typeof(Vpms.Tax.Sa.SaudiVatProvider)));
+    }
+
+    private sealed class DeliberateClearanceClient
+    {
+        public void Submit() { }
+    }
+
+    private static bool NamesIssuingConcept(Type t) =>
+        IssuingConcepts.Any(c => t.Name.Contains(c, StringComparison.OrdinalIgnoreCase)
+            || t.GetMembers(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly)
+                .Any(m => !m.Name.StartsWith('<') && m.Name.Contains(c, StringComparison.OrdinalIgnoreCase)));
+
     private sealed class DeliberateViolation
     {
         public static IQueryable<string> Bypass(IQueryable<string> q) =>

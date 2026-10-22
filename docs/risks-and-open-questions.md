@@ -22,6 +22,10 @@ Status: Accepted (Phase 0 approved).
 | R14 | Data residency and retention requirements differ by country | Medium | Dedicated-DB path in ADR-0001, per-tenant retention policy | 8 |
 | R15 | The ERP credential is stolen or leaks | High | Only a vault name is stored; the secret is read at send time and held in memory; never in API, audit, queue or logs; least-privilege D365 role; rotation by changing the vault value | 6, 8 |
 | R16 | Wrong coding posted to the ledger | High | Unmapped tax code or dimension is a permanent error, never a guess; mapping changes need a second person; reconciliation flags amount differences | 6 |
+| R17 | Report PDF library licence (QuestPDF is free only below a revenue threshold) | Medium | Confirm the licence before general release; the exporter is behind `IReportExporter` and can be swapped (ADR-0021) | 7, before release |
+| R18 | Notification channels never exercised against real Graph, SMTP or Teams | Medium | Stub-server tests only; try each channel in a test tenant before go-live; dead letters are visible and retryable (ADR-0022) | 7, before go-live |
+| R19 | Notification flooding or a missed mandatory notice | Medium | Unique dedupe keys, mandatory kinds locked, dead-letter monitor; no digest yet | 7 |
+| R20 | Evidence bundle mistaken for proof beyond what it is | Low | Documented: it shows the range was not changed since export and came from the tenant's key; the live chain verifier remains the control | 7 |
 
 ## 2. ZATCA obligations and VPMS's role
 
@@ -64,4 +68,5 @@ Consequences for the design:
 | Q11 | Email intake: shared mailbox per tenant or per legal entity? | Per legal entity mailbox | Phase 3 |
 | Q12 | Expected scale (tenants, invoices per month) for sizing and load tests? | Unknown | Phase 8 |
 | Q13 | Which D365 Finance version and which posting route (journal posts automatically, or needs a separate posting step) does the first customer use? | Journal created; entity names configurable; field names to be confirmed in a spike | Before first live posting |
-| Q14 | Who should receive an alert when messages are dead-lettered or a reconciliation finds differences? | Visible on the monitor only until notifications exist | Phase 7 |
+| Q14 | Who should receive an alert when messages are dead-lettered or a reconciliation finds differences? | Built: everyone holding the ERP operate permission (`Erp.Operate`) for that entity (ADR-0022). Confirm | Before go-live |
+| Q15 | Is the QuestPDF licence acceptable for the intended customers, or should another PDF library be used? | Community licence assumed for development | Before release |

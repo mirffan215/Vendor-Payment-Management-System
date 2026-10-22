@@ -92,6 +92,14 @@ rules (duplicates, purchase-order match, amounts, VAT, dates, vendor status); fa
 rules are versioned, and making a check weaker needs a second person to approve. Purchase orders are imported by staff until the
 ERP integration supplies them. See ADR-0011 to ADR-0013.
 
+## Reports, notifications and languages (Phase 7)
+
+- Reports (`/reports`): payables aging, payment forecast, exceptions, approval delays and the input-VAT register, exportable as CSV, Excel and PDF. Every export is audited.
+- Audit evidence (`/audit`): download a signed bundle for a date range and verify it later.
+- Notifications: in-app bell and inbox always; email (Microsoft Graph or SMTP) and Teams per tenant after a second person approves the channel. Secrets are entered as vault names.
+- Each person chooses language (English, Arabic) and calendar (Gregorian, Hijri) in the header; the choice is stored on their account.
+- VPMS receives supplier invoices; it does not issue tax invoices or talk to ZATCA clearance (`docs/zatca-scope.md`).
+
 ## Conventions
 
 - Every feature ships with tests and updated docs; hard-to-reverse decisions are ADRs in `docs/adr`.

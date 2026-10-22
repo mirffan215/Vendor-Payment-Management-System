@@ -58,7 +58,7 @@ Key Vault secrets; idempotent retryable sync with dead-lettering; reconciliation
 Depends on: Phases 3-5.
 Acceptance: replayed messages create no duplicates; the reconciliation report flags planted mismatches.
 
-## Phase 7: Reporting, notifications, localization (`phase-7-reporting-notifications-localization.md`)
+## Phase 7: Reporting, notifications, localization (`phase-7-reporting-notifications-localization.md`) — complete, see [phase-7-summary.md](phase-7-summary.md)
 Scope: reports (aging, approval delays, forecast, exceptions) with Excel/PDF/CSV export; audit evidence export;
 notifications (Graph email + transactional provider, in-app, Teams-ready, push abstraction) with templates and
 preferences; full Arabic/RTL, Arabic templates, Hijri/Gregorian, SAR and multi-currency; Saudi VAT and the
