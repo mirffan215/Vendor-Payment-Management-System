@@ -17,7 +17,8 @@
     "approvals": "Approvals",
     "delegations": "Delegations",
     "workflow": "Approval workflow",
-    "payments": "Payments"
+    "payments": "Payments",
+    "erp": "ERP"
   },
   "language": {
     "label": "Language",
@@ -182,7 +183,27 @@
       "empty_proposal": "A proposal needs at least one payment request.",
       "instruction_tampered": "The stored instruction no longer matches its signature and cannot be handed off.",
       "format_invalid": "Choose csv or json.",
-      "payment_released": "A payment instruction has already been prepared for this invoice, so it can no longer be changed."
+      "payment_released": "A payment instruction has already been prepared for this invoice, so it can no longer be changed.",
+      "provider_unknown": "That ERP system is not supported.",
+      "base_url_invalid": "The base URL must be an https address.",
+      "authority_required": "The Entra directory (tenant) id is required.",
+      "client_id_required": "The application (client) id is required.",
+      "secret_ref_invalid": "Give the name of the secret in the vault, not the secret itself.",
+      "entity_set_role_unknown": "One of the entity names is not recognised.",
+      "entity_set_name_invalid": "One of the entity names is not valid.",
+      "page_size_invalid": "The page size must be between 10 and 1000.",
+      "timeout_invalid": "The timeout must be between 5 and 300 seconds.",
+      "company_invalid": "Give the ERP company (data area) id.",
+      "journal_invalid": "Give the vendor invoice journal name.",
+      "posting_profile_invalid": "The posting profile is not valid.",
+      "map_value_invalid": "A mapped value is not valid.",
+      "dimension_duplicate": "A dimension is mapped twice.",
+      "dimension_invalid": "A dimension mapping is not valid.",
+      "dimension_default_invalid": "A dimension default is not valid.",
+      "dimension_value_invalid": "A dimension value is not valid.",
+      "already_proposed": "Acceptance has already been proposed.",
+      "erp_account_conflict": "The vendor is already linked to a different ERP account.",
+      "erp_account_invalid": "The ERP account is not valid."
     }
   },
   "format": {
@@ -945,6 +966,184 @@
       "releaser_is_submitter": "The releaser submitted the proposal.",
       "releaser_is_approver": "The releaser approved the proposal.",
       "releaser_took_part_in_invoice_or_bank_details": "The releaser took part in the invoices or the vendor's bank details."
+    }
+  },
+  "erp": {
+    "title": "ERP integration",
+    "intro": "Approved invoices and active vendors are sent to Dynamics 365 Finance; purchase orders and invoice status come back. Every change to the connection needs a second person.",
+    "noWrites": "VPMS uses only the documented Dynamics 365 interfaces. It never writes to the ERP database and never sends money.",
+    "nav": {
+      "admin": "Connection and mapping",
+      "sync": "Sync monitor",
+      "reconciliation": "Reconciliation"
+    },
+    "state": {
+      "active": "In force: version {{version}}",
+      "pending": "Waiting for approval: version {{version}}",
+      "pendingAt": "Version {{version}} is waiting for approval (proposed {{date}})."
+    },
+    "note": "Why is this changing?",
+    "comment": "Comment",
+    "propose": "Propose change",
+    "connection": {
+      "title": "Connection",
+      "none": "No ERP connection has been approved yet.",
+      "provider": "ERP system",
+      "d365": "Dynamics 365 Finance",
+      "baseUrl": "Base URL of the environment",
+      "authority": "Entra directory (tenant) id",
+      "clientId": "Application (client) id",
+      "secretRef": "Name of the secret in the vault",
+      "secretHint": "Enter the name of the secret, never the secret itself. It is read from the vault only when a message is sent.",
+      "pageSize": "Page size",
+      "timeout": "Timeout (seconds)",
+      "entitySets": "Entity names (leave blank for the standard ones)",
+      "role": {
+        "vendors": "Vendors",
+        "invoiceJournalHeaders": "Invoice journal headers",
+        "invoiceJournalLines": "Invoice journal lines",
+        "invoiceAttachments": "Attachments",
+        "vendorInvoices": "Posted vendor invoices",
+        "vendorPayments": "Vendor payments",
+        "purchaseOrders": "Purchase order headers",
+        "purchaseOrderLines": "Purchase order lines",
+        "dimensionValues": "Dimension values"
+      }
+    },
+    "mapping": {
+      "title": "Mapping per legal entity",
+      "none": "This legal entity has no approved ERP mapping, so nothing is sent for it.",
+      "company": "ERP company (data area)",
+      "journal": "Vendor invoice journal",
+      "postingProfile": "Posting profile (optional)",
+      "paymentTerms": "Payment terms, one per line as VPMS=ERP",
+      "taxCodes": "Tax codes, one per line as VPMS=ERP",
+      "dimensions": "Financial dimensions",
+      "vpmsDimension": "VPMS dimension",
+      "erpDimension": "ERP dimension",
+      "defaultValue": "Default value",
+      "valueMap": "Values, one per line as VPMS=ERP",
+      "addDimension": "Add a dimension",
+      "removeDimension": "Remove this dimension",
+      "test": "Test connection",
+      "testOk": "The ERP answered.",
+      "testFailed": "The test failed: {{reason}}"
+    },
+    "testError": {
+      "connection_missing": "No approved connection.",
+      "mapping_missing": "No approved mapping for this entity.",
+      "secret_unavailable": "The secret could not be read from the vault.",
+      "provider_unavailable": "The configured ERP provider is not available.",
+      "auth_failed": "Sign-in to the ERP was refused.",
+      "erp_unavailable": "The ERP is not reachable."
+    },
+    "changes": {
+      "title": "ERP changes waiting for a decision",
+      "empty": "No changes are waiting.",
+      "kind": {
+        "Connection": "Connection",
+        "Mapping": "Mapping"
+      },
+      "version": "version {{version}}",
+      "field": "Field",
+      "current": "Now",
+      "proposed": "Proposed",
+      "approve": "Approve",
+      "reject": "Reject",
+      "cancel": "Withdraw"
+    },
+    "sync": {
+      "title": "Sync monitor",
+      "intro": "Messages to the ERP are sent one at a time and safely repeated. A message the ERP refuses, or that keeps failing, waits here for a person.",
+      "summary": {
+        "pending": "Waiting",
+        "inFlight": "Sending",
+        "succeeded": "Done",
+        "deadLetter": "Need attention",
+        "resolved": "Handled by hand"
+      },
+      "filter": "Status",
+      "all": "All",
+      "type": {
+        "PostInvoice": "Invoice posting",
+        "UpsertVendor": "Vendor"
+      },
+      "status": {
+        "Pending": "Waiting",
+        "InFlight": "Sending",
+        "Succeeded": "Done",
+        "DeadLetter": "Needs attention",
+        "Resolved": "Handled by hand",
+        "Superseded": "Replaced by a newer message"
+      },
+      "attempts": "Attempts: {{count}}",
+      "nextAttempt": "Next attempt {{date}}",
+      "reference": "ERP reference {{ref}}",
+      "details": "Details",
+      "detailTitle": "Attempts",
+      "empty": "No messages.",
+      "reason": "Reason",
+      "erpReference": "ERP reference (optional)",
+      "retry": "Send again",
+      "resolve": "Mark as handled",
+      "error": {
+        "vendor_not_synced": "Waiting for the vendor to exist in the ERP.",
+        "vendor_not_active": "The vendor cannot be used now.",
+        "max_attempts": "Gave up after repeated failures.",
+        "tax_code_unmapped": "A tax code has no ERP mapping.",
+        "dimension_unmapped": "A dimension has no ERP mapping.",
+        "dimension_value_unmapped": "A dimension value has no ERP mapping.",
+        "already_posted_other_version": "An earlier version is already in the ERP.",
+        "secret_unavailable": "The secret could not be read from the vault.",
+        "connection_missing": "No approved connection.",
+        "mapping_missing": "No approved mapping for this entity.",
+        "throttled": "The ERP asked us to slow down.",
+        "auth_failed": "Sign-in to the ERP was refused.",
+        "erp_unavailable": "The ERP is not reachable.",
+        "timeout": "The ERP did not answer in time."
+      }
+    },
+    "recon": {
+      "title": "Reconciliation",
+      "intro": "Compares what VPMS posted with what the ERP holds. It only reads; nothing is changed in either system.",
+      "twoPeople": "Accepting a difference in amount or payee needs a second person to confirm.",
+      "run": "Run reconciliation",
+      "export": "Download CSV",
+      "runDone": "Compared {{vpms}} VPMS invoices with {{erp}} ERP documents: {{open}} open differences.",
+      "runFailed": "The run failed: {{code}}",
+      "summary": {
+        "open": "Open",
+        "pending": "Acceptance proposed",
+        "accepted": "Accepted",
+        "resolved": "Resolved"
+      },
+      "itemsTitle": "Differences",
+      "statusFilter": "Status",
+      "typeFilter": "Kind of difference",
+      "empty": "No differences.",
+      "type": {
+        "MissingInErp": "Missing in the ERP",
+        "AmountMismatch": "Different amount",
+        "VendorMismatch": "Different payee",
+        "StatusMismatch": "Different status",
+        "UnknownInErp": "In the ERP, not posted by VPMS",
+        "PaidInErpNotReleased": "Paid in the ERP, not released here"
+      },
+      "status": {
+        "Open": "Open",
+        "PendingAcceptance": "Acceptance proposed",
+        "Accepted": "Accepted",
+        "Resolved": "Resolved",
+        "Cleared": "No longer differs"
+      },
+      "vpmsValue": "VPMS",
+      "erpValue": "ERP",
+      "lastSeen": "Last seen {{date}}",
+      "proposed": "Proposed to accept: {{reason}}",
+      "resolve": "Mark as resolved",
+      "propose": "Propose to accept",
+      "approve": "Confirm acceptance",
+      "reject": "Reject acceptance"
     }
   }
 }

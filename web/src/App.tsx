@@ -13,6 +13,9 @@ import { ApprovalTaskPage } from './pages/staff/ApprovalTaskPage'
 import { ApprovalsInboxPage } from './pages/staff/ApprovalsInboxPage'
 import { DelegationsPage } from './pages/staff/DelegationsPage'
 import { WorkflowAdminPage } from './pages/staff/WorkflowAdminPage'
+import { ErpAdminPage } from './pages/staff/ErpAdminPage'
+import { ErpReconciliationPage } from './pages/staff/ErpReconciliationPage'
+import { ErpSyncPage } from './pages/staff/ErpSyncPage'
 import { PaymentsPage } from './pages/staff/PaymentsPage'
 import { ProposalDetailPage } from './pages/staff/ProposalDetailPage'
 import { AdminPage } from './pages/staff/AdminPage'
@@ -53,6 +56,7 @@ function StaffShell({ calendar, onCalendarChange }: CalendarProps) {
             <Link to="/intake">{t('nav.intake')}</Link>
             <Link to="/verification">{t('nav.verification')}</Link>
             <Link to="/payments">{t('nav.payments')}</Link>
+            <Link to="/erp/sync">{t('nav.erp')}</Link>
             <Link to="/delegations">{t('nav.delegations')}</Link>
             <Link to="/workflow">{t('nav.workflow')}</Link>
             <Link to="/bank-changes">{t('nav.bankChanges')}</Link>
@@ -81,6 +85,9 @@ function StaffShell({ calendar, onCalendarChange }: CalendarProps) {
               <Route path="/approvals/:taskId" element={<ApprovalTaskPage calendar={calendar} />} />
               <Route path="/payments" element={<PaymentsPage calendar={calendar} />} />
               <Route path="/payments/proposals/:id" element={<ProposalDetailPage calendar={calendar} />} />
+              <Route path="/erp" element={<ErpAdminPage calendar={calendar} />} />
+              <Route path="/erp/sync" element={<ErpSyncPage calendar={calendar} />} />
+              <Route path="/erp/reconciliation" element={<ErpReconciliationPage calendar={calendar} />} />
               <Route path="/delegations" element={<DelegationsPage calendar={calendar} />} />
               <Route path="/workflow" element={<WorkflowAdminPage />} />
               <Route path="/exceptions" element={<ExceptionsPage calendar={calendar} />} />
