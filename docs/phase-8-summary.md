@@ -23,7 +23,7 @@ Status: complete. Nothing beyond Phase 8 has been started.
 | Runbooks reviewed | `docs/operations/` written from the code and Bicep; **not rehearsed on Azure**; rehearsal log in its README. "Reviewed" here means self-review; your review is the open step |
 
 ## Final results (Release, 0 warnings)
-RESULTS_PLACEHOLDER
+Architecture 14, unit 734, API 169, integration 509 passed / 11 skipped (MinIO tests, no image in the sandbox) after fixing three failures found by the first full run (two S3 stub listing tests, one notification-settings test broken in slice 2); web Vitest 115, Playwright 40, `tsc` clean, oxlint shows only the three pre-existing warnings. The fixed tests were re-run on their own (13 pass); the whole integration suite was not re-run after the fixes.
 
 ## Load test (single 4-core machine, 3,000 invoices)
 `load` profile (20 browse / 10 write / 2 export users): 0 % failures, list p95 127 ms, write p95 173 ms, all thresholds met. `stress` (60 / 30 / 4): 0 % failures, reads inside limits, **write p95 4.2 s** against a 1.5 s threshold because
