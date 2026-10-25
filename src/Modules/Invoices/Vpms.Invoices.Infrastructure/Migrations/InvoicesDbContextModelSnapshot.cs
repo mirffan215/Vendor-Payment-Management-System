@@ -225,6 +225,10 @@ namespace Vpms.Invoices.Infrastructure.Migrations
 
                     b.HasIndex("TenantId", "DuplicateKeyIndex");
 
+                    b.HasIndex("TenantId", "CreatedAt", "Id")
+                        .IsDescending(false, true, false)
+                        .HasDatabaseName("IX_Invoice_TenantId_CreatedAt_Id");
+
                     b.HasIndex("TenantId", "LegalEntityId", "Status");
 
                     b.HasIndex("TenantId", "VendorId", "NumberKeyIndex");

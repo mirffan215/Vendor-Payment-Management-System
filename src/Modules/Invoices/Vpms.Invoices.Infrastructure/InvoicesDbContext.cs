@@ -50,6 +50,8 @@ public class InvoicesDbContext(DbContextOptions<InvoicesDbContext> options, ITen
             b.HasIndex(x => new { x.TenantId, x.LegalEntityId, x.Status });
             b.HasIndex(x => new { x.TenantId, x.VendorId, x.NumberKeyIndex });
             b.HasIndex(x => new { x.TenantId, x.DuplicateKeyIndex });
+            // The invoice list is newest first; without this every page sorts the tenant's whole invoice set.
+            b.HasIndex(x => new { x.TenantId, x.CreatedAt, x.Id }).IsDescending(false, true, false).HasDatabaseName("IX_Invoice_TenantId_CreatedAt_Id");
         });
 
         modelBuilder.Entity<InvoiceLine>(b =>

@@ -21,6 +21,9 @@ public sealed class AzureStorageOptions
     public string? AccountUrl { get; set; }
 
     public string Container { get; set; } = "vpms";
+
+    /// <summary>A separate storage account for the audit anchors (own access rules, immutable container). Empty = same account as the files.</summary>
+    public string? AnchorAccountUrl { get; set; }
 }
 
 public sealed class S3StorageOptions

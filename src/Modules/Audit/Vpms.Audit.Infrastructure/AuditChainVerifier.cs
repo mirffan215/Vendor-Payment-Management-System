@@ -47,12 +47,13 @@ public sealed class AuditChainVerifier(AuditDbContext db, TenantContext tenant, 
             return ChainVerificationResult.Broken(checkedCount, lastSequence + 1, "Chain head does not match the stored events (events removed or head altered).");
         }
 
-        foreach (var anchor in await db.Anchors.AsNoTracking().Where(a => a.TenantId == tenantId).ToListAsync(ct))
+        // One query for all anchored events instead of one per anchor (anchors accumulate hourly).
+        var anchors = await db.Anchors.AsNoTracking().Where(a => a.TenantId == tenantId).ToListAsync(ct);
+        var sequences = anchors.Select(a => a.Sequence).ToList();
+        var hashes = await db.Events.AsNoTracking().Where(x => x.TenantId == tenantId && sequences.Contains(x.Sequence)).ToDictionaryAsync(x => x.Sequence, x => x.Hash, ct);
+        foreach (var anchor in anchors)
         {
-            var ev = await db.Events.AsNoTracking()
-                .Where(x => x.TenantId == tenantId && x.Sequence == anchor.Sequence)
-                .Select(x => x.Hash).FirstOrDefaultAsync(ct);
-            if (ev != anchor.Hash)
+            if (hashes.GetValueOrDefault(anchor.Sequence) != anchor.Hash)
             {
                 return ChainVerificationResult.Broken(checkedCount, anchor.Sequence, "Stored event does not match the externally anchored hash.");
             }

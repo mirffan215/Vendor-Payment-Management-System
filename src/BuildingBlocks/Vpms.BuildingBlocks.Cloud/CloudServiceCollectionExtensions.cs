@@ -26,7 +26,7 @@ public static class CloudServiceCollectionExtensions
     /// </summary>
     public static IBlobBackend CreateBackend(StorageOptions o, string? containerOrBucket = null) => o.Provider switch
     {
-        "Azure" => CreateAzure(containerOrBucket is null ? o.Azure : new AzureStorageOptions { ConnectionString = o.Azure.ConnectionString, AccountUrl = o.Azure.AccountUrl, Container = containerOrBucket }),
+        "Azure" => CreateAzure(containerOrBucket is null ? o.Azure : new AzureStorageOptions { ConnectionString = o.Azure.ConnectionString, AccountUrl = o.Azure.AnchorAccountUrl ?? o.Azure.AccountUrl, Container = containerOrBucket }),
         "S3" => CreateS3(containerOrBucket is null ? o.S3 : new S3StorageOptions
         {
             ServiceUrl = o.S3.ServiceUrl, Bucket = containerOrBucket, Region = o.S3.Region, AccessKey = o.S3.AccessKey, SecretKey = o.S3.SecretKey,

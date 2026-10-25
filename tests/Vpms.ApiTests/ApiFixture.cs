@@ -22,7 +22,7 @@ using Vpms.TestSupport;
 namespace Vpms.ApiTests;
 
 /// <summary>Boots the real API against a migrated SQL Server and two fake identity providers (one per tenant).</summary>
-public sealed class ApiFixture : WebApplicationFactory<Program>, IAsyncLifetime
+public class ApiFixture : WebApplicationFactory<Program>, IAsyncLifetime
 {
     private readonly SqlServerFixture _sql;
     private TestDatabase _db = null!;

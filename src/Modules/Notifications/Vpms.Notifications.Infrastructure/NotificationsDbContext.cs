@@ -32,6 +32,8 @@ public class NotificationsDbContext(DbContextOptions<NotificationsDbContext> opt
             b.Property(x => x.DedupeKey).HasMaxLength(200).IsRequired();
             // the same event is recorded once per person
             b.HasIndex(x => new { x.TenantId, x.UserId, x.DedupeKey }).IsUnique();
+            // The sweep asks "which of these events are already known?" across all people, which the index above cannot answer.
+            b.HasIndex(x => new { x.TenantId, x.DedupeKey }).HasDatabaseName("IX_Notification_TenantId_DedupeKey");
             b.HasIndex(x => new { x.TenantId, x.UserId, x.ReadAt, x.CreatedAt });
         });
 

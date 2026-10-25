@@ -18,6 +18,7 @@ public sealed class NotificationService(NotificationsDbContext db, TemplateResol
         if (unreadOnly) q = q.Where(n => n.ReadAt == null);
         var rows = await q.OrderByDescending(n => n.CreatedAt).Skip(Math.Max(0, skip)).Take(Math.Clamp(take, 1, 100)).ToListAsync(ct);
         var result = new List<NotificationDto>();
+        await templates.PreloadAsync(ct);
         foreach (var n in rows)
         {
             var (title, body) = await templates.RenderAsync(n, NotificationChannel.InApp, locale == "ar" ? "ar" : "en", ct);
@@ -48,10 +49,8 @@ public sealed class NotificationService(NotificationsDbContext db, TemplateResol
     {
         var user = current.UserId;
         var now = clock.GetUtcNow();
-        var unread = await db.Notifications.Where(n => n.UserId == user && n.ReadAt == null).ToListAsync(ct);
-        foreach (var n in unread) n.ReadAt = now;
-        await db.SaveChangesAsync(ct);
-        return unread.Count;
+        // One statement instead of loading every unread row into memory.
+        return await db.Notifications.Where(n => n.UserId == user && n.ReadAt == null).ExecuteUpdateAsync(s => s.SetProperty(n => n.ReadAt, now), ct);
     }
 
     public async Task<IReadOnlyList<PreferenceDto>> PreferencesAsync(CancellationToken ct = default)

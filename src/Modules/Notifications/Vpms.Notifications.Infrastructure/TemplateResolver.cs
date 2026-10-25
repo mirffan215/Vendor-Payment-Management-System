@@ -23,9 +23,20 @@ public sealed class TemplateResolver(NotificationsDbContext db, IOptions<Notific
 {
     public string Absolute(string path) => options.Value.BaseUrl.TrimEnd('/') + path;
 
+    private Dictionary<(string Kind, string Channel, string Locale), NotificationTemplate>? _preloaded;
+
+    /// <summary>
+    /// Reads the tenant's overridden templates once, so rendering a page of notifications does not ask the database again for every row. Call it before a
+    /// loop of renders and let the resolver go out of scope afterwards; a resolver that has not preloaded always asks.
+    /// </summary>
+    public async Task PreloadAsync(CancellationToken ct = default) =>
+        _preloaded = (await db.Templates.AsNoTracking().ToListAsync(ct)).ToDictionary(t => (t.Kind, t.Channel, t.Locale));
+
     public async Task<(string Subject, string Body)> ResolveAsync(string kind, string channel, string locale, CancellationToken ct = default)
     {
-        var own = await db.Templates.AsNoTracking().FirstOrDefaultAsync(t => t.Kind == kind && t.Channel == channel && t.Locale == locale, ct);
+        var own = _preloaded is not null
+            ? _preloaded.GetValueOrDefault((kind, channel, locale))
+            : await db.Templates.AsNoTracking().FirstOrDefaultAsync(t => t.Kind == kind && t.Channel == channel && t.Locale == locale, ct);
         return own is null ? BuiltInTemplates.Get(kind, locale) : (own.Subject, own.Body);
     }
 

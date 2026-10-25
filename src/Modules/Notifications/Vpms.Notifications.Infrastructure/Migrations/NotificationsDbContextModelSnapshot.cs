@@ -134,6 +134,9 @@ namespace Vpms.Notifications.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("TenantId", "DedupeKey")
+                        .HasDatabaseName("IX_Notification_TenantId_DedupeKey");
+
                     b.HasIndex("TenantId", "UserId", "DedupeKey")
                         .IsUnique();
 
