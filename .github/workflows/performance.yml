@@ -1,0 +1,58 @@
+name: Performance
+# Not on every pull request: the load profile takes about ten minutes. Run on demand or weekly; the k6 summary is kept as an artefact.
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: k6 profile
+        type: choice
+        options: [load, smoke, stress]
+        default: load
+  schedule:
+    - cron: "17 3 * * 1"
+
+permissions:
+  contents: read
+
+env:
+  K6_VERSION: "0.55.0"
+
+jobs:
+  load:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with: { dotnet-version: "10.0.x" }
+      - name: Install k6 (checksum verified)
+        run: |
+          base="https://github.com/grafana/k6/releases/download/v${K6_VERSION}"
+          curl -fsSL -o k6.tgz "$base/k6-v${K6_VERSION}-linux-amd64.tar.gz"
+          curl -fsSL -o k6.sum "$base/k6-v${K6_VERSION}-checksums.txt"
+          grep "k6-v${K6_VERSION}-linux-amd64.tar.gz" k6.sum | sed 's#k6-v.*#k6.tgz#' | sha256sum -c -
+          mkdir k6dir && tar -xzf k6.tgz -C k6dir --strip-components=1
+      - run: dotnet restore Vpms.sln --locked-mode
+      - run: dotnet build tests/Vpms.ApiTests -c Release --no-restore
+      - name: Start the load host
+        env:
+          VPMS_LOAD_SERVE: "1"
+          VPMS_LOAD_INVOICES: "3000"
+          VPMS_LOAD_READY_FILE: ${{ runner.temp }}/load.ready
+          VPMS_LOAD_STOP_FILE: ${{ runner.temp }}/load.stop
+        run: |
+          nohup dotnet test tests/Vpms.ApiTests -c Release --no-build --filter "FullyQualifiedName~LoadServerTests" > "$RUNNER_TEMP/host.log" 2>&1 &
+          for i in $(seq 1 120); do [ -f "$RUNNER_TEMP/load.ready" ] && exit 0; sleep 5; done
+          cat "$RUNNER_TEMP/host.log"; exit 1
+      - name: Run k6
+        run: |
+          entity=$(python3 -c "import json,sys;print(json.load(open(sys.argv[1]))['entity'])" "$RUNNER_TEMP/load.ready")
+          ./k6dir/k6 run --quiet -e PROFILE="${{ inputs.profile || 'load' }}" -e ENTITY_ID="$entity" --summary-export=k6-summary.json loadtests/scenarios.js
+      - name: Stop the host
+        if: always()
+        run: touch "$RUNNER_TEMP/load.stop"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: k6-summary
+          path: k6-summary.json
