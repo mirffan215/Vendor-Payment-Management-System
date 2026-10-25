@@ -59,6 +59,9 @@ public interface IBlobBackend
     /// a whole tenant prefix ("{tenantN}/"), so a wrong argument cannot empty the store.
     /// </summary>
     Task<int> DeletePrefixAsync(string prefix, CancellationToken ct = default);
+
+    /// <summary>The keys of every object whose key starts with the prefix (empty = all), in key order.</summary>
+    IAsyncEnumerable<string> ListKeysAsync(string prefix, CancellationToken ct = default);
 }
 
 public interface IFileStore
@@ -112,6 +115,17 @@ public sealed class InMemoryBlobBackend : IBlobBackend
     {
         _blobs.TryRemove(key, out _);
         return Task.CompletedTask;
+    }
+
+    public async IAsyncEnumerable<string> ListKeysAsync(string prefix, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken ct = default)
+    {
+        foreach (var key in _blobs.Keys.Where(k => k.StartsWith(prefix, StringComparison.Ordinal)).Order(StringComparer.Ordinal).ToList())
+        {
+            ct.ThrowIfCancellationRequested();
+            yield return key;
+        }
+
+        await Task.CompletedTask;
     }
 
     public Task<int> DeletePrefixAsync(string prefix, CancellationToken ct = default)

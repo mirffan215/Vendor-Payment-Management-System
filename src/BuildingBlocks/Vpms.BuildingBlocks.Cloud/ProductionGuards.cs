@@ -18,6 +18,7 @@ public static class ProductionGuards
         if (Is("Encryption:Provider", "Local", "Local")) problems.Add("Encryption:Provider must be KeyVault; the Local key is for development only.");
         if (Is("Storage:Provider", "InMemory", "InMemory")) problems.Add("Storage:Provider must be Azure or S3.");
         if (Is("Documents:Scanner", "Eicar")) problems.Add("Documents:Scanner must be ClamAv; Eicar only detects a test string.");
+        if (!Is("Audit:AnchorSink", "Blob")) problems.Add("Audit:AnchorSink must be Blob; anchors must live outside the database in immutable storage.");
         if (string.IsNullOrWhiteSpace(c[HostingExtensions.KeyVaultUriSetting])) problems.Add("KeyVault:Uri is required; secrets are read from Key Vault.");
         if (c.GetConnectionString("Default") is { } cs)
         {

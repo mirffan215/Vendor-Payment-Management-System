@@ -69,6 +69,19 @@ public abstract class BlobBackendContract : IAsyncLifetime
         Assert.Equal(0, await Backend.DeletePrefixAsync(TenantStoragePath.PrefixFor(tenantA)));
     }
 
+    [SkippableFact]
+    public async Task Keys_can_be_listed_by_prefix_in_key_order()
+    {
+        var tenant = Guid.NewGuid();
+        var other = Guid.NewGuid();
+        foreach (var name in new[] { "b.bin", "a.bin", "c.bin" }) await Backend.PutAsync(TenantStoragePath.PrefixFor(tenant) + name, new MemoryStream([1]));
+        await Backend.PutAsync(TenantStoragePath.PrefixFor(other) + "x.bin", new MemoryStream([1]));
+
+        var keys = new List<string>();
+        await foreach (var key in Backend.ListKeysAsync(TenantStoragePath.PrefixFor(tenant))) keys.Add(key);
+        Assert.Equal(["a.bin", "b.bin", "c.bin"], keys.Select(k => k[33..]));
+    }
+
     [SkippableTheory]
     [InlineData("")]
     [InlineData("/")]

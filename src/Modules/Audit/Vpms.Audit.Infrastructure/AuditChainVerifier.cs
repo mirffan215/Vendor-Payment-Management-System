@@ -5,9 +5,11 @@ using Vpms.BuildingBlocks.Tenancy;
 
 namespace Vpms.Audit.Infrastructure;
 
-public sealed class AuditChainVerifier(AuditDbContext db, TenantContext tenant) : IAuditChainVerifier
+public sealed class AuditChainVerifier(AuditDbContext db, TenantContext tenant, IAuditAnchorSink? sink = null) : IAuditChainVerifier
 {
-    public async Task<ChainVerificationResult> VerifyAsync(Guid tenantId, CancellationToken ct = default)
+    public Task<ChainVerificationResult> VerifyAsync(Guid tenantId, CancellationToken ct = default) => VerifyAsync(tenantId, true, ct);
+
+    public async Task<ChainVerificationResult> VerifyAsync(Guid tenantId, bool checkExternalAnchors, CancellationToken ct = default)
     {
         using var _ = tenant.BeginPlatformScope();
 
@@ -56,7 +58,44 @@ public sealed class AuditChainVerifier(AuditDbContext db, TenantContext tenant) 
             }
         }
 
+        if (checkExternalAnchors && sink is not null)
+        {
+            var problem = await CheckExternalAnchorsAsync(tenantId, expected - 1, checkedCount, ct);
+            if (problem is not null) return problem;
+        }
+
         return ChainVerificationResult.Ok(checkedCount);
+    }
+
+    /// <summary>
+    /// The anchors published outside the database are what a restore from an older backup (or a rewritten database) is measured against. A restore marker
+    /// accepted by a person retires the anchors published earlier for sequences after the point it restored to.
+    /// </summary>
+    private async Task<ChainVerificationResult?> CheckExternalAnchorsAsync(Guid tenantId, long lastSequence, long checkedCount, CancellationToken ct)
+    {
+        var effective = new List<ExternalAnchor>();
+        foreach (var item in await sink!.ListAsync(tenantId, ct))
+        {
+            if (item.Kind == ExternalAnchorKind.Restore) effective.RemoveAll(a => a.Sequence > item.Sequence);
+            else effective.Add(item);
+        }
+
+        foreach (var anchor in effective)
+        {
+            if (anchor.Sequence > lastSequence)
+            {
+                return ChainVerificationResult.Broken(checkedCount, lastSequence + 1,
+                    $"Events are missing: the trail was anchored outside the database up to sequence {anchor.Sequence}, but the database ends at {lastSequence}. Was it restored from an older backup?");
+            }
+
+            var stored = await db.Events.AsNoTracking().Where(x => x.TenantId == tenantId && x.Sequence == anchor.Sequence).Select(x => x.Hash).FirstOrDefaultAsync(ct);
+            if (stored != anchor.Hash)
+            {
+                return ChainVerificationResult.Broken(checkedCount, anchor.Sequence, "Stored event does not match the anchor published outside the database.");
+            }
+        }
+
+        return null;
     }
 
     public async Task<IReadOnlyList<Guid>> ListTenantsWithEventsAsync(CancellationToken ct = default)

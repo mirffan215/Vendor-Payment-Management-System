@@ -15,18 +15,35 @@ public static class CloudServiceCollectionExtensions
     public static IServiceCollection AddBlobStorage(this IServiceCollection services)
     {
         services.AddOptions<StorageOptions>();
-        services.AddSingleton<IBlobBackend>(sp =>
-        {
-            var o = sp.GetRequiredService<IOptions<StorageOptions>>().Value;
-            return o.Provider switch
-            {
-                "Azure" => CreateAzure(o.Azure),
-                "S3" => CreateS3(o.S3),
-                "InMemory" => new InMemoryBlobBackend(),
-                _ => throw new InvalidOperationException($"Unknown storage provider '{o.Provider}'."),
-            };
-        });
+        services.AddSingleton<IBlobBackend>(sp => CreateBackend(sp.GetRequiredService<IOptions<StorageOptions>>().Value));
         services.AddScoped<IFileStore, TenantScopedFileStore>();
+        return services;
+    }
+
+    /// <summary>
+    /// The storage backend for the configured provider. <paramref name="containerOrBucket"/> names another container (Azure) or bucket (S3) in the same
+    /// account, used for data that must live apart from the files, such as the audit anchors.
+    /// </summary>
+    public static IBlobBackend CreateBackend(StorageOptions o, string? containerOrBucket = null) => o.Provider switch
+    {
+        "Azure" => CreateAzure(containerOrBucket is null ? o.Azure : new AzureStorageOptions { ConnectionString = o.Azure.ConnectionString, AccountUrl = o.Azure.AccountUrl, Container = containerOrBucket }),
+        "S3" => CreateS3(containerOrBucket is null ? o.S3 : new S3StorageOptions
+        {
+            ServiceUrl = o.S3.ServiceUrl, Bucket = containerOrBucket, Region = o.S3.Region, AccessKey = o.S3.AccessKey, SecretKey = o.S3.SecretKey,
+            ForcePathStyle = o.S3.ForcePathStyle, ServerSideEncryption = o.S3.ServerSideEncryption,
+        }),
+        "InMemory" => new InMemoryBlobBackend(),
+        _ => throw new InvalidOperationException($"Unknown storage provider '{o.Provider}'."),
+    };
+
+    /// <summary>The backend for the audit anchors: another container (or bucket) of the configured store, named by <c>Storage:AnchorContainer</c>.</summary>
+    public static IServiceCollection AddAnchorBackend(this IServiceCollection services, string key)
+    {
+        services.AddKeyedSingleton<IBlobBackend>(key, (sp, _) =>
+        {
+            var configuration = sp.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>();
+            return CreateBackend(sp.GetRequiredService<IOptions<StorageOptions>>().Value, configuration["Storage:AnchorContainer"] ?? "audit-anchors");
+        });
         return services;
     }
 

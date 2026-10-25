@@ -75,8 +75,8 @@ if (builder.Environment.IsDevelopment()) builder.Services.AddSingleton<Vpms.ErpI
 builder.Services.AddSingleton<Vpms.Invoices.Domain.Tax.ITaxRuleProvider, Vpms.Tax.Sa.SaudiVatProvider>();
 builder.Services.Configure<PortalOptions>(builder.Configuration.GetSection(PortalOptions.Section));
 builder.Services.AddVendorPortalModule(ConnectionString);
-builder.Services.AddSingleton<IAuditAnchorSink>(sp => new FileAuditAnchorSink(
-    sp.GetRequiredService<IConfiguration>()["Audit:AnchorDirectory"] ?? Path.Combine(Path.GetTempPath(), "vpms-audit-anchors")));
+builder.Services.AddAnchorBackend(AuditModule.AnchorBackendKey);
+builder.Services.AddAuditAnchorSink();
 builder.Services.AddMemoryCache();
 
 // Per-tenant OIDC schemes are added at runtime; the shared post-configuration (data protection, nonce/state formats) is registered once.

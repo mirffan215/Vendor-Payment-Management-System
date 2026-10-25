@@ -37,7 +37,26 @@ internal static class MigratorEntry
         {
             try
             {
-                // Leaving the service (ADR-0024): suspend, resume, and the final shred.
+                // After a restore: check the restored database and file store (read-only), or accept a restore to an earlier point (see docs/runbooks).
+        if (args.Length > 0 && args[0] is "verify-restore" or "accept-restore")
+        {
+            var configuration = new ConfigurationBuilder().AddEnvironmentVariables().Build();
+            if (args[0] == "verify-restore")
+            {
+                var findings = await RestoreVerification.RunAsync(cs, configuration);
+                foreach (var f in findings) Console.WriteLine($"{{\"level\":\"error\",\"tenant\":\"{f.TenantId}\",\"check\":\"{f.Check}\",\"message\":\"{f.Detail.Replace("\"", "'")}\"}}");
+                Console.WriteLine($"{{\"level\":\"information\",\"message\":\"Restore verification finished with {findings.Count} finding(s).\"}}");
+                return findings.Count == 0 ? 0 : 1;
+            }
+
+            var o = ParseOptions(args.Skip(1).ToArray());
+            string Get(string key) => o.TryGetValue(key, out var v) ? v : throw new ArgumentException($"--{key} is required.");
+            var accepted = await RestoreAcceptance.AcceptAsync(cs, configuration, Get("slug"), Get("reason"));
+            Console.WriteLine($"{{\"level\":\"information\",\"message\":\"Restore accepted; the chain verifies ({accepted.EventsChecked} events).\"}}");
+            return 0;
+        }
+
+        // Leaving the service (ADR-0024): suspend, resume, and the final shred.
         if (args.Length > 0 && args[0] is "suspend-tenant" or "resume-tenant" or "shred-tenant")
         {
             var o = ParseOptions(args.Skip(1).ToArray());

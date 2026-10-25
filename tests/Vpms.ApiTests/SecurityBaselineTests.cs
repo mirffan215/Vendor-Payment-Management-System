@@ -25,6 +25,7 @@ public sealed class ProductionGuardTests
         ["Encryption:Provider"] = "KeyVault",
         ["Storage:Provider"] = "Azure",
         ["Documents:Scanner"] = "ClamAv",
+        ["Audit:AnchorSink"] = "Blob",
         ["DataProtection:Provider"] = "AzureBlob",
         ["DataProtection:KeyVaultKeyId"] = "https://v.vault.azure.net/keys/dp/1",
         ["KeyVault:Uri"] = "https://v.vault.azure.net/",
@@ -55,6 +56,7 @@ public sealed class ProductionGuardTests
     [InlineData("Encryption:Provider", "Local", "Encryption:Provider")]
     [InlineData("Storage:Provider", "InMemory", "Storage:Provider")]
     [InlineData("Documents:Scanner", "Eicar", "Documents:Scanner")]
+    [InlineData("Audit:AnchorSink", "File", "Audit:AnchorSink")]
     [InlineData("DataProtection:Provider", "Default", "DataProtection:Provider")]
     [InlineData("AllowedHosts", "*", "AllowedHosts")]
     [InlineData("Auth:AllowInsecureMetadata", "true", "AllowInsecureMetadata")]

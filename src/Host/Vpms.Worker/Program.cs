@@ -58,8 +58,8 @@ builder.Services.Configure<Vpms.Notifications.Infrastructure.GraphMailOptions>(o
 builder.Services.AddSingleton<Vpms.Invoices.Domain.Tax.ITaxRuleProvider, Vpms.Tax.Sa.SaudiVatProvider>();
 builder.Services.Configure<GraphOptions>(builder.Configuration.GetSection(GraphOptions.Section));
 builder.Services.AddAuditModule(ConnectionString);
-builder.Services.AddSingleton<IAuditAnchorSink>(sp => new FileAuditAnchorSink(
-    sp.GetRequiredService<IConfiguration>()["Audit:AnchorDirectory"] ?? Path.Combine(Path.GetTempPath(), "vpms-audit-anchors")));
+builder.Services.AddAnchorBackend(AuditModule.AnchorBackendKey);
+builder.Services.AddAuditAnchorSink();
 builder.Services.AddHostedService<AuditChainJob>();
 builder.Services.AddHostedService<AttachmentScanJob>();
 builder.Services.AddHostedService<BankChangeExpiryJob>();
