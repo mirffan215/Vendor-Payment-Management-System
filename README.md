@@ -3,8 +3,8 @@
 Multi-tenant SaaS that approves vendor invoices and **prepares** payment instructions. It never transfers money and
 does not issue invoices. Design documents live in [`docs/`](docs/); delivery follows [`docs/roadmap.md`](docs/roadmap.md).
 
-Current status: **Phase 6 (ERP / Dynamics 365 Finance) complete** — see [`docs/phase-6-summary.md`](docs/phase-6-summary.md)
-(earlier: [Phase 5](docs/phase-5-summary.md), [Phase 4](docs/phase-4-summary.md), [Phase 3](docs/phase-3-summary.md), [Phase 2](docs/phase-2-summary.md), [Phase 1](docs/phase-1-summary.md)).
+Current status: **Phase 8 (hardening) complete** — see [`docs/phase-8-summary.md`](docs/phase-8-summary.md); operations runbooks in [`docs/operations/`](docs/operations/README.md); security review in [`docs/security/`](docs/security/asvs-l2.md)
+(earlier: [Phase 7](docs/phase-7-summary.md), [Phase 6](docs/phase-6-summary.md), [Phase 5](docs/phase-5-summary.md), [Phase 4](docs/phase-4-summary.md), [Phase 3](docs/phase-3-summary.md), [Phase 2](docs/phase-2-summary.md), [Phase 1](docs/phase-1-summary.md)).
 
 ## Repository layout
 
@@ -18,7 +18,8 @@ Current status: **Phase 6 (ERP / Dynamics 365 Finance) complete** — see [`docs
 | `src/Host/Vpms.Migrator` | Applies EF Core migrations, provisions the restricted application login, and provisions tenants (`provision-tenant`) |
 | `web/` | React + TypeScript (Vite), English/Arabic, RTL |
 | `tests/` | Unit, architecture, integration (Testcontainers SQL Server), API tests |
-| `infra/` | Bicep skeleton |
+| `infra/` | Bicep for Azure: SQL (Entra-only), Container Apps, Key Vault, storage, immutable audit anchors, Front Door + WAF, alerts; `main.{dev,test,prod}.bicepparam` |
+| `loadtests/` | k6 scenarios against the real API ([docs/performance.md](docs/performance.md)) |
 | `docs/` | Architecture, data model, ADRs, roadmap, risks |
 
 ## Prerequisites

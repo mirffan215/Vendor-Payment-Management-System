@@ -247,3 +247,13 @@ duplicate detection works without decrypting. See ADR-0004.
 - **NotificationCursor**: per source, the time already swept (with an overlap window).
 - Identity: `User.Calendar` added beside `Locale` (migration `UserCalendar`).
 - All tables carry `TenantId`, the global filter and SQL Server row-level security like the other modules.
+
+## Phase 8 as built
+
+- **Customer administration:** `Tenant.Status` (Active | Suspended | Offboarded) and `StatusChangedAt`; `TenantKey.Status` gains `Destroyed` (a tombstone; the key ring refuses to create a replacement);
+  `RetentionPolicyVersion` (versioned JSON of months per data class with country overrides; Active | Pending | Superseded | Rejected | Cancelled; maker and checker); `LegalHold` (scope Tenant | LegalEntity | Vendor, reason, placed by, released by a different person).
+- **Identity:** `User.SessionsValidFrom` (sessions issued before it are rejected).
+- **Workflow:** `DENY DELETE` lifted for `WorkflowNotice` only (operational copies that may be disposed; migration `NoticesMayBeDisposed`).
+- **Indexes:** `IX_Invoice_TenantId_CreatedAt_Id` (default invoice list order), `IX_Notification_TenantId_DedupeKey` (de-duplication lookup).
+- **Outside the database:** audit anchors (one object per tenant and time, in the immutable `audit-anchors` container) and restore markers.
+- Everything else is unchanged; all new tables carry `TenantId`, the global filter and row-level security.

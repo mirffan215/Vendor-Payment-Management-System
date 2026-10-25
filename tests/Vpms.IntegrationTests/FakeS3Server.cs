@@ -40,6 +40,28 @@ public sealed class FakeS3Server : IAsyncDisposable
         {
             var id = $"{ctx.Request.RouteValues["bucket"]}/{ctx.Request.RouteValues["key"]}";
             var store = self!._objects;
+            if (ctx.Request.Method == "GET" && ctx.Request.Query.ContainsKey("list-type"))
+            {
+                // ListObjectsV2 (one page): keys of this bucket under the prefix, in binary order like S3.
+                var bucket = ctx.Request.RouteValues["bucket"]?.ToString() ?? "";
+                var prefix = ctx.Request.Query["prefix"].ToString();
+                var keys = store.Keys.Where(k => k.StartsWith(bucket + "/", StringComparison.Ordinal)).Select(k => k[(bucket.Length + 1)..])
+                    .Where(k => k.StartsWith(prefix, StringComparison.Ordinal)).OrderBy(k => k, StringComparer.Ordinal).ToList();
+                var xml = new System.Text.StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\">");
+                xml.Append(System.Security.SecurityElement.Escape(bucket) is { } name ? $"<Name>{name}</Name>" : "");
+                xml.Append($"<Prefix>{System.Security.SecurityElement.Escape(prefix)}</Prefix><KeyCount>{keys.Count}</KeyCount><MaxKeys>1000</MaxKeys><IsTruncated>false</IsTruncated>");
+                foreach (var k in keys)
+                {
+                    xml.Append($"<Contents><Key>{System.Security.SecurityElement.Escape(k)}</Key><LastModified>2026-01-01T00:00:00.000Z</LastModified><ETag>{System.Security.SecurityElement.Escape(ETag(store[bucket + "/" + k]))}</ETag><Size>{store[bucket + "/" + k].Length}</Size><StorageClass>STANDARD</StorageClass></Contents>");
+                }
+
+                xml.Append("</ListBucketResult>");
+                ctx.Response.ContentType = "application/xml";
+                ctx.Response.StatusCode = 200;
+                await ctx.Response.WriteAsync(xml.ToString());
+                return;
+            }
+
             switch (ctx.Request.Method)
             {
                 case "PUT":

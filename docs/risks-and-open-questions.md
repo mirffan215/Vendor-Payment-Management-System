@@ -26,6 +26,12 @@ Status: Accepted (Phase 0 approved).
 | R18 | Notification channels never exercised against real Graph, SMTP or Teams | Medium | Stub-server tests only; try each channel in a test tenant before go-live; dead letters are visible and retryable (ADR-0022) | 7, before go-live |
 | R19 | Notification flooding or a missed mandatory notice | Medium | Unique dedupe keys, mandatory kinds locked, dead-letter monitor; no digest yet | 7 |
 | R20 | Evidence bundle mistaken for proof beyond what it is | Low | Documented: it shows the range was not changed since export and came from the tenant's key; the live chain verifier remains the control | 7 |
+| R21 | Nothing has been deployed to Azure: the Bicep, the pipeline, private endpoints, alerts and Entra-only SQL are compiled and linted only | High until the first deployment | Deploy to dev, then test; run the checklist and restore drill in `docs/operations/`; record in the rehearsal log | 8 |
+| R22 | MFA is not verified by VPMS (`amr`/`acr`); a customer with a weak identity-provider policy has weak staff sign-in | Medium | Document it to customers; build the per-provider check (finding FR-3) | 8 |
+| R23 | No automatic disposal of financial records, vendor data or audit; no bulk export for offboarding | Medium | Retention report shows what is eligible; decide and build disposal and export (Q16) | 8 |
+| R24 | Data-key rotation has no operator command or re-encryption job; old KEK versions must be kept | Medium | Finding FR-6; keep old versions enabled | 8 |
+| R25 | A restore loses events between the last anchor and the incident without detection | Medium | Anchor interval is the bound; shorten if needed; restore needs an audited person's acceptance | 8 |
+| R26 | No third-party penetration test | Medium | Commission one against the test environment before go-live (FR-1) | 8 |
 
 ## 2. ZATCA obligations and VPMS's role
 
@@ -70,3 +76,7 @@ Consequences for the design:
 | Q13 | Which D365 Finance version and which posting route (journal posts automatically, or needs a separate posting step) does the first customer use? | Journal created; entity names configurable; field names to be confirmed in a spike | Before first live posting |
 | Q14 | Who should receive an alert when messages are dead-lettered or a reconciliation finds differences? | Built: everyone holding the ERP operate permission (`Erp.Operate`) for that entity (ADR-0022). Confirm | Before go-live |
 | Q15 | Is the QuestPDF licence acceptable for the intended customers, or should another PDF library be used? | Community licence assumed for development | Before release |
+| Q16 | Should VPMS dispose of financial records, vendor master data, documents and (archived) audit at the end of retention, and who may authorise it? | Not built: reported only (ADR-0024) | Before go-live for customers with deletion duties |
+| Q17 | Hosting region(s) and data residency per tenant? (was Q10) | Single Azure region parameter (`location`); backups geo-redundant by default, which may conflict with residency | Before the first production deployment |
+| Q18 | RPO/RTO the customer expects, and the expected scale (Q12) | Design values in `docs/operations/README.md`; load test at 3,000 invoices only | Before go-live |
+| Q19 | Does the first customer's identity-provider policy enforce MFA for staff, or must VPMS check it (FR-3)? | Not checked by VPMS | Before go-live |

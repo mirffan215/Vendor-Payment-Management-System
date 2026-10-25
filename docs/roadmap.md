@@ -67,7 +67,7 @@ Depends on: Phases 1-6.
 Acceptance: reports respect tenant isolation; Arabic/RTL works across all screens; ZATCA scope matches the
 documented decision.
 
-## Phase 8: Hardening (`phase-8-hardening.md`)
+## Phase 8: Hardening (`phase-8-hardening.md`) — complete, see [phase-8-summary.md](phase-8-summary.md)
 Scope: OWASP ASVS L2 security review; dependency/container scanning and SBOM; performance and load testing;
 backup/restore and DR runbooks, retention and deletion policy; production IaC, environments, blue/green or slot
 deployment, monitoring; ISO/IEC 27001:2022 and SOC 2 mapping; operations/admin docs.

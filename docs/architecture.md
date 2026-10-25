@@ -318,3 +318,20 @@ future integration; v1 never moves money.**
   A Playwright sweep opens every staff route in Arabic at phone width and checks direction, overflow and untranslated keys.
 - **Saudi VAT:** input-VAT register export only; no issuing or clearance code (architecture test, `docs/zatca-scope.md`).
 - **Settings:** `App:BaseUrl`, `Notifications:AllowInternalHosts` (development only), `Notifications:GraphBaseUrl`, `Notifications:GraphAuthorityUrl`.
+
+## 19. Phase 8 additions (hardening)
+
+- **Start-up guards** (`BuildingBlocks.Cloud/ProductionGuards`): in Production the API and worker refuse to start with the development encryption key, in-memory storage, the test virus scanner,
+  a non-blob audit-anchor sink, no Key Vault, blind server-certificate trust, `AllowedHosts: *`, an unprotected data-protection key ring or no trusted proxy.
+- **Secrets and keys:** Key Vault configuration provider (`Secrets--name` → `Secrets:name`); data-protection key ring in blob storage wrapped by a Key Vault key; managed identities for SQL, storage and Key Vault (no passwords).
+- **Edge and limits:** forwarded headers honoured only from configured proxies (ADR-0025 topology: Front Door → web nginx → API); Kestrel, form and JSON limits; upload concurrency limiter; HSTS one year; CSP and security headers on the SPA.
+- **Authorization coverage:** an architecture test fails the build if a controller action has no policy, no permission-evaluator call and no allow-list entry; a sweep test calls every route anonymously and as a role-less user.
+- **Outbound calls:** `OutboundGuard` resolves the host, refuses private/link-local/mapped addresses and connects to the validated address; used by webhooks, SMTP, Graph, D365 and the OIDC back channel.
+- **Step-up and sessions** (ADR-0023): `[RequireStepUp]` on sensitive actions; `User.SessionsValidFrom` revokes sessions; `SecurityEventMiddleware` and the `vpms.security.events` metric.
+- **Observability:** `BuildingBlocks.Observability` (Serilog JSON with redaction, OpenTelemetry traces/metrics, Application Insights exporter); worker job metrics and heartbeat.
+- **Retention and offboarding** (ADR-0024): versioned policy with two-person shortening, legal holds, `IRetentionTarget` per module, `RetentionJob`, tenant lifecycle (Active/Suspended/Offboarded), crypto-shredding.
+- **Audit anchors and restore:** anchors in an immutable blob container in a separate account; the verifier compares the database with the anchors; restore markers and `accept-restore`; `verify-restore` after any restore.
+- **Performance:** two indexes and four query fixes; `loadtests/` (k6) against a test-host that serves the real API.
+- **Deployment** (ADR-0025): Container Apps, Entra-only SQL, private endpoints, Front Door + WAF, alerts, Bicep modules, blue/green by revision with a migrator job gate (`.github/workflows/deploy.yml`).
+- **CI:** SHA-pinned actions, locked restore, CodeQL, Trivy, CycloneDX SBOM, Dependabot, Bicep lint, scheduled performance run.
+- **Settings added:** `KeyVault:Uri`, `KeyVault:ReloadMinutes`, `DataProtection:*`, `ForwardedHeaders:*`, `Storage:AnchorContainer`, `Storage:Azure:AnchorAccountUrl`, `Audit:AnchorSink`, `Worker:HeartbeatFile`, `Auth:*` timeouts, `APPLICATIONINSIGHTS_CONNECTION_STRING`, `VPMS_ENTRA_PRINCIPALS` (migrator).

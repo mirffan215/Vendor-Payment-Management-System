@@ -111,6 +111,8 @@ public sealed class NotificationDeliveryTests(SqlServerFixture sql) : PaymentSce
     [Fact]
     public async Task Unsafe_or_incomplete_settings_are_refused_before_anything_is_stored()
     {
+        // The rest of this class lets mail go to loopback servers; here the production rule applies (internal hosts and unlisted webhook hosts refused).
+        W.Host.Services.GetRequiredService<Microsoft.Extensions.Options.IOptions<NotificationOptions>>().Value.AllowInternalHosts = false;
         await Assert.ThrowsAsync<ValidationFailedException>(() => Svc(_notifAdmin, s => s.ProposeAsync(NotificationChannel.Webhook, Json(new { url = "https://evil.example.com/x", kinds = new[] { "ErpDeadLetter" } }), "x")));
         await Assert.ThrowsAsync<ValidationFailedException>(() => Svc(_notifAdmin, s => s.ProposeAsync(NotificationChannel.Email, Json(new { provider = "Smtp", fromAddress = "noreply@acme.com", smtpHost = "10.0.0.5", smtpPort = 25 }), "x")));
         await Assert.ThrowsAsync<ValidationFailedException>(() => Svc(_notifAdmin, s => s.ProposeAsync(NotificationChannel.Email, Json(new { provider = "Graph", fromAddress = "noreply@acme.com", secretRef = "not a name!" }), "x")));
