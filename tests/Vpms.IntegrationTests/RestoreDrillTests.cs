@@ -11,7 +11,7 @@ using Vpms.TestSupport;
 namespace Vpms.IntegrationTests;
 
 /// <summary>
-/// The restore drill (docs/runbooks/restore.md) as a test: back the database up, carry on working, restore the backup into a new database, and check that
+/// The restore drill (docs/operations/restore.md) as a test: back the database up, carry on working, restore the backup into a new database, and check that
 /// the checks an operator runs afterwards notice the lost events, that a person's acceptance lets the chain continue, and that encrypted data still reads.
 /// </summary>
 [Collection(SqlServerCollection.Name)]

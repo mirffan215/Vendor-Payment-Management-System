@@ -37,7 +37,7 @@ internal static class MigratorEntry
         {
             try
             {
-                // After a restore: check the restored database and file store (read-only), or accept a restore to an earlier point (see docs/runbooks).
+                // After a restore: check the restored database and file store (read-only), or accept a restore to an earlier point (see docs/operations/restore.md).
         if (args.Length > 0 && args[0] is "verify-restore" or "accept-restore")
         {
             var configuration = new ConfigurationBuilder().AddEnvironmentVariables().Build();
