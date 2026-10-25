@@ -62,7 +62,10 @@ jobs:
         run: docker build -f ${{ matrix.file }} -t vpms-${{ matrix.name }}:ci ${{ matrix.context }}
       - name: The web image's nginx configuration is valid
         if: matrix.name == 'web'
-        run: docker run --rm --entrypoint sh -e API_UPSTREAM=http://api:8080 vpms-web:ci -c "/docker-entrypoint.sh nginx -t"
+        # nginx resolves the upstream name when it starts, so the test gives it one; the second run checks the Front Door rule renders.
+        run: |
+          docker run --rm --add-host api:127.0.0.1 --entrypoint sh -e API_UPSTREAM=http://api:8080 vpms-web:ci -c "/docker-entrypoint.sh nginx -t"
+          docker run --rm --add-host api:127.0.0.1 --entrypoint sh -e API_UPSTREAM=http://api:8080 -e FRONT_DOOR_ID=00000000-0000-0000-0000-000000000000 vpms-web:ci -c "/docker-entrypoint.sh nginx -t"
       - name: The images run as a non-root user
         run: |
           user=$(docker inspect --format '{{.Config.User}}' vpms-${{ matrix.name }}:ci)
