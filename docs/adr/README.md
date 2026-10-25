@@ -29,6 +29,7 @@ Phase 0 ADRs were approved by the owner and are **Accepted**.
 | [0022](0022-notifications.md) | Notifications: sweep, outbox, channels and mandatory kinds | Accepted |
 | [0023](0023-step-up-sessions-and-security-logging.md) | Step-up authentication, ending sessions, and security logging | Accepted |
 | [0024](0024-retention-legal-hold-and-offboarding.md) | Retention, legal hold, disposal and tenant offboarding | Accepted |
+| [0025](0025-deployment-and-blue-green.md) | Deployment topology, blue/green releases and migrations | Accepted |
 
 ## Template
 

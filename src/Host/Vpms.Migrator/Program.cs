@@ -117,6 +117,15 @@ internal static class MigratorEntry
             Console.WriteLine($"Application login '{appLogin}' is ready.");
         }
 
+        // Azure SQL with Entra-only authentication: the application identities (comma-separated display names) become database users.
+        var entra = Environment.GetEnvironmentVariable("VPMS_ENTRA_PRINCIPALS");
+        if (!string.IsNullOrWhiteSpace(entra))
+        {
+            var names = entra.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            await DatabaseMigrator.EnsureEntraPrincipalsAsync(cs, names);
+            Console.WriteLine($"Entra principals ready: {string.Join(", ", names)}.");
+        }
+
         return 0;
     }
 

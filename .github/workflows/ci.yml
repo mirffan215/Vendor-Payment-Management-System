@@ -56,6 +56,11 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: az bicep lint --file infra/main.bicep
       - run: az bicep build --file infra/main.bicep --stdout > /dev/null
+      - name: Parameter files compile
+        env:
+          VPMS_DEPLOYER_OBJECT_ID: 00000000-0000-0000-0000-000000000001
+          VPMS_SQL_ADMIN_OBJECT_ID: 00000000-0000-0000-0000-000000000002
+        run: for e in dev test prod; do az bicep build-params --file infra/main.$e.bicepparam --stdout > /dev/null; done
 
   secrets:
     runs-on: ubuntu-latest

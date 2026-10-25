@@ -1,0 +1,25 @@
+name: Azure login (OIDC)
+description: Signs in with a GitHub OpenID Connect token. No client secret or certificate is stored anywhere.
+inputs:
+  client-id:
+    required: true
+    description: App registration (federated credential) client id
+  tenant-id:
+    required: true
+    description: Entra tenant id
+  subscription-id:
+    required: true
+    description: Subscription id
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        AZURE_CLIENT_ID: ${{ inputs.client-id }}
+        AZURE_TENANT_ID: ${{ inputs.tenant-id }}
+        AZURE_SUBSCRIPTION_ID: ${{ inputs.subscription-id }}
+      run: |
+        token=$(curl -fsS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=api://AzureADTokenExchange" | jq -r .value)
+        echo "::add-mask::$token"
+        az login --service-principal -u "$AZURE_CLIENT_ID" -t "$AZURE_TENANT_ID" --federated-token "$token" -o none
+        az account set -s "$AZURE_SUBSCRIPTION_ID"

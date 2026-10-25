@@ -115,6 +115,34 @@ public static class DatabaseMigrator
         await Execute(conn, createUser, login, null, ct);
     }
 
+    /// <summary>
+    /// Azure SQL with an Entra-only administrator: the API and worker connect as managed identities, which have no password. Creates a
+    /// contained user for each identity (by its display name) and puts it in vpms_app. The migrator itself must be an Entra admin or member of one.
+    /// </summary>
+    public static async Task EnsureEntraPrincipalsAsync(string ownerConnectionString, IEnumerable<string> principals, CancellationToken ct = default)
+    {
+        await using var conn = new SqlConnection(ownerConnectionString);
+        await conn.OpenAsync(ct);
+        foreach (var name in principals)
+        {
+            if (!Regex.IsMatch(name, "^[A-Za-z0-9_.-]{1,128}$"))
+            {
+                throw new ArgumentException("An Entra principal name may only contain letters, digits, '.', '-' and '_'.", nameof(principals));
+            }
+
+            const string sql = """
+                IF DATABASE_PRINCIPAL_ID(@login) IS NULL
+                BEGIN
+                    DECLARE @create nvarchar(max) = N'CREATE USER ' + QUOTENAME(@login) + N' FROM EXTERNAL PROVIDER;';
+                    EXEC (@create);
+                END
+                DECLARE @add nvarchar(max) = N'ALTER ROLE [vpms_app] ADD MEMBER ' + QUOTENAME(@login) + N';';
+                EXEC (@add);
+                """;
+            await Execute(conn, sql, name, null, ct);
+        }
+    }
+
     private static async Task Execute(SqlConnection conn, string sql, string login, string? password, CancellationToken ct)
     {
         await using var cmd = conn.CreateCommand();

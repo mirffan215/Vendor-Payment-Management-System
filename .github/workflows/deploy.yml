@@ -1,0 +1,199 @@
+name: Deploy
+# Manual release to dev, test or prod (ADR-0025). Each environment is a GitHub environment: prod requires an approver there.
+# Sequence: what-if -> platform -> images -> migrations (job, wait) -> new revision at 0% -> health gate -> traffic shift -> smoke test -> rollback on failure.
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        type: choice
+        options: [dev, test, prod]
+        required: true
+      image_tag:
+        description: Existing image tag to redeploy (rollback or promotion). Empty = build this commit.
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+  id-token: write # OpenID Connect federation to Azure: no stored cloud credentials
+
+concurrency:
+  group: deploy-${{ inputs.environment }}
+  cancel-in-progress: false
+
+env:
+  ENVIRONMENT: ${{ inputs.environment }}
+
+jobs:
+  whatif:
+    name: What-if (${{ inputs.environment }})
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}-plan
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/azure-login
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Lint and what-if
+        env:
+          VPMS_DEPLOYER_OBJECT_ID: ${{ vars.VPMS_DEPLOYER_OBJECT_ID }}
+          VPMS_SQL_ADMIN_OBJECT_ID: ${{ vars.VPMS_SQL_ADMIN_OBJECT_ID }}
+          VPMS_SQL_ADMIN_NAME: ${{ vars.VPMS_SQL_ADMIN_NAME }}
+          VPMS_PUBLIC_HOST: ${{ vars.VPMS_PUBLIC_HOST }}
+          VPMS_ALERT_EMAILS: ${{ vars.VPMS_ALERT_EMAILS }}
+        run: |
+          az bicep lint --file infra/main.bicep
+          az deployment group what-if -g "${{ vars.AZURE_RESOURCE_GROUP }}" --parameters "infra/main.${ENVIRONMENT}.bicepparam" --no-pretty-print | tee whatif.txt
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: whatif-${{ inputs.environment }}
+          path: whatif.txt
+
+  release:
+    name: Release (${{ inputs.environment }})
+    needs: whatif
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    env:
+      RG: ${{ vars.AZURE_RESOURCE_GROUP }}
+      VPMS_DEPLOYER_OBJECT_ID: ${{ vars.VPMS_DEPLOYER_OBJECT_ID }}
+      VPMS_SQL_ADMIN_OBJECT_ID: ${{ vars.VPMS_SQL_ADMIN_OBJECT_ID }}
+      VPMS_SQL_ADMIN_NAME: ${{ vars.VPMS_SQL_ADMIN_NAME }}
+      VPMS_PUBLIC_HOST: ${{ vars.VPMS_PUBLIC_HOST }}
+      VPMS_ALERT_EMAILS: ${{ vars.VPMS_ALERT_EMAILS }}
+      VPMS_FRONT_DOOR_ID: ${{ vars.VPMS_FRONT_DOOR_ID }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/azure-login
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Settings
+        id: s
+        run: |
+          tag="${{ inputs.image_tag }}"
+          if [ -z "$tag" ]; then tag="${GITHUB_SHA::12}"; echo "build=true" >> "$GITHUB_OUTPUT"; else echo "build=false" >> "$GITHUB_OUTPUT"; fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "suffix=r$(date -u +%m%d%H%M)-${tag:0:7}" | tr 'A-Z_' 'a-z-' >> "$GITHUB_OUTPUT"
+
+      - name: Platform (databases, vault, network, registry, monitoring)
+        run: |
+          VPMS_DEPLOY_APPS=false az deployment group create -g "$RG" --parameters "infra/main.${ENVIRONMENT}.bicepparam" -o none
+          out() { az deployment group show -g "$RG" -n main --query "properties.outputs.$1.value" -o tsv; }
+          echo "ACR=$(out registryName)" >> "$GITHUB_ENV"
+          echo "LOGIN_SERVER=$(out registryLoginServer)" >> "$GITHUB_ENV"
+          echo "API_IDENTITY=$(out apiIdentityName)" >> "$GITHUB_ENV"
+
+      - name: Build and push images
+        if: steps.s.outputs.build == 'true'
+        run: |
+          az acr login -n "$ACR"
+          for pair in "api:Dockerfile.api:." "worker:Dockerfile.worker:." "migrator:Dockerfile.migrator:." "web:web/Dockerfile:web"; do
+            IFS=: read -r name file ctx <<< "$pair"
+            docker build -f "$file" -t "$LOGIN_SERVER/vpms-$name:${{ steps.s.outputs.tag }}" "$ctx"
+            docker push "$LOGIN_SERVER/vpms-$name:${{ steps.s.outputs.tag }}"
+          done
+
+      - name: Image exists
+        run: |
+          for n in api worker migrator web; do az acr repository show -n "$ACR" --image "vpms-$n:${{ steps.s.outputs.tag }}" -o none; done
+
+      - name: Migrate (expand step; the old revision keeps serving)
+        run: |
+          job="vpms-${ENVIRONMENT}-migrator"
+          if az containerapp job show -g "$RG" -n "$job" -o none 2>/dev/null; then
+            az containerapp job update -g "$RG" -n "$job" --image "$LOGIN_SERVER/vpms-migrator:${{ steps.s.outputs.tag }}" -o none
+            exec_name=$(az containerapp job start -g "$RG" -n "$job" --query name -o tsv)
+            for i in $(seq 1 90); do
+              status=$(az containerapp job execution show -g "$RG" -n "$job" --job-execution-name "$exec_name" --query properties.status -o tsv)
+              echo "migrator: $status"
+              case "$status" in Succeeded) exit 0 ;; Failed|Stopped|Degraded) echo "::error::Migration failed; see the job logs in Log Analytics."; exit 1 ;; esac
+              sleep 20
+            done
+            echo "::error::Migration timed out"; exit 1
+          else
+            echo "First deployment: the job is created with the apps and started below."
+          fi
+
+      - name: New revision at 0% traffic
+        id: rev
+        run: |
+          api="vpms-${ENVIRONMENT}-api"; web="vpms-${ENVIRONMENT}-web"
+          active() { az containerapp revision list -g "$RG" -n "$1" --query "[?properties.active && properties.trafficWeight > \`0\`].name | [0]" -o tsv 2>/dev/null || true; }
+          prev_api=$(active "$api"); prev_web=$(active "$web")
+          echo "prev_api=$prev_api" >> "$GITHUB_OUTPUT"; echo "prev_web=$prev_web" >> "$GITHUB_OUTPUT"
+          if [ -n "$prev_api" ]; then
+            export VPMS_API_TRAFFIC="[{\"revisionName\":\"$prev_api\",\"weight\":100},{\"latestRevision\":true,\"weight\":0}]"
+            export VPMS_WEB_TRAFFIC="[{\"revisionName\":\"$prev_web\",\"weight\":100},{\"latestRevision\":true,\"weight\":0}]"
+          fi
+          export VPMS_DEPLOY_APPS=true VPMS_IMAGE_TAG="${{ steps.s.outputs.tag }}" VPMS_REVISION_SUFFIX="${{ steps.s.outputs.suffix }}"
+          az deployment group create -g "$RG" --parameters "infra/main.${ENVIRONMENT}.bicepparam" -o none
+          echo "new_api=$api--${{ steps.s.outputs.suffix }}" >> "$GITHUB_OUTPUT"
+          echo "new_web=$web--${{ steps.s.outputs.suffix }}" >> "$GITHUB_OUTPUT"
+          echo "first=$([ -z "$prev_api" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
+      - name: First deployment - run migrations now
+        if: steps.rev.outputs.first == 'true'
+        run: |
+          job="vpms-${ENVIRONMENT}-migrator"
+          exec_name=$(az containerapp job start -g "$RG" -n "$job" --query name -o tsv)
+          for i in $(seq 1 90); do
+            status=$(az containerapp job execution show -g "$RG" -n "$job" --job-execution-name "$exec_name" --query properties.status -o tsv)
+            case "$status" in Succeeded) exit 0 ;; Failed|Stopped|Degraded) echo "::error::Migration failed"; exit 1 ;; esac
+            sleep 20
+          done
+          exit 1
+
+      - name: Health gate on the new revisions
+        run: |
+          for pair in "vpms-${ENVIRONMENT}-api:${{ steps.rev.outputs.new_api }}" "vpms-${ENVIRONMENT}-web:${{ steps.rev.outputs.new_web }}"; do
+            app="${pair%%:*}"; rev="${pair##*:}"
+            for i in $(seq 1 60); do
+              state=$(az containerapp revision show -g "$RG" -n "$app" --revision "$rev" --query "[properties.healthState, properties.runningState]" -o tsv | tr '\n' ' ')
+              echo "$rev: $state"
+              case "$state" in "Healthy Running"*) break ;; esac
+              [ "$i" = 60 ] && { echo "::error::$rev did not become healthy"; exit 1; }
+              sleep 10
+            done
+          done
+
+      - name: Shift traffic
+        if: steps.rev.outputs.first != 'true'
+        run: |
+          az containerapp ingress traffic set -g "$RG" -n "vpms-${ENVIRONMENT}-api" --revision-weight "${{ steps.rev.outputs.new_api }}=100"
+          az containerapp ingress traffic set -g "$RG" -n "vpms-${ENVIRONMENT}-web" --revision-weight "${{ steps.rev.outputs.new_web }}=100"
+
+      - name: Smoke test
+        id: smoke
+        run: |
+          host=$(az deployment group show -g "$RG" -n main --query properties.outputs.publicHost.value -o tsv)
+          for i in $(seq 1 12); do
+            web=$(curl -s -o /dev/null -w '%{http_code}' "https://$host/healthz" || true)
+            api=$(curl -s -o /dev/null -w '%{http_code}' "https://$host/auth/denied" || true)
+            echo "web=$web api=$api"
+            if [ "$web" = 200 ] && [ "$api" -lt 500 ] && [ "$api" -gt 0 ]; then exit 0; fi
+            sleep 10
+          done
+          echo "::error::Smoke test failed"; exit 1
+
+      - name: Roll back
+        if: failure() && steps.rev.outputs.prev_api != ''
+        run: |
+          az containerapp ingress traffic set -g "$RG" -n "vpms-${ENVIRONMENT}-api" --revision-weight "${{ steps.rev.outputs.prev_api }}=100" || true
+          az containerapp ingress traffic set -g "$RG" -n "vpms-${ENVIRONMENT}-web" --revision-weight "${{ steps.rev.outputs.prev_web }}=100" || true
+          echo "::warning::Traffic is back on ${{ steps.rev.outputs.prev_api }}. The worker was updated in place: redeploy the previous image_tag to roll it back, and check that the database changes are backward compatible (docs/operations/deployment.md)."
+
+      - name: Retire revisions older than the previous one
+        if: success() && steps.rev.outputs.first != 'true'
+        run: |
+          for app in "vpms-${ENVIRONMENT}-api" "vpms-${ENVIRONMENT}-web"; do
+            keep_prev="${{ steps.rev.outputs.prev_api }} ${{ steps.rev.outputs.prev_web }} ${{ steps.rev.outputs.new_api }} ${{ steps.rev.outputs.new_web }}"
+            for r in $(az containerapp revision list -g "$RG" -n "$app" --query "[?properties.active].name" -o tsv); do
+              case " $keep_prev " in *" $r "*) ;; *) az containerapp revision deactivate -g "$RG" -n "$app" --revision "$r" -o none ;; esac
+            done
+          done

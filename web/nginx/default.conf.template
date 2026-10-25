@@ -1,4 +1,10 @@
 # Rendered by the nginx image's envsubst step. API_UPSTREAM is the address of the API (for example http://api:8080).
+# FRONT_DOOR_ID, when set, is the Azure Front Door profile id: requests that did not come through that Front Door (and its WAF) are refused.
+map "$http_x_azure_fdid" $fd_mismatch { default 1; "${FRONT_DOOR_ID}" 0; }
+map "${FRONT_DOOR_ID}" $fd_enforced { "" 0; default 1; }
+# The API must see the public host name (it builds the sign-in redirect address from it). Front Door and the ingress pass the original host in X-Forwarded-Host;
+# the API's AllowedHosts rejects any value that is not the configured public host.
+map $http_x_forwarded_host $public_host { default $http_x_forwarded_host; "" $host; }
 server {
     listen 8080;
     server_name _;
@@ -21,18 +27,22 @@ server {
     }
 
     location ~ ^/(api|auth|portal/auth)/ {
+        set $fd_check "$fd_enforced$fd_mismatch";
+        if ($fd_check = "11") { return 403; }
         include /etc/nginx/vpms/security-headers.conf;
         proxy_pass ${API_UPSTREAM};
         proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header Host $public_host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $http_x_forwarded_proto;
-        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-Host $public_host;
         proxy_read_timeout 60s;
         proxy_hide_header X-Powered-By;
     }
 
     location / {
+        set $fd_check "$fd_enforced$fd_mismatch";
+        if ($fd_check = "11") { return 403; }
         include /etc/nginx/vpms/security-headers.conf;
         add_header Cache-Control "no-store" always;
         try_files $uri /index.html;
